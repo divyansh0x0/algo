@@ -1,0 +1,17 @@
+1.
+
+V = voltage
+U = potential difference
+i = current
+
+
+current source: Outputs current as
+s(t) = a + f(t)
+in a static analyser
+s(t) = a; its constant
+
+
+now:
+ i  = VG -- resistor
+    = C(dV/dt) as Q = CV -- capacitor
+    =
