@@ -18,4 +18,12 @@ window.addEventListener('resize', ()=>{updateCanvasSize (ctx )});
 const scene  = new Scene(ctx, true);
 const algorithm = "DFS Graph Traversal";
 const visualizer = new Visualizer(scene, algorithm); ;
-visualizer.start();
+const default_graph = {
+            "A": ["B", "C"],
+            "B": ["D", "E"],
+            "C": ["F"],
+            "D": [],
+            "E": ["F"],
+            "F": []
+        };
+visualizer.start(default_graph, "A");

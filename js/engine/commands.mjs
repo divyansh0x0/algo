@@ -11,7 +11,8 @@ export const COMMAND_TYPES = Object.freeze({
     UNHIGHLIGHT_EDGE: "unhighlight_edge",
     LABEL_EDGE: "label_edge",
     NOOP: "noop",
-    FINISHED: "finished"
+    FINISHED: "finished",
+    ERROR: "error"
     
 });
 
@@ -22,14 +23,14 @@ export const COMMAND_TYPES = Object.freeze({
 export const SceneCommands = Object.freeze({
 addNode(id, pos, radius){
     if (typeof id !== "string"){
-        throw new Error("id must be a string")
+        throw new Error(`id must be a string, received: ${id}`)
     }
     if (typeof pos !== "object"){
-        throw new Error("pos must be an object of type {x: int, y: int}")
+        throw new Error(`pos must be an object of type {x: int, y: int}, received: ${JSON.stringify(pos)}`)
     }
  
     if (typeof radius !== "number"){
-        throw new Error("radius must be a number")
+        throw new Error(`radius must be a number, received: ${radius}`)
     }
     
     return {
@@ -42,7 +43,7 @@ addNode(id, pos, radius){
 
 removeNode(id){
     if (typeof id !== "string"){
-        throw new Error("id must be a string")
+        throw new Error(`id must be a string, received: ${id}`)
     }
     return {
         type: COMMAND_TYPES.REMOVE_NODE,
@@ -52,7 +53,7 @@ removeNode(id){
 
 highlightNode(id){
     if (typeof id !== "string"){
-        throw new Error("id must be a string")
+        throw new Error(`id must be a string, received: ${id}`)
     }
     return {
         type: COMMAND_TYPES.HIGHLIGHT_NODE,
@@ -62,7 +63,7 @@ highlightNode(id){
 
 unhighlightNode(id){
     if (typeof id !== "string"){
-        throw new Error("id must be a string")
+        throw new Error(`id must be a string, received: ${id}`)
     }
     return {
         type: COMMAND_TYPES.UNHIGHLIGHT_NODE,
@@ -72,14 +73,14 @@ unhighlightNode(id){
 
 moveNode(id, from_pos, to_pos){
     if (typeof id !== "string"){
-        throw new Error("id must be a string")
+        throw new Error(`id must be a string, received: ${id}`)
     }
     if (typeof from_pos !== "object"){
-        throw new Error("from_pos must be an object of type {x: int, y: int}")
+        throw new Error(`from_pos must be an object of type {x: int, y: int}, received: ${JSON.stringify(from_pos)}`)
     }
     
     if (typeof to_pos !== "object"){
-        throw new Error("from_pos must be an object of type {x: int, y: int}")
+        throw new Error(`to_pos must be an object of type {x: int, y: int}, received: ${JSON.stringify(to_pos)}`)
     }
     return {
         type: COMMAND_TYPES.MOVE_NODE,
@@ -91,10 +92,10 @@ moveNode(id, from_pos, to_pos){
 
 labelNode(id, label){
     if (typeof id !== "string"){
-        throw new Error("id must be a string")
+        throw new Error(`id must be a string, received: ${id}`)
     }
     if (typeof label !== "string"){
-        throw new Error("label must be a string")
+        throw new Error(`label must be a string, received: ${label}`)
     }
     return {
         type: COMMAND_TYPES.LABEL_NODE,
@@ -109,10 +110,10 @@ labelNode(id, label){
  */
  addEdge(from_id, to_id){
     if (typeof from_id !== "string"){
-        throw new Error("from must be a string")
+        throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error("to must be a string")
+        throw new Error(`to must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.ADD_EDGE,
@@ -123,10 +124,10 @@ labelNode(id, label){
 
 removeEdge(from_id, to_id){
     if (typeof from_id !== "string"){
-        throw new Error("from must be a string")
+        throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error("to must be a string")
+        throw new Error(`to must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.REMOVE_EDGE,
@@ -138,10 +139,10 @@ removeEdge(from_id, to_id){
 
 highlightEdge(from_id, to_id){
     if (typeof from_id !== "string"){
-        throw new Error("from must be a string")
+        throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error("to must be a string")
+        throw new Error(`to must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.LABEL_EDGE,
@@ -152,10 +153,10 @@ highlightEdge(from_id, to_id){
 
 unhighlightEdge(from_id, to_id){
     if (typeof from_id !== "string"){
-        throw new Error("from must be a string")
+        throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error("to must be a string")
+        throw new Error(`to must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.UNHIGHLIGHT_EDGE,
@@ -165,14 +166,14 @@ unhighlightEdge(from_id, to_id){
 },
 
 labelEdge(from_id, to_id, label){
-    if (typeof from !== "string"){
-        throw new Error("from must be a string")
+    if (typeof from_id !== "string"){
+        throw new Error(`from must be a string, received: ${from_id}`)
     }
-    if (typeof to !== "string"){
-        throw new Error("to must be a string")
+    if (typeof to_id !== "string"){
+        throw new Error(`to must be a string, received: ${to_id}`)
     }
     if (typeof label !== "string"){
-        throw new Error("label must be a string")
+        throw new Error(`label must be a string, received: ${label}`)
     }
     
     return {
@@ -195,6 +196,11 @@ finished(){
     return {
         type: COMMAND_TYPES.FINISHED
     }
-}
-
+},
+error(message){
+    return {
+        type: COMMAND_TYPES.ERROR,
+        msg: message
+    }
+},
 });
