@@ -1,3 +1,5 @@
+import { COMMAND_TYPES } from "./commands.mjs";
+
 class Drawable {
     constructor(ctx) {
         this.ctx = ctx;
@@ -104,6 +106,7 @@ class Node extends Drawable{
     }
 
 }
+
 export class Scene {
     constructor(ctx,show_fps = false) {
         this.ctx = ctx;
@@ -117,26 +120,16 @@ export class Scene {
         this.fps = 0;
     }
 
-    handleCommands(command){
+    handleCommand(command){
+        console.log("Command: ", command)
         switch(command.type){
-            case "add_node":
-                this.addNode(command.node);
+            case COMMAND_TYPES.NOOP:
+                // Do nothing
                 break;
-            case "remove_node":
-                this.removeNode(command.id);
+            case COMMAND_TYPES.FINISHED:
+                console.log("Finished")
                 break;
-            case "highlight_node":
-                this.highlightNode(command.id);
-                break;
-            case "unhighlight_node":
-                this.unhighlightNode(command.id);
-                break;
-            case "move_node":
-                this.moveNode(command.id, command.from, command.to);
-                break;
-            case "label_node":
-                this.labelNode(command.id, command.label);
-                break;
+
             default:
                 console.error("Unknown command: ", command);
                 break;

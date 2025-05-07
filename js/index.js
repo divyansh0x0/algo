@@ -16,6 +16,6 @@ updateCanvasSize(ctx);
 window.addEventListener('resize', ()=>{updateCanvasSize (ctx )});
 
 const scene  = new Scene(ctx, true);
-const algorithm = getAlgorithm("DFS");
+const algorithm = "DFS Graph Traversal";
 const visualizer = new Visualizer(scene, algorithm); ;
 visualizer.start();

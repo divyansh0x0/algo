@@ -9,7 +9,9 @@ export const COMMAND_TYPES = Object.freeze({
     REMOVE_EDGE: "remove_edge",
     HIGHLIGHT_EDGE: "highlight_edge",
     UNHIGHLIGHT_EDGE: "unhighlight_edge",
-    LABEL_EDGE: "label_edge"
+    LABEL_EDGE: "label_edge",
+    NOOP: "noop",
+    FINISHED: "finished"
     
 });
 
@@ -17,8 +19,8 @@ export const COMMAND_TYPES = Object.freeze({
  * Node commands are used to modify the nodes of the graph.
  * Nodes are defined by a unique id and a position (x, y).
  */
-
-export function addNode(id, pos, radius){
+export const SceneCommands = Object.freeze({
+addNode(id, pos, radius){
     if (typeof id !== "string"){
         throw new Error("id must be a string")
     }
@@ -36,9 +38,9 @@ export function addNode(id, pos, radius){
         pos: pos,
         radius: radius
     }
-}
+},
 
-export function removeNode(id){
+removeNode(id){
     if (typeof id !== "string"){
         throw new Error("id must be a string")
     }
@@ -46,9 +48,9 @@ export function removeNode(id){
         type: COMMAND_TYPES.REMOVE_NODE,
         id: id
     }
-}
+},
 
-export function highlightNode(id){
+highlightNode(id){
     if (typeof id !== "string"){
         throw new Error("id must be a string")
     }
@@ -56,9 +58,9 @@ export function highlightNode(id){
         type: COMMAND_TYPES.HIGHLIGHT_NODE,
         id: id
     }
-}
+},
 
-export function unhighlightNode(id){
+unhighlightNode(id){
     if (typeof id !== "string"){
         throw new Error("id must be a string")
     }
@@ -66,9 +68,9 @@ export function unhighlightNode(id){
         type: COMMAND_TYPES.UNHIGHLIGHT_NODE,
         id: id
     }
-}
+},
 
-export function moveNode(id, from_pos, to_pos){
+moveNode(id, from_pos, to_pos){
     if (typeof id !== "string"){
         throw new Error("id must be a string")
     }
@@ -85,9 +87,9 @@ export function moveNode(id, from_pos, to_pos){
         from: from_pos,
         to: to_pos
     }
-}
+},
 
-export function labelNode(id, label){
+labelNode(id, label){
     if (typeof id !== "string"){
         throw new Error("id must be a string")
     }
@@ -99,13 +101,13 @@ export function labelNode(id, label){
         id: id,
         label: label
     }
-}
+},
 /** -------------------------- EDGE COMMANDS --------------------------
  * Edge commands are used to modify the edges of the graph.
  * Edges are defined by a pair of nodes (from, to). 
  *---------------------------------------------------------------------
  */
- export function addEdge(from_id, to_id){
+ addEdge(from_id, to_id){
     if (typeof from_id !== "string"){
         throw new Error("from must be a string")
     }
@@ -117,9 +119,9 @@ export function labelNode(id, label){
         from: from_id,
         to: to_id
     }
-}
+},
 
-export function removeEdge(from_id, to_id){
+removeEdge(from_id, to_id){
     if (typeof from_id !== "string"){
         throw new Error("from must be a string")
     }
@@ -131,10 +133,10 @@ export function removeEdge(from_id, to_id){
         from: from_id,
         to: to_id
     }
-}
+},
 
 
-export function highlightEdge(from_id, to_id){
+highlightEdge(from_id, to_id){
     if (typeof from_id !== "string"){
         throw new Error("from must be a string")
     }
@@ -146,23 +148,23 @@ export function highlightEdge(from_id, to_id){
         from: from_id,
         to: to_id
     }
-}
+},
 
-export function unhighlightEdge(from_id, from_id){
-    if (typeof from !== "string"){
+unhighlightEdge(from_id, to_id){
+    if (typeof from_id !== "string"){
         throw new Error("from must be a string")
     }
-    if (typeof to !== "string"){
+    if (typeof to_id !== "string"){
         throw new Error("to must be a string")
     }
     return {
         type: COMMAND_TYPES.UNHIGHLIGHT_EDGE,
         from: from_id,
-        to: from_id
+        to: to_id
     }
-}
+},
 
-export function labelEdge(from_id, to_id, label){
+labelEdge(from_id, to_id, label){
     if (typeof from !== "string"){
         throw new Error("from must be a string")
     }
@@ -179,5 +181,20 @@ export function labelEdge(from_id, to_id, label){
         to: to_id,
         label: label
     }
+},
+/** ---------------------------- GLOBAL COMMANDS --------------------------
+ * 
+ */
+
+noop(){
+    return {
+        type: COMMAND_TYPES.NOOP
+    }
+},
+finished(){
+    return {
+        type: COMMAND_TYPES.FINISHED
+    }
 }
 
+});
