@@ -21,12 +21,9 @@ export const COMMAND_TYPES = Object.freeze({
  * Nodes are defined by a unique id and a position (x, y).
  */
 export const SceneCommands = Object.freeze({
-addNode(id, pos, radius){
+addNode(id, x=0,y=0, radius=10){
     if (typeof id !== "string"){
         throw new Error(`id must be a string, received: ${id}`)
-    }
-    if (typeof pos !== "object"){
-        throw new Error(`pos must be an object of type {x: int, y: int}, received: ${JSON.stringify(pos)}`)
     }
  
     if (typeof radius !== "number"){
@@ -36,7 +33,7 @@ addNode(id, pos, radius){
     return {
         type: COMMAND_TYPES.ADD_NODE,
         id: id,
-        pos: pos,
+        pos: {x,y},
         radius: radius
     }
 },
@@ -86,7 +83,7 @@ moveNode(id, from_pos, to_pos){
         type: COMMAND_TYPES.MOVE_NODE,
         id: id,
         from: from_pos,
-        to: to_pos
+        end: to_pos
     }
 },
 
@@ -113,12 +110,12 @@ labelNode(id, label){
         throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error(`to must be a string, received: ${to_id}`)
+        throw new Error(`end must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.ADD_EDGE,
         from: from_id,
-        to: to_id
+        end: to_id
     }
 },
 
@@ -127,12 +124,12 @@ removeEdge(from_id, to_id){
         throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error(`to must be a string, received: ${to_id}`)
+        throw new Error(`end must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.REMOVE_EDGE,
         from: from_id,
-        to: to_id
+        end: to_id
     }
 },
 
@@ -142,12 +139,12 @@ highlightEdge(from_id, to_id){
         throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error(`to must be a string, received: ${to_id}`)
+        throw new Error(`end must be a string, received: ${to_id}`)
     }
     return {
-        type: COMMAND_TYPES.LABEL_EDGE,
+        type: COMMAND_TYPES.HIGHLIGHT_EDGE,
         from: from_id,
-        to: to_id
+        end: to_id
     }
 },
 
@@ -156,12 +153,12 @@ unhighlightEdge(from_id, to_id){
         throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error(`to must be a string, received: ${to_id}`)
+        throw new Error(`end must be a string, received: ${to_id}`)
     }
     return {
         type: COMMAND_TYPES.UNHIGHLIGHT_EDGE,
         from: from_id,
-        to: to_id
+        end: to_id
     }
 },
 
@@ -170,7 +167,7 @@ labelEdge(from_id, to_id, label){
         throw new Error(`from must be a string, received: ${from_id}`)
     }
     if (typeof to_id !== "string"){
-        throw new Error(`to must be a string, received: ${to_id}`)
+        throw new Error(`end must be a string, received: ${to_id}`)
     }
     if (typeof label !== "string"){
         throw new Error(`label must be a string, received: ${label}`)
@@ -179,7 +176,7 @@ labelEdge(from_id, to_id, label){
     return {
         type: COMMAND_TYPES.LABEL_EDGE,
         from: from_id,
-        to: to_id,
+        end: to_id,
         label: label
     }
 },

@@ -22,6 +22,7 @@ function* DFS_Graph_Traversal(graph, start_node, visited=new Set()){
     for (const node of graph[start_node]){
         if (!visited.has(node)){
             visited.add(node);
+            yield SceneCommands.highlightEdge(start_node,node);
             yield* DFS_Graph_Traversal(graph, node, visited);
         }
     }

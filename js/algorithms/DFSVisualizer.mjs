@@ -7,7 +7,7 @@ export class DFSVisualizer extends AlgorithmVisualizer {
         super(default_config, ctx);
         /**
          * node = {x: 0, y: 0, radius: 0}
-         * edge = {from: "node_name", to: "node_name"}
+         * edge = {from: "node_name", end: "node_name"}
          */
         this.nodes = {};
         for (const id in this.default_config.nodes){
@@ -49,7 +49,7 @@ export class DFSVisualizer extends AlgorithmVisualizer {
         for (let i = 0; i < total_edges; i++) {
             const edge = this.edges[i];
             const node_from = this.nodes[edge.from];
-            const node_to = this.nodes[edge.to];
+            const node_to = this.nodes[edge.end];
 
 
             this.drawLine(node_from.x,node_from.y,node_to.x,node_to.y, 10, "blue")

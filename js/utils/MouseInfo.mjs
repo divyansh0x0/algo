@@ -28,6 +28,19 @@ window.onmousedown = (evt) => {
     }
 
 }
+window.ontouchstart = (evt) =>{
+    MouseInfo.is_primary_btn_down = true;
+}
+window.ontouchmove = (evt)=>{
+    let bounding_rect = {x:0,y:0}
+    if(element_in_focus)
+        bounding_rect = element_in_focus.getBoundingClientRect();
+    MouseInfo.location.x =  evt.touches[0].pageX - bounding_rect.x;
+    MouseInfo.location.y =  evt.touches[0].pageY - bounding_rect.y;
+}
+window.ontouchend = (evt) =>{
+    MouseInfo.is_primary_btn_down = false;
+}
 window.onmouseup = (evt) => {
     switch (evt.button) {
         case 0:

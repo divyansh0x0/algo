@@ -7,9 +7,9 @@ const default_config = {
             "D": { x: 0.6, y: 0.8, radius: 20 },
         },
         edges: [
-            {from: "A", to: "B"},
-            {from: "A", to: "C"},
-            {from: "B", to: "D"},
+            {from: "A", end: "B"},
+            {from: "A", end: "C"},
+            {from: "B", end: "D"},
         ]
     }
 }

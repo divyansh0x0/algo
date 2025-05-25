@@ -19,11 +19,20 @@ const scene  = new Scene(ctx, true);
 const algorithm = "DFS Graph Traversal";
 const visualizer = new Visualizer(scene, algorithm); ;
 const default_graph = {
-            "A": ["B", "C"],
-            "B": ["D", "E"],
-            "C": ["F"],
-            "D": [],
+            "A": ["B", "C","D"],
+            "B": ["C","F"],
+            "C": ["A"],
+            "D": ["A"],
             "E": ["F"],
-            "F": []
+            "F": ["B","E"],
+    // "G": ["B"],
+    // "H": ["M"],
+    // "I": ["L"],
+    // "J": ["A"],
+    // "K": ["F"],
+    // "L": ["D"],
+    // "M": ["C"]
+
+
         };
 visualizer.start(default_graph, "A");
