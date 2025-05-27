@@ -1,0 +1,21 @@
+@media screen and (max-width: 740px) {
+    .visualizer-container {
+        grid-template-columns: none;
+        grid-template-rows: 1fr 1fr;
+    }
+
+    #main-canvas {
+        grid-row: 1;
+        width: 100vw;
+    }
+
+    #visualizer-data {
+        grid-row: 2;
+        min-height: 100dvh;
+    }
+
+    #slider {
+        display: none;
+    }
+
+}

@@ -259,6 +259,7 @@ export class Scene {
         this.grid_size = {x:100,y:100};
         setupMouseInfoFor(this.ctx.canvas);
 
+
     }
 
     handleCommand(command) {
@@ -403,11 +404,11 @@ export class Scene {
         //drawing fps
         if (!this.show_fps)
             return;
-        this.ctx.fillStyle = "#fff";
-        this.ctx.font = "20px Arial";
+        this.ctx.fillStyle = ThemeManager.getTextColor("on-background");
         this.ctx.textAlign = "left";    // Horizontal center
+        this.ctx.font = "1em Arial";
         this.ctx.textBaseline = "top"; // Vertical center
-        this.ctx.fillText(`FPS: ${this.fps}`, 0, 0);
+        this.ctx.fillText(`FPS: ${this.fps}`, 10, 10);
     }
 
 
