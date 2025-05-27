@@ -4,6 +4,20 @@
         grid-template-rows: 1fr 1fr;
     }
 
+    #heading {
+        position: absolute;
+        bottom: 0;
+        border-radius: 0.5em;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        align-content: center;
+        width: max-content;
+        background-color: rgba(243, 243, 243, 0.1);
+
+    }
     #main-canvas {
         grid-row: 1;
         width: 100vw;

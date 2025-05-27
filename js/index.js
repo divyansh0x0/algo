@@ -35,8 +35,8 @@ window.addEventListener("mouseup", () => {
     is_dragging = false;
 });
 window.addEventListener("mousemove", (e) => {
-    if (is_dragging) {
-        visualizer_data.width = e.clientX;
+    if (is_dragging && e.clientX < window.innerWidth && e.clientX > 0) {
+        visualizer_data.style.width = e.clientX + "px";
         canvas.width = window.innerWidth - e.clientX;
         updateCanvasSize(ctx);
         e.preventDefault();
@@ -50,16 +50,16 @@ const algorithm = "DFS Graph Traversal";
 const visualizer = new Visualizer(scene, algorithm);
 
 const default_graph = {
-    "A": ["B", "C", "D"],
-    "B": ["C", "F", "G"],
+    "A": ["B", "C"],
+    "B": ["C"],
     "C": ["A"],
-    "D": ["A"],
-    "E": ["F","E"],
-    "F": ["B", "E"],
-    "G": ["B", "E", "H"],
-    "H": ["G","I", "J"],
-    "I": ["H"],
-    "J": ["H"],
+    // "D": ["F", "G"],
+    // "E": ["F","E"],
+    // "F": ["D", "E"],
+    // "G": ["D", "E", "H"],
+    // "H": ["G","I", "J"],
+    // "I": ["H"],
+    // "J": ["H"],
     // "K": ["F"],
     // "L": ["D"],
     // "M": ["C"]

@@ -4,6 +4,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    color: var(--text-on-background-color);
 }
 canvas{
     height:100dvh;
@@ -17,14 +18,18 @@ body{
     background-color: var(--surface-bg-color);
 }
 
+#heading {
+    text-align: center;
+}
 #slider {
     background-color: var(--slider-color);
+    cursor: ew-resize;
 }
 .visualizer-container {
     width: 100dvw;
     height: fit-content;
     display: grid;
-    grid-template-columns: 1fr 10px auto;
+    grid-template-columns: auto 10px auto;
 }
 .visualizer-data{
     min-width: 0px;
