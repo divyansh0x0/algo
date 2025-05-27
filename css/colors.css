@@ -1,0 +1,94 @@
+:root{
+
+}
+[theme="light"] {
+
+
+    --grid-color: #d5d5d5;
+    --surface-bg-color:#fff;
+    --canvas-bg-default-color: #f1f1f1;
+
+    /* === NODE COLORS === */
+    --node-bg-border-color: #000;
+    --node-bg-default-color: #0057b8;
+    --node-bg-highlighted-color: #132e80;
+    --node-bg-selected-color: #d0d0d0;
+    --node-bg-hover-color: #c0c0c0;
+
+    --node-fg-default-color: #333333;
+    --node-fg-highlighted-color: #222222;
+    --node-fg-selected-color: #111111;
+    --node-fg-hover-color: #000000;
+
+    /* === EDGE COLORS === */
+    --edge-bg-default-color: #999999;
+    --edge-bg-highlighted-color: #ff8c00;
+    --edge-bg-selected-color: #d0d0d0;
+    --edge-bg-hover-color: #002ada;
+
+    --edge-fg-default-color: #333333;
+    --edge-fg-highlighted-color: #222222;
+    --edge-fg-selected-color: #111111;
+    --edge-fg-hover-color: #000000;
+
+    /* === BUTTON COLORS === */
+    --button-bg-default-color: #f0f0f0;
+    --button-bg-highlighted-color: #e0e0e0;
+    --button-bg-selected-color: #d0d0d0;
+    --button-bg-hover-color: #c0c0c0;
+
+    --button-fg-default-color: #333333;
+    --button-fg-highlighted-color: #222222;
+    --button-fg-selected-color: #111111;
+    --button-fg-hover-color: #000000;
+
+    /* === TEXT COLORS === */
+    --text-on-primary-color: #ffffff;
+    --text-on-secondary-color: #000000;
+    --text-on-background-color: #000000;
+
+}
+[theme="dark"] {
+    --grid-color:#000;
+    --surface-bg-color: #000000;
+    --canvas-bg-default-color:#000;
+    /* === NODE COLORS === */
+    --node-bg-border-color: #000;
+    --node-bg-default-color: #2c2c2c;
+    --node-bg-highlighted-color: #3a3a3a;
+    --node-bg-selected-color: #444444;
+    --node-bg-hover-color: #505050;
+
+    --node-fg-default-color: #e0e0e0;
+    --node-fg-highlighted-color: #f0f0f0;
+    --node-fg-selected-color: #ffffff;
+    --node-fg-hover-color: #cccccc;
+
+    /* === EDGE COLORS === */
+    --edge-bg-default-color: #2c2c2c;
+    --edge-bg-highlighted-color: #3a3a3a;
+    --edge-bg-selected-color: #444444;
+    --edge-bg-hover-color: #505050;
+
+    --edge-fg-default-color: #e0e0e0;
+    --edge-fg-highlighted-color: #f0f0f0;
+    --edge-fg-selected-color: #ffffff;
+    --edge-fg-hover-color: #cccccc;
+
+    /* === BUTTON COLORS === */
+    --button-bg-default-color: #2c2c2c;
+    --button-bg-highlighted-color: #3a3a3a;
+    --button-bg-selected-color: #444444;
+    --button-bg-hover-color: #505050;
+
+    --button-fg-default-color: #e0e0e0;
+    --button-fg-highlighted-color: #f0f0f0;
+    --button-fg-selected-color: #ffffff;
+    --button-fg-hover-color: #cccccc;
+
+    /* === TEXT COLORS === */
+    --text-on-primary-color: #ffffff;
+    --text-on-secondary-color: #dddddd;
+    --text-on-background-color: #f5f5f5;
+}
+

@@ -30,7 +30,7 @@ export class Visualizer {
         let circles_in_row = 0
         let angle_increment = 0
         let curr_angle = 0;
-        console.log("center",cx,cy)
+        this.scene.log("center",cx,cy)
 
         for(const node in default_graph){
             const x = h*Math.cos(curr_angle) -k*Math.sin(curr_angle)+cx;
@@ -38,7 +38,7 @@ export class Visualizer {
             this.scene.handleCommand(SceneCommands.addNode(node, x,y, radius ));
             circles_in_row++;
             curr_angle += angle_increment;
-            console.log(x,y)
+            this.scene.log(x,y)
             if(circles_in_row === max_circles_in_curr_row){
                 row_num++;
                 h = 2 * radius*row_num
@@ -48,8 +48,8 @@ export class Visualizer {
                 angle_increment = Math.acos(1-1/(2*row_num*row_num));
                 max_circles_in_curr_row = Math.round(2*Math.PI/angle_increment);
 
-                console.log("n ", row_num, max_circles_in_curr_row)
-                console.log("h",h,"k",k)
+                this.scene.log("n", row_num, max_circles_in_curr_row)
+                this.scene.log("h",h,"k",k)
             }
 
 
