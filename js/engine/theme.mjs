@@ -58,6 +58,7 @@ export const ThemeManager = (function () {
 
     return {
         setThemeType: (themeType) => {
+            styles = getComputedStyle(document.documentElement);
             disableSystemThemeMatching();
             switch (themeType) {
                 case ThemeType.LIGHT:

@@ -1,7 +1,9 @@
 :root{
-
+    --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1)
 }
 [theme="light"] {
+    --primary-color: #0c0050;
+    --primary-color-hover: #bb88fa;
 
     --slider-color: #000;
     --grid-color: #d5d5d5;
@@ -32,7 +34,7 @@
     --edge-fg-hover-color: #000000;
 
     /* === BUTTON COLORS === */
-    --button-bg-default-color: #f0f0f0;
+    --button-bg-default-color: #5b88fa;
     --button-bg-highlighted-color: #e0e0e0;
     --button-bg-selected-color: #d0d0d0;
     --button-bg-hover-color: #c0c0c0;
@@ -49,14 +51,17 @@
 
 }
 [theme="dark"] {
+    --primary-color: #5b88fa;
+    --primary-color-hover: #779ef8;
+
     --slider-color: #a8a8a8;
     --grid-color: #373737;
-    --surface-bg-color: #000000;
-    --canvas-bg-default-color:#000;
+    --surface-bg-color: #191919;
+    --canvas-bg-default-color: #111111;
     /* === NODE COLORS === */
-    --node-bg-border-color: #000;
-    --node-bg-default-color: #2c2c2c;
-    --node-bg-highlighted-color: #4b666e;
+    --node-bg-border-color: #002ffd;
+    --node-bg-default-color: #9c9c9c;
+    --node-bg-highlighted-color: #70d1ec;
     --node-bg-selected-color: #444444;
     --node-bg-hover-color: #505050;
 
@@ -66,8 +71,8 @@
     --node-fg-hover-color: #cccccc;
 
     /* === EDGE COLORS === */
-    --edge-bg-default-color: #2c2c2c;
-    --edge-bg-highlighted-color: #293b73;
+    --edge-bg-default-color: #f8f8f8;
+    --edge-bg-highlighted-color: #708bd8;
     --edge-bg-selected-color: #444444;
     --edge-bg-hover-color: #505050;
 
@@ -77,18 +82,13 @@
     --edge-fg-hover-color: #cccccc;
 
     /* === BUTTON COLORS === */
-    --button-bg-default-color: #2c2c2c;
+    --button-bg-default-color: #3d73fd;
     --button-bg-highlighted-color: #3a3a3a;
     --button-bg-selected-color: #444444;
     --button-bg-hover-color: #505050;
 
-    --button-fg-default-color: #e0e0e0;
-    --button-fg-highlighted-color: #f0f0f0;
-    --button-fg-selected-color: #ffffff;
-    --button-fg-hover-color: #cccccc;
-
     /* === TEXT COLORS === */
-    --text-on-primary-color: #ffffff;
+    --text-on-primary-color: #000000;
     --text-on-secondary-color: #dddddd;
     --text-on-background-color: #f5f5f5;
 }

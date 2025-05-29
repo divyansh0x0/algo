@@ -14,6 +14,7 @@ const NATURAL_EDGE_LENGTH_SQRD = NATURAL_EDGE_LENGTH * NATURAL_EDGE_LENGTH;
 const NODE_CHARGE = 1;
 
 export class Scene {
+    static animator = new Animator();
 
     constructor(ctx, show_fps = false) {
         this.ctx = ctx;
@@ -29,7 +30,6 @@ export class Scene {
         this.k_attr = 100;
         this.k_repl = 10E6;
         this.drawable_selected = null;
-        this.animator = new Animator();
         this.logger = new Logger();
         this.grid_size = {x: 100, y: 100};
         setupMouseInfoFor(this.ctx.canvas);
@@ -100,12 +100,11 @@ export class Scene {
     }
 
     highlight(drawable) {
-        this.animator.add(new ColorAnimation(drawable, drawable.color, ThemeManager.getBgColor(drawable.getName(), "highlighted")));
+        drawable.highlight()
     }
 
     loop(curr_animation_call_time) {
         if (!this.is_running) return;
-
         const t1 = this.last_animation_call_time;
         const dt_ms = curr_animation_call_time - this.last_animation_call_time;
         this.last_animation_call_time = curr_animation_call_time;
@@ -132,6 +131,8 @@ export class Scene {
     }
 
     start() {
+        if(this.is_running)
+            return;
         this.is_running = true;
         this.last_animation_call_time = performance.now();
         this.accumulated_time = 0;
@@ -149,7 +150,6 @@ export class Scene {
         this.ctx.clearRect(0, 0, rect.width, rect.height);
         this.ctx.fillStyle = ThemeManager.getBgColor("canvas");
         this.ctx.fillRect(0, 0, rect.width, rect.height);
-
         //Gridlines
         this.ctx.save();
         this.ctx.strokeStyle = ThemeManager.getColor("grid");
@@ -253,7 +253,7 @@ export class Scene {
                 this.drawable_selected = null;
             }
         }
-        this.animator.step(dt_ms);
+        Scene.animator.step(dt_ms);
     }
 
     log(...data) {

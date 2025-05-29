@@ -106,6 +106,7 @@ export class ColorAnimation extends Animation {
         this.to_rgba = hexToRgba(to_hex);
         if (!this.from_rgba || !this.to_rgba)
             console.error("Couldn't parse color for animation.");
+        this.drawable.is_color_animating = true;
     }
 
     setNormalizedTime(t) {
@@ -117,11 +118,14 @@ export class ColorAnimation extends Animation {
     }
 
     finalize() {
+        this.setNormalizedTime(1)
         this.curr_rgba = this.to_rgba;
+        this.drawable.is_color_animating = false;
         this.interrupt();
     }
     interrupt(){
         this.drawable.color = rgbaToHex(this.curr_rgba);
+        this.drawable.is_animating = false;
     }
 
     update_color() {
@@ -147,19 +151,16 @@ export class Animator {
         for (const id in this.animations) {
             const animation = this.animations[id]
             animation.duration_passed_ms += dt_ms;
-            let animation_complete = false;
+
             if (animation.duration_passed_ms > animation.total_duration_ms) {
                 animation.duration_passed_ms = animation.total_duration_ms;
-                animation_complete = true;
-            }
-            const t = animation.duration_passed_ms / animation.total_duration_ms;
-            animation.setNormalizedTime(t)
-
-            if (animation_complete) {
-                // console.log("Animation complete: ", id);
                 animation.finalize();
                 delete this.animations[id];
+                break
             }
+
+            const t = animation.duration_passed_ms / animation.total_duration_ms;
+            animation.setNormalizedTime(t)
 
         }
     }

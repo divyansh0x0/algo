@@ -55,8 +55,10 @@ function placeDiagonally(graph, scene, radius = 20) {
         if (y > scene.ctx.canvas.height || x > scene.ctx.canvas.width) {
             diagonal_count += 1;
             y = diagonal_count * radius * 3 + 10;
-            x = 0;
+            x =0;
         }
+        x += Math.random()*5;
+
     }
 
 }
@@ -101,6 +103,5 @@ export class Visualizer {
     }
 
     reset() {
-        this.algorithmInstance.reset();
     }
 }

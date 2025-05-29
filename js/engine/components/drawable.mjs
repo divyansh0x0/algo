@@ -1,12 +1,25 @@
 import {ThemeManager} from "../theme.mjs";
-
+import {ColorAnimation} from "../animation.mjs";
+import {Scene} from "../scene.mjs";
+const COLOR_STATES = Object.freeze({
+    DEFAULT:"default",
+    HIGHLIGHTED:"highlighted",
+    SELECTED:"selected",
+    HOVER: "hover"
+})
 export class Drawable {
     constructor(ctx, id) {
         this.ctx = ctx;
         this.id = id;
-        this.color = ThemeManager.getBgColor(this.getName());
         this.x = 0;
         this.y = 0;
+        this.is_color_animating = false;
+        this.color_state = COLOR_STATES.DEFAULT;
+        this.color = ThemeManager.getBgColor(this.getName(), this.color_state);
+    }
+    highlight(){
+        Scene.animator.add(new ColorAnimation(this, this.color, ThemeManager.getBgColor(this.getName(), "highlighted")));
+        this.color_state = COLOR_STATES.HIGHLIGHTED;
     }
 
     getName() {
@@ -14,6 +27,9 @@ export class Drawable {
     }
 
     update(dt_ms) {
+        if(!this.is_color_animating){
+            this.color = ThemeManager.getBgColor(this.getName(), this.color_state);
+        }
 
     }
 

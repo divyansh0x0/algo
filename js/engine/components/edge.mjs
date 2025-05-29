@@ -1,10 +1,10 @@
 import {Drawable} from "./drawable.mjs";
+import {ThemeManager} from "../theme.mjs";
 
 
 export class Edge extends Drawable {
     constructor(ctx, start_node, end_node) {
         super(ctx, Edge.getEdgeKey(start_node.id, end_node.id));
-        this.text_color = "#000";
         this.start_node = start_node;
         this.end_node = end_node;
     }

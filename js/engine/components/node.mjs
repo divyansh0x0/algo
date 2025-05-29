@@ -17,8 +17,9 @@ export class Node extends Drawable {
         this.repln_force = {x: 0, y: 0};
     }
 
-    update() {
-        const dt_ms = 20; //fixed dtms
+    update(dt_ms) {
+        super.update(dt_ms);
+        dt_ms = 20; //fixed dtms
         this.force.x = this.attr_force.x + this.repln_force.x;
         this.force.y = this.attr_force.y + this.repln_force.y;
         // console.log(this.id,this.force)
