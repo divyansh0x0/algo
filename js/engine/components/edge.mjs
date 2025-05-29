@@ -1,8 +1,8 @@
 import {Drawable} from "./drawable.mjs";
-import {ThemeManager} from "../theme.mjs";
 
 
 export class Edge extends Drawable {
+    static thickness = 5;
     constructor(ctx, start_node, end_node) {
         super(ctx, Edge.getEdgeKey(start_node.id, end_node.id));
         this.start_node = start_node;
@@ -17,7 +17,7 @@ export class Edge extends Drawable {
         // const color = this.is_highlighted ? "blue" : this.color;
         const from_pos = {x: this.start_node.x, y: this.start_node.y};
         const to_pos = {x: this.end_node.x, y: this.end_node.y};
-        this.drawLine(from_pos.x, from_pos.y, to_pos.x, to_pos.y, 10, this.color);
+        this.drawLine(from_pos.x, from_pos.y, to_pos.x, to_pos.y, Edge.thickness, this.color);
     }
 
 }

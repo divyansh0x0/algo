@@ -3,6 +3,7 @@ import {clamp} from "../../utils/PMath.mjs";
 import {ThemeManager} from "../theme.mjs";
 
 export class Node extends Drawable {
+    static max_force = 10000;
     constructor(ctx, id, x, y, radius, text = "") {
         super(ctx, id);
         this.text = text;
@@ -19,12 +20,18 @@ export class Node extends Drawable {
 
     update(dt_ms) {
         super.update(dt_ms);
-        dt_ms = 20; //fixed dtms
-        this.force.x = this.attr_force.x + this.repln_force.x;
-        this.force.y = this.attr_force.y + this.repln_force.y;
+        const dt_s = 0.02; //fixed dtms
+        this.force.x = clamp(this.attr_force.x + this.repln_force.x, -Node.max_force, Node.max_force);
+        this.force.y = clamp(this.attr_force.y + this.repln_force.y, -Node.max_force, Node.max_force);
+        // if(isNaN(this.force.x)){
+        //     this.force.x = Node.max_force;
+        // }
+        // if(isNaN(this.force.y)){
+        //     this.force.y = Node.max_force;
+        // }
         // console.log(this.id,this.force)
-        const dvx = (clamp(this.force.x * dt_ms / 1000, -this.max_velocity, this.max_velocity));
-        const dvy = (clamp(this.force.y * dt_ms / 1000, -this.max_velocity, this.max_velocity));
+        const dvx = (clamp(this.force.x * dt_s, -this.max_velocity, this.max_velocity));
+        const dvy = (clamp(this.force.y * dt_s, -this.max_velocity, this.max_velocity));
 
         this.velocity.x += dvx;
         this.velocity.y += dvy;
@@ -34,8 +41,8 @@ export class Node extends Drawable {
         this.velocity.y = (this.velocity.y);
         this.velocity.x *= this.damping;
         this.velocity.y *= this.damping;
-        const dx = this.velocity.x * dt_ms / 1000;
-        const dy = this.velocity.y * dt_ms / 1000;
+        const dx = this.velocity.x * dt_s;
+        const dy = this.velocity.y * dt_s;
         this.x += dx;
         this.y += dy;
     }

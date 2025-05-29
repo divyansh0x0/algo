@@ -1,6 +1,6 @@
 import MouseInfo, {setupMouseInfoFor} from "../utils/MouseInfo.mjs";
 import {COMMAND_TYPES} from "./commands.mjs";
-import {Animator, ColorAnimation} from "./animation.mjs";
+import {Animator} from "./animation.mjs";
 import {ThemeManager} from "./theme.mjs";
 import {Node} from "./components/node.mjs";
 import {Edge} from "./components/edge.mjs";
@@ -194,6 +194,7 @@ export class Scene {
 
     update(dt_ms) {
         const node_stack = [];
+        const bounds = this.ctx.canvas.getBoundingClientRect();
         for (const id in this.drawable_categories.nodes) {
             const node = this.drawable_categories.nodes[id];
 
@@ -238,13 +239,22 @@ export class Scene {
             const node = this.drawable_categories.nodes[id];
             node.update(dt_ms);
 
-            const bounds = this.ctx.canvas.getBoundingClientRect();
             node.x = clamp(node.x, node.radius, bounds.width - node.radius);
             node.y = clamp(node.y, node.radius, bounds.height - node.radius);
+
+            if (isNaN(node.x)) {
+                node.x = bounds.width * Math.random();
+                node.y = bounds.height * Math.random();
+            }
             // console.log(node.repln_force);
 
             const node_el = document.getElementById(id);
-            node_el.innerHTML = `<div>${node.id}</div> <div> ${Math.round(node.x)}px </div> <div>${Math.round(node.y)}px</div>`;
+            node_el.innerHTML = `
+<div>${node.id}</div> 
+<div> ${Math.round(node.x)}px </div>
+<div>${Math.round(node.y)}px</div>
+<div>${Math.round(node.force.x)}i + ${Math.round(node.force.y)}j</div>
+`;
         }
         if (this.drawable_selected) {
             this.drawable_selected.x = MouseInfo.location.x;

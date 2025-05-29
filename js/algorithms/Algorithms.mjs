@@ -6,12 +6,14 @@
  * }
  */
 
-import { SceneCommands } from "../engine/commands.mjs";
+import {SceneCommands} from "../engine/commands.mjs";
 
 
 function* DFS_Graph_Traversal(graph, start_node, visited=new Set()){
-    if (!start_node)
-        return SceneCommands.error("Start node is not defined");
+    if (!start_node) {
+        SceneCommands.error("Start node is not defined so using first node");
+        start_node = Object.keys(graph)[0];
+    }
     yield SceneCommands.highlightNode(start_node);
     yield SceneCommands.labelNode(start_node, "Visited");
    

@@ -12,8 +12,9 @@ function getGenerator(algorithm_name, ...args) {
 }
 
 function placeNodesRadially(graph, scene, radius = 20) {
-    let cx = scene.ctx.canvas.width / 2;
-    let cy = scene.ctx.canvas.height / 2;
+    const rect = scene.ctx.canvas.getBoundingClientRect();
+    let cx = rect.width / 2;
+    let cy = rect.height / 2;
     let h = 0;
     let k = 0;
     let row_num = 0;
@@ -24,8 +25,8 @@ function placeNodesRadially(graph, scene, radius = 20) {
 
     for (const node in graph) {
 
-        const x = h * Math.cos(curr_angle) - k * Math.sin(curr_angle) + cx;
-        const y = h * Math.sin(curr_angle) + k * Math.cos(curr_angle) + cy;
+        let x = h * Math.cos(curr_angle) - k * Math.sin(curr_angle) + cx;
+        let y = h * Math.sin(curr_angle) + k * Math.cos(curr_angle) + cy;
         scene.handleCommand(SceneCommands.addNode(node, x, y, radius));
         circles_in_row++;
         curr_angle += angle_increment;
@@ -38,8 +39,6 @@ function placeNodesRadially(graph, scene, radius = 20) {
             angle_increment = Math.acos(1 - 1 / (2 * row_num * row_num));
             max_circles_in_curr_row = Math.round(2 * Math.PI / angle_increment);
         }
-
-
     }
 }
 
@@ -74,7 +73,7 @@ export class Visualizer {
         const parent = document.getElementById("node-data");
 
         const default_graph = args[0];
-        placeDiagonally(default_graph, this.scene);
+        placeNodesRadially(default_graph, this.scene);
 
         for (const node in default_graph) {
             const el = document.createElement("div");
