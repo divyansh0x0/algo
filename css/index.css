@@ -1,16 +1,17 @@
 @import url(colors.css);
 
 *{
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
     color: var(--text-on-background-color);
+    box-sizing: border-box !important;
 }
 canvas{
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
     background-color: var(--canvas-bg-default-color);
     height: 100%;
     width: 100%;
+    touch-action: none;
     /*display: none;*/
 }
 body{
@@ -37,13 +38,37 @@ body{
     min-width: 10vw;
     width: 50%;
     flex-grow: 1;
-    height: 100lvh;
-    border: 1px #002ada dot-dash;
+    min-height: 100lvh;
+    max-height: fit-content;
+    border: 1px #002ada dashed;
     /*flex: none;*/
     /*width: 50%;*/
 
 
 
+}
+
+#visualizer-data {
+    padding: 1em;
+    overflow: scroll;
+}
+
+#node-data {
+    height: fit-content;
+    margin-top: 1em;
+    background-color: rgba(255, 255, 255, 0.27);
+    border-radius: 10px;
+}
+
+.node {
+    display: flex;
+    padding: 1em;
+}
+
+.node > div {
+    flex-grow: 1;
+    border: 1px var(--text-on-background-color) solid;
+    padding: 1em 2em;
 }
 /*}*/
 /*#visualizer-data{*/

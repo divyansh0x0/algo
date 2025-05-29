@@ -17,8 +17,8 @@ export class Node extends Drawable {
         this.repln_force = {x: 0, y: 0};
     }
 
-    update(dt_ms) {
-        dt_ms = 20; //fixed dtms
+    update() {
+        const dt_ms = 20; //fixed dtms
         this.force.x = this.attr_force.x + this.repln_force.x;
         this.force.y = this.attr_force.y + this.repln_force.y;
         // console.log(this.id,this.force)
@@ -46,7 +46,7 @@ export class Node extends Drawable {
 
 
         // this.drawText(`a: ${this.attr_force.x}i + ${this.attr_force.y}j`, this.x, this.y + this.radius * 2,  ThemeManager.getTextColor())
-        this.drawText(`force: ${this.force.x}i + ${this.force.y}j`, this.x, this.y - this.radius * 2, ThemeManager.getTextColor());
+        // this.drawText(`loc: ${this.x}i + ${this.y}j`, this.x, this.y - this.radius * 2, ThemeManager.getTextColor());
         // this.drawText(`v: ${this.velocity.x}i + ${this.velocity.y}j`, this.x, this.y - this.radius * 3,  ThemeManager.getTextColor())
 
         // this.drawPointVec(this.repln_force, "green")

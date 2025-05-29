@@ -65,6 +65,8 @@ window.addEventListener("mousemove", (e) => {
     }
 });
 
+// const toggle_btn = document.getElementById()
+
 
 const scene = new Scene(ctx, true);
 const algorithm = "DFS Graph Traversal";
@@ -78,12 +80,12 @@ const default_graph = {
     "E": ["F", "E", "A"],
     "F": ["D", "E"],
     "G": ["D", "E", "H"],
-    "H": ["G", "I", "J"],
+    "H": ["G", "I", "J", "K", "L", "M"],
     "I": ["H"],
     "J": ["H"],
-    "K": ["F"],
-    "L": ["D"],
-    "M": ["C"]
+    "K": ["H"],
+    "L": ["H"],
+    "M": ["H"]
 
 
 };

@@ -243,6 +243,8 @@ export class Scene {
             node.y = clamp(node.y, node.radius, bounds.height - node.radius);
             // console.log(node.repln_force);
 
+            const node_el = document.getElementById(id);
+            node_el.innerHTML = `<div>${node.id}</div> <div> ${Math.round(node.x)}px </div> <div>${Math.round(node.y)}px</div>`;
         }
         if (this.drawable_selected) {
             this.drawable_selected.x = MouseInfo.location.x;

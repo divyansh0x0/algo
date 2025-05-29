@@ -21,7 +21,7 @@ export const COMMAND_TYPES = Object.freeze({
  * Nodes are defined by a unique id and a position (x, y).
  */
 export const SceneCommands = Object.freeze({
-    addNode(id, x = 0, y = 0, radius = 10) {
+    addNode: function (id, x = 0, y = 0, radius = 10) {
         if (typeof id !== "string") {
             throw new Error(`id must be a string, received: ${id}`);
         }
