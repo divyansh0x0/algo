@@ -49,14 +49,14 @@
 
 }
 [theme="dark"] {
-    --slider-color: #000;
-    --grid-color:#000;
+    --slider-color: #a8a8a8;
+    --grid-color: #373737;
     --surface-bg-color: #000000;
     --canvas-bg-default-color:#000;
     /* === NODE COLORS === */
     --node-bg-border-color: #000;
     --node-bg-default-color: #2c2c2c;
-    --node-bg-highlighted-color: #3a3a3a;
+    --node-bg-highlighted-color: #4b666e;
     --node-bg-selected-color: #444444;
     --node-bg-hover-color: #505050;
 
@@ -67,7 +67,7 @@
 
     /* === EDGE COLORS === */
     --edge-bg-default-color: #2c2c2c;
-    --edge-bg-highlighted-color: #3a3a3a;
+    --edge-bg-highlighted-color: #293b73;
     --edge-bg-selected-color: #444444;
     --edge-bg-hover-color: #505050;
 

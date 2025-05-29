@@ -10,6 +10,8 @@ const MouseInfo = {
 let element_in_focus; // element with respect to which mouse position is stored
 
 const mousedownlistener = (evt) => {
+    if (!element_in_focus.contains(evt.target))
+        return;
     switch (evt.button) {
         case 0:
             MouseInfo.is_primary_btn_down = true;
@@ -27,6 +29,8 @@ const mousedownlistener = (evt) => {
 };
 
 const touchstartlistener = (evt) => {
+    if (!element_in_focus.contains(evt.target))
+        return;
     MouseInfo.is_primary_btn_down = true;
 };
 const touchmovelistener = evt => {

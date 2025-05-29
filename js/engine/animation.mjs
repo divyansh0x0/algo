@@ -1,4 +1,4 @@
-import {roundedClamp} from "../utils/PMath.js";
+import {roundedClamp} from "../utils/PMath.mjs";
 
 function hexToRgba(hex) {
     // Remove # if present

@@ -1,5 +1,5 @@
-import { getAlgorithm } from "../algorithms/Algorithms.mjs";
-import { SceneCommands } from "./commands.mjs";
+import {getAlgorithm} from "../algorithms/Algorithms.mjs";
+import {SceneCommands} from "./commands.mjs";
 
 function getGenerator(algorithm_name, ...args) {
     switch (algorithm_name) {
@@ -33,7 +33,7 @@ export class Visualizer {
         this.scene.log("center",cx,cy)
 
         for(const node in default_graph){
-            const x = h*Math.cos(curr_angle) -k*Math.sin(curr_angle)+cx;
+            const x = h * Math.cos(curr_angle) - k * Math.sin(curr_angle) + cx;
             const y = h*Math.sin(curr_angle) + k * Math.cos(curr_angle) + cy;
             this.scene.handleCommand(SceneCommands.addNode(node, x,y, radius ));
             circles_in_row++;

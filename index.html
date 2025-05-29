@@ -12,15 +12,20 @@
     <meta name="application-name" content="My Web App">
     <meta name="apple-mobile-web-app-title" content="Mobile rules">
     <meta name="apple-mobile-web-app-status-bar-style" content="red">
-
+    <script>
+        /*to prevent Firefox FOUC, this must be here*/
+        let FF_FOUC_FIX;
+    </script>
 </head>
 <body>
-<div class="visualizer-container">
+<div class="visualizer-container" id="visualizer-container">
     <div id="visualizer-data">
         <h1 id="heading">Algorithm Visualizer</h1>
     </div>
     <div id="slider"></div>
-    <canvas id="main-canvas" class="resizable"></canvas>
+    <div class="canvas-container" id="canvas-container">
+        <canvas class="resizable" id="main-canvas"></canvas>
+    </div>
 </div>
 </body>
 <script type="module" src="./js/index.js"></script>

@@ -1,7 +1,7 @@
 @media screen and (max-width: 740px) {
     .visualizer-container {
-        grid-template-columns: none;
-        grid-template-rows: 1fr 1fr;
+        display: flex;
+        flex-direction: column-reverse;
     }
 
     #heading {
@@ -23,9 +23,9 @@
         width: 100vw;
     }
 
-    #visualizer-data {
-        grid-row: 2;
+    #visualizer-data, #canvas-container {
         min-height: 100dvh;
+        min-width: 100dvw;
     }
 
     #slider {
