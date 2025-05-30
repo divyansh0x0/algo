@@ -15,9 +15,7 @@ export class Edge extends Drawable {
 
     render() {
         // const color = this.is_highlighted ? "blue" : this.color;
-        const from_pos = {x: this.start_node.x, y: this.start_node.y};
-        const to_pos = {x: this.end_node.x, y: this.end_node.y};
-        this.drawLine(from_pos.x, from_pos.y, to_pos.x, to_pos.y, Edge.thickness, this.color);
+        this.drawLine(this.start_node.position.x, this.start_node.position.y, this.end_node.position.x, this.end_node.position.y, Edge.thickness, this.color);
     }
 
 }

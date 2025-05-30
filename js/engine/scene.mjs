@@ -6,22 +6,27 @@ import {Node} from "./components/node.mjs";
 import {Edge} from "./components/edge.mjs";
 import {Logger} from "./components/logger.mjs";
 import {clamp} from "../utils/PMath.mjs";
+import {AABB, ForceQuadTree} from "../utils/QuadTree.mjs";
 
 const ZERO_VEC = Object.freeze({x: 0, y: 0});
-const NATURAL_EDGE_LENGTH = 100;
-
-const NATURAL_EDGE_LENGTH_SQRD = NATURAL_EDGE_LENGTH * NATURAL_EDGE_LENGTH;
+const NATURAL_EDGE_LENGTH = 50;
 const NODE_CHARGE = 1;
-
+const k_repl = 10e6;
 export class Scene {
     static animator = new Animator();
 
-    constructor(ctx, show_fps = false) {
+    /**
+     *
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {boolean} show_fps
+     * @param {boolean} debug
+     */
+    constructor(ctx, show_fps = false, debug = true) {
         this.ctx = ctx;
-        this.drawable_categories = {
-            nodes: {},
-            edges: {}
-        };
+        /** @type {Node[]}*/
+        this.nodes = [];
+        /** @type {Edge[]}*/
+        this.edges = [];
         this.accumulated_time = 0;
         this.show_fps = show_fps;
         this.last_animation_call_time = 0;
@@ -33,8 +38,8 @@ export class Scene {
         this.logger = new Logger();
         this.grid_size = {x: 100, y: 100};
         setupMouseInfoFor(this.ctx.canvas);
-
-
+        this.debug = debug;
+        this.force_quad_tree = null;
     }
 
     handleCommand(command) {
@@ -43,18 +48,18 @@ export class Scene {
             //Addition
             case COMMAND_TYPES.ADD_NODE:
                 const node = new Node(this.ctx, command.id, command.pos.x, command.pos.y, command.radius);
-                this.drawable_categories.nodes[node.id] = node;
+                this.nodes[node.id] = node;
                 break;
             case COMMAND_TYPES.ADD_EDGE:
-                const from = this.drawable_categories.nodes[command.from];
-                const end = this.drawable_categories.nodes[command.end];
+                const from = this.nodes[command.from];
+                const end = this.nodes[command.end];
                 const edge = new Edge(this.ctx, from, end);
-                this.drawable_categories.edges[edge.id] = edge;
+                this.edges[edge.id] = edge;
                 break;
 
             //Highlight
             case COMMAND_TYPES.HIGHLIGHT_NODE:
-                const node_to_highlight = this.drawable_categories.nodes[command.id];
+                const node_to_highlight = this.nodes[command.id];
                 if (node_to_highlight)
                     this.highlight(node_to_highlight);
                 else
@@ -62,7 +67,7 @@ export class Scene {
                 break;
             case COMMAND_TYPES.HIGHLIGHT_EDGE:
                 const id = Edge.getEdgeKey(command.from, command.end);
-                const edge_to_highlight = this.drawable_categories.edges[id];
+                const edge_to_highlight = this.edges[id];
                 if (edge_to_highlight)
                     this.highlight(edge_to_highlight);
                 else
@@ -70,7 +75,7 @@ export class Scene {
                 break;
             //Modification
             case COMMAND_TYPES.LABEL_NODE:
-                const node_to_label = this.drawable_categories.nodes[command.id];
+                const node_to_label = this.nodes[command.id];
                 if (node_to_label) {
                     node_to_label.text = command.label;
                 } else {
@@ -84,12 +89,12 @@ export class Scene {
                 this.logger.log("Finished", Logger.SUCCESS);
                 break;
             case COMMAND_TYPES.RESET:
-                for (const id in this.drawable_categories.edges) {
-                    const drawable = this.drawable_categories.edges[id];
+                for (const id in this.edges) {
+                    const drawable = this.edges[id];
                     drawable.reset();
                 }
-                for (const id in this.drawable_categories.nodes) {
-                    const drawable = this.drawable_categories.nodes[id];
+                for (const id in this.nodes) {
+                    const drawable = this.nodes[id];
                     drawable.reset();
                 }
                 break;
@@ -100,7 +105,7 @@ export class Scene {
     }
 
     highlight(drawable) {
-        drawable.highlight()
+        drawable.highlight();
     }
 
     loop(curr_animation_call_time) {
@@ -131,7 +136,7 @@ export class Scene {
     }
 
     start() {
-        if(this.is_running)
+        if (this.is_running)
             return;
         this.is_running = true;
         this.last_animation_call_time = performance.now();
@@ -145,6 +150,7 @@ export class Scene {
 
 
     render() {
+        this.ctx.save();
         //Background of canvas
         const rect = this.ctx.canvas.getBoundingClientRect();
         this.ctx.clearRect(0, 0, rect.width, rect.height);
@@ -165,15 +171,22 @@ export class Scene {
         this.ctx.restore();
 
         //Drawing drawables
-        const edges = this.drawable_categories.edges;
-        const nodes = this.drawable_categories.nodes;
+        const edges = this.edges;
+        const nodes = this.nodes;
         for (const id in edges) {
             const node = edges[id];
             node.render();
         }
+
+        this.ctx.strokeStyle = ThemeManager.getColor("debug");
+        this.ctx.fillStyle = ThemeManager.getTextColor("on-background");
+        this.ctx.font = "1em Arial";
+
         for (const id in nodes) {
             const node = nodes[id];
             node.render();
+
+
             node.attr_force.x = 0;
             node.attr_force.y = 0;
 
@@ -181,6 +194,28 @@ export class Scene {
             node.repln_force.y = 0;
         }
 
+        if (!this.debug) {
+            this.ctx.restore();
+            return;
+        }
+        //Quad tree debug
+        if (this.force_quad_tree) {
+            this.ctx.beginPath();
+
+            let b = null;
+            let cy = 0;
+            for (const region of this.force_quad_tree.getAllRegions()) {
+                b = region.boundary;
+
+                this.ctx.strokeRect(b.center.x - b.half_dimension.width, b.center.y - b.half_dimension.height, b.half_dimension.width * 2, b.half_dimension.height * 2);
+                // if(region.has_sub_divisions && region.COM !== null)
+                //     this.ctx.fillRect(region.COM.x, region.COM.y, 5,5)
+            }
+            // if(!this.mark)
+            //     this.mark = true;
+
+            this.ctx.closePath();
+        }
         //drawing fps
         if (!this.show_fps)
             return;
@@ -189,45 +224,44 @@ export class Scene {
         this.ctx.font = "1em Arial";
         this.ctx.textBaseline = "top"; // Vertical center
         this.ctx.fillText(`FPS: ${this.fps}`, 10, 10);
+        this.ctx.fillText(`Accuracy: ${1 - ForceQuadTree.MAX_THRESHOLD_SQRD}`, 10, 30);
+        if (this.bounds)
+            this.ctx.fillText(`Bounds ${Math.round(this.bounds.width)}x${Math.round(this.bounds.height)}`, 10, 50);
+        this.ctx.restore();
     }
 
 
     update(dt_ms) {
         const node_stack = [];
-        const bounds = this.ctx.canvas.getBoundingClientRect();
-        for (const id in this.drawable_categories.nodes) {
-            const node = this.drawable_categories.nodes[id];
+        this.bounds = this.ctx.canvas.getBoundingClientRect();
+        this.force_quad_tree = new ForceQuadTree(AABB.fromRect(this.bounds.width / 2, this.bounds.height / 2, this.bounds.width / 2, this.bounds.height / 2));
 
+        // Calculate forces
+        for (const id in this.nodes) {
+            const node = this.nodes[id];
+
+            this.force_quad_tree.insert(node.position, node);
 
             if (!this.drawable_selected && node.containsPoint(MouseInfo.location) && MouseInfo.is_primary_btn_down) {
                 this.drawable_selected = node;
             }
-            // node.force = {x:0, y:0}
-            for (const other_id in this.drawable_categories.nodes) {
-                if (other_id === id || other_id in node_stack)
-                    continue;
-                const other_node = this.drawable_categories.nodes[other_id];
-                const repln_force = computeRepulsion(node.x, node.y, other_node.x, other_node.y, NODE_CHARGE, NODE_CHARGE, this.k_repl);
-                node.repln_force.x += repln_force.x;
-                node.repln_force.y += repln_force.y;
 
-                other_node.repln_force.x -= repln_force.x;
-                other_node.repln_force.y -= repln_force.y;
-            }
+
 
 
             // console.log("Force on ", node.id, "is", node.force)
 
             node_stack.push(id); //push ids of nodes whose repulsion has already been calculated to avoid duplicate calculation
         }
+        // console.log(this.force_quad_tree)
 
-        for (const id in this.drawable_categories.edges) {
-            const edge = this.drawable_categories.edges[id];
+        for (const id in this.edges) {
+            const edge = this.edges[id];
             edge.update(dt_ms);
             const node1 = edge.start_node;
             const node2 = edge.end_node;
 
-            const attr_force = computeAttraction(node1, node2, this.k_attr);
+            const attr_force = computeAttraction(node1.position, node2.position, this.k_attr);
 
             node1.attr_force.x += attr_force.x;
             node1.attr_force.y += attr_force.y;
@@ -235,64 +269,63 @@ export class Scene {
             node2.attr_force.x -= attr_force.x;
             node2.attr_force.y -= attr_force.y;
         }
-        for (const id in this.drawable_categories.nodes) {
-            const node = this.drawable_categories.nodes[id];
+
+        // Update nodes
+        for (const id in this.nodes) {
+            const node = this.nodes[id];
+            if (this.force_quad_tree) {
+                node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.position, computeRepulsion);
+            }
             node.update(dt_ms);
 
-            node.x = clamp(node.x, node.radius, bounds.width - node.radius);
-            node.y = clamp(node.y, node.radius, bounds.height - node.radius);
+
+            node.position.x = clamp(node.position.x, node.radius, this.bounds.width - node.radius);
+            node.position.y = clamp(node.position.y, node.radius, this.bounds.height - node.radius);
 
             if (isNaN(node.x)) {
-                node.x = bounds.width * Math.random();
-                node.y = bounds.height * Math.random();
+                node.position.x = this.bounds.width * Math.random();
+                node.position.y = this.bounds.height * Math.random();
             }
             // console.log(node.repln_force);
 
-            const node_el = document.getElementById(id);
-            node_el.innerHTML = `
-<div>${node.id}</div> 
-<div> ${Math.round(node.x)}px </div>
-<div>${Math.round(node.y)}px</div>
-<div>${Math.round(node.force.x)}i + ${Math.round(node.force.y)}j</div>
-`;
+//             const node_el = document.getElementById(id);
+//             node_el.innerHTML = `
+// <div>${node.id}</div>
+// <div> ${node.position}px </div>
+// <div>${node.repln_force}</div>
+// `;
         }
+
         if (this.drawable_selected) {
-            this.drawable_selected.x = MouseInfo.location.x;
-            this.drawable_selected.y = MouseInfo.location.y;
+            this.drawable_selected.position.x = MouseInfo.location.x;
+            this.drawable_selected.position.y = MouseInfo.location.y;
             if (!MouseInfo.is_primary_btn_down) {
                 this.drawable_selected = null;
             }
         }
         Scene.animator.step(dt_ms);
     }
-
-    log(...data) {
-        this.logger.log(data.join(" "), Logger.INFO);
-    };
 }
 
-function computeRepulsion(x1, y1, x2, y2, charge1, charge2, k) {
-    const dx = x1 - x2;
-    const dy = y1 - y2;
-
-    const dist_sq = dx * dx + dy * dy;
+function computeRepulsion(vec1, vec2) {
+    const distance_vec = vec1.sub(vec2);
+    const dist_sq = distance_vec.length_sqrd();
     // if (dist_sq > NATURAL_EDGE_LENGTH_SQRD) {
     //     return ZERO_VEC;
     // }
 
-    const angle = Math.atan2(dy, dx);
-    const force = k * charge1 * charge2 / dist_sq;
+    const angle = Math.atan2(distance_vec.y, distance_vec.x);
+    const force = k_repl / (dist_sq + 1);
     return {
         x: Math.round(force * Math.cos(angle)), //horizontal component of force
         y: Math.round(force * Math.sin(angle)) //vertical component of force
     };
 }
 
-function computeAttraction(node1, node2, k) {
-    const dx = node1.x - node2.x;
-    const dy = node1.y - node2.y;
+function computeAttraction(vec1, vec2, k) {
+    const distance_vec = vec1.sub(vec2);
+    const dist_sq = distance_vec.length_sqrd();
 
-    const dist_sq = dx * dx + dy * dy;
     if (dist_sq < 0.01) {
         return ZERO_VEC;
     }
@@ -301,8 +334,8 @@ function computeAttraction(node1, node2, k) {
     const force = k * (dist - NATURAL_EDGE_LENGTH);
 
     return {
-        x: -Math.round(dx / dist * force), //horizontal component of force
-        y: -Math.round(dy / dist * force) //vertical component of force
+        x: -Math.round(distance_vec.x / dist * force), //horizontal component of force
+        y: -Math.round(distance_vec.y / dist * force) //vertical component of force
     };
 }
 

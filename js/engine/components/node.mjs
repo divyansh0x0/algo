@@ -1,21 +1,22 @@
 import {Drawable} from "./drawable.mjs";
 import {clamp} from "../../utils/PMath.mjs";
 import {ThemeManager} from "../theme.mjs";
+import {Vector} from "../../utils/Geometry.mjs";
 
 export class Node extends Drawable {
     static max_force = 10000;
     constructor(ctx, id, x, y, radius, text = "") {
         super(ctx, id);
+        this.position.set(x, y);
         this.text = text;
-        this.x = x;
-        this.y = y;
-        this.velocity = {x: 0, y: 0};
+        this.velocity = new Vector(0, 0);
         this.radius = radius;
-        this.force = {x: 0, y: 0};
+        this.force = new Vector(0, 0);
         this.max_velocity = 100;
-        this.damping = 0.85;
-        this.attr_force = {x: 0, y: 0};
-        this.repln_force = {x: 0, y: 0};
+        this.damping = 0.30;
+        this.attr_force = new Vector(0, 0);
+        this.repln_force = new Vector(0, 0);
+        this.mass = 1;
     }
 
     update(dt_ms) {
@@ -43,18 +44,18 @@ export class Node extends Drawable {
         this.velocity.y *= this.damping;
         const dx = this.velocity.x * dt_s;
         const dy = this.velocity.y * dt_s;
-        this.x += dx;
-        this.y += dy;
+        this.position.x += dx;
+        this.position.y += dy;
     }
 
     render() {
-        this.drawCircle(this.radius, this.x, this.y, this.color, true, ThemeManager.getBgColor(this.getName(), "border"), 1);
-        this.drawText(this.id, this.x, this.y, ThemeManager.getTextColor("on-primary"));
+        this.drawCircle(this.radius, this.position.x, this.position.y, this.color, true, ThemeManager.getBgColor(this.getName(), "border"), 1);
+        this.drawText(this.id, this.position.x, this.position.y, ThemeManager.getTextColor("on-primary"));
         // this.drawText(this.text, this.x, this.y + this.radius + 10, ThemeManager.getTextColor("on-background"));
 
 
+        // this.drawText(`loc: ${this.position}`, this.position.x, this.position.y - this.radius * 2, ThemeManager.getTextColor());
         // this.drawText(`a: ${this.attr_force.x}i + ${this.attr_force.y}j`, this.x, this.y + this.radius * 2,  ThemeManager.getTextColor())
-        // this.drawText(`loc: ${this.x}i + ${this.y}j`, this.x, this.y - this.radius * 2, ThemeManager.getTextColor());
         // this.drawText(`v: ${this.velocity.x}i + ${this.velocity.y}j`, this.x, this.y - this.radius * 3,  ThemeManager.getTextColor())
 
         // this.drawPointVec(this.repln_force, "green")
@@ -78,7 +79,7 @@ export class Node extends Drawable {
 
     containsPoint(point) {
         // Check if the point is inside the circle using the distance formula
-        const dist_sqrd = (this.x - point.x) ** 2 + (this.y - point.y) ** 2;
+        const dist_sqrd = (this.position.x - point.x) ** 2 + (this.position.y - point.y) ** 2;
         return this.radius ** 2 > dist_sqrd;
     }
 

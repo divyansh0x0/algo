@@ -1,5 +1,5 @@
-import {AlgorithmVisualizer} from '/js/algorithms/AlgorithmVisualizer.mjs';
-import MouseInfo from '/js/utils/MouseInfo.mjs';
+import {AlgorithmVisualizer} from "/js/algorithms/AlgorithmVisualizer.mjs";
+import MouseInfo from "/js/utils/MouseInfo.mjs";
 
 
 export class DFSVisualizer extends AlgorithmVisualizer {
@@ -32,8 +32,8 @@ export class DFSVisualizer extends AlgorithmVisualizer {
             }
         }
         if (this.drag_info.node) {
-            this.drag_info.node.x = MouseInfo.location.x;
-            this.drag_info.node.y = MouseInfo.location.y; 
+            this.drag_info.node.position.x = MouseInfo.location.x;
+            this.drag_info.node.position.y = MouseInfo.location.y;
             if (!MouseInfo.is_primary_btn_down) {
                 this.drag_info.node.color = "#fff";
                 this.drag_info.node = null;

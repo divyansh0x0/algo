@@ -1,6 +1,8 @@
 import {ThemeManager} from "../theme.mjs";
 import {ColorAnimation} from "../animation.mjs";
 import {Scene} from "../scene.mjs";
+import {Vector} from "../../utils/Geometry.mjs";
+
 const COLOR_STATES = Object.freeze({
     DEFAULT:"default",
     HIGHLIGHTED:"highlighted",
@@ -12,7 +14,7 @@ export class Drawable {
         this.ctx = ctx;
         this.id = id;
         this.x = 0;
-        this.y = 0;
+        this.position = new Vector(0, 0);
         this.is_color_animating = false;
         this.color_state = COLOR_STATES.DEFAULT;
         this.color = ThemeManager.getBgColor(this.getName(), this.color_state);

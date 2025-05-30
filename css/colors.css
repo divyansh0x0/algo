@@ -1,5 +1,6 @@
 :root{
-    --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1)
+    --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
+    --debug-color: #f00
 }
 [theme="light"] {
     --primary-color: #0c0050;
@@ -7,7 +8,7 @@
 
     --slider-color: #000;
     --grid-color: #d5d5d5;
-    --surface-bg-color:#fff;
+    --surface-bg-color: #c3c3c3;
     --canvas-bg-default-color: #f1f1f1;
 
     /* === NODE COLORS === */
@@ -52,7 +53,7 @@
 }
 [theme="dark"] {
     --primary-color: #5b88fa;
-    --primary-color-hover: #779ef8;
+    --primary-color-hover: #afc7ff;
 
     --slider-color: #a8a8a8;
     --grid-color: #373737;
