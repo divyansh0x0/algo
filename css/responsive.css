@@ -2,10 +2,13 @@
     .visualizer-container {
         display: block;
     }
-    #canvas-container, #visualizer-container{
+
+    #canvas-container, #data-container {
         position: fixed;
         top: 0;
         left: 0;
+        transition: transform 300ms var(--easing-jerk), width 300ms var(--easing-jerk), height 300ms var(--easing-jerk);
+
     }
 
     #canvas-container {
@@ -17,11 +20,20 @@
 
     }
 
-    #visualizer-data {
+    #data-container {
         margin: 0;
         width: 100vw;
         min-height: 100lvh;
         height: 100dvh;
+    }
+
+
+    #data-container.hidden {
+        transform: translateX(-100%);
+    }
+
+    #canvas-container.hidden {
+        transform: translateX(100%);
     }
 
     /*#heading {*/

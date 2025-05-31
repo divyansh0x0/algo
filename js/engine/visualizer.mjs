@@ -1,6 +1,7 @@
 import {getAlgorithm} from "../algorithms/Algorithms.mjs";
 import {SceneCommands} from "./commands.mjs";
 
+const RADIUS = 10;
 function getGenerator(algorithm_name, ...args) {
     switch (algorithm_name) {
         case "DFS":
@@ -11,7 +12,7 @@ function getGenerator(algorithm_name, ...args) {
     }
 }
 
-function placeNodesRadially(graph, scene, radius = 20) {
+function placeNodesRadially(graph, scene, radius = RADIUS) {
     const rect = scene.ctx.canvas.getBoundingClientRect();
     let cx = rect.width / 2;
     let cy = rect.height / 2;
@@ -42,7 +43,7 @@ function placeNodesRadially(graph, scene, radius = 20) {
     }
 }
 
-function placeDiagonally(graph, scene, radius = 20) {
+function placeNodesDiagonally(graph, scene, radius = RADIUS) {
     let x = radius;
     let y = radius;
     let diagonal_count = 0;
@@ -56,7 +57,8 @@ function placeDiagonally(graph, scene, radius = 20) {
             y = diagonal_count * radius * 3 + 10;
             x =0;
         }
-        x += Math.random()*5;
+        x += Math.random() * 10;
+        y += Math.random() * 10;
 
     }
 
@@ -68,33 +70,55 @@ export class Visualizer {
         this.scene.start();
 
         this.algorithm_instance = getAlgorithm(algorithm_name);
+        this.generator = null;
+        this.playing = false;
+        const btn = document.getElementById("start-btn");
+        btn.addEventListener("click", () => {
+            this.playing = !this.playing;
+            btn.innerText = this.playing ? "Pause" : "Play";
+        });
+        // const interval = setInterval(() => {
+        //     if(!is_ready ||)
+        //         const obj = this.generator.next();
+        //     if (obj.done) {
+        //         clearInterval(interval);
+        //         return;
+        //     }
+        //     this.scene.handleCommand(obj.value);
+        //
+        // }, this.step_time_ms);
+
+        setInterval(() => {
+            if (!this.generator || !this.playing)
+                return;
+
+
+            const obj = this.generator.next();
+            if (obj.done) {
+                this.finished = true;
+            }
+
+            this.scene.handleCommand(obj.value);
+        }, this.step_time_ms);
+
     }
-    start(...args) {
+
+    load(...args) {
         const parent = document.getElementById("node-data");
 
         const default_graph = args[0];
-        placeNodesRadially(default_graph, this.scene);
+        placeNodesDiagonally(default_graph, this.scene);
 
         for (const node in default_graph) {
             const el = document.createElement("div");
-            el.id = node;
+            el.id = node.toString();
             el.classList.add("node");
             parent.append(el);
             for (const neighbour of default_graph[node]) {
                 this.scene.handleCommand(SceneCommands.addEdge(node, neighbour));
             }
         }
-        const generator = this.algorithm_instance(...args);
-
-        const interval = setInterval(() => {
-            const obj = generator.next();
-            if (obj.done) {
-                clearInterval(interval);
-                return;
-            }
-            this.scene.handleCommand(obj.value);
-
-        }, this.step_time_ms);
+        this.generator = this.algorithm_instance(...args);
     }
 
     stop() {

@@ -2,7 +2,7 @@ import {Drawable} from "./drawable.mjs";
 
 
 export class Edge extends Drawable {
-    static thickness = 5;
+    static thickness = 2;
     constructor(ctx, start_node, end_node) {
         super(ctx, Edge.getEdgeKey(start_node.id, end_node.id));
         this.start_node = start_node;

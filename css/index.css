@@ -3,135 +3,33 @@
     --easing-jerk: cubic-bezier(1, .06, .66, .79);
 }
 
-*{
-    font-family: "Roboto Light", sans-serif;
-    margin: 0;
-    padding: 0;
-    border: none;
-
-    color: var(--text-on-background-color);
-    box-sizing: border-box !important;
-    -webkit-tap-highlight-color: transparent;
-}
-button{
-    width: fit-content;
-    height: fit-content;
-    background-color: var(--primary-color);
-    border-radius: 0.5em;
-    color: var(--text-on-primary-color);
-    cursor: pointer;
-    transition: background-color 200ms ease-in-out;
-    box-shadow: var(--box-shadow);
-}
-button:hover{
-    background-color: var(--primary-color-hover);
-}
-canvas{
-    overscroll-behavior: none;
-    background-color: var(--canvas-bg-default-color);
-    height: 100%;
-    width: 100%;
-    touch-action: none;
-    /*display: none;*/
-}
-body{
-    background-color: var(--surface-bg-color);
-}
-
-input[type="range"] {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 100%;
-    cursor: pointer;
-    height: 1em;
-    align-self: center;
-    background-color: rgba(0, 0, 0, 0.38);
-    border-radius: 1em;
-    overflow: hidden;
-    padding: 0;
-}
-
-input[type="range"]::-webkit-scrollbar-track {
-    -webkit-appearance: none;
-    appearance: none;
-    padding: 0;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    background-color: var(--text-on-background-color);
-    height: 1em;
-    width: 10px;
-    box-shadow: -100vw 0 0 100vw var(--primary-color);
-    padding: 0;
-}
 #heading {
     text-align: center;
 }
-#slider {
-    width: 10px;
-    background-color: var(--slider-color);
-    cursor: ew-resize;
-}
+
 .visualizer-container {
     width: 100vw;
     height: fit-content;
-    display: flex;
+    display: grid;
     max-width: 100vw;
-    min-width: fit-content;
     overflow: hidden;
+    grid-template-columns: auto auto 1fr;
 }
 
 
-#visualizer-data,#canvas-container {
-    min-width: 10vw;
-    width: 50%;
-    flex-grow: 1;
+#data-container, #canvas-container {
+    will-change: width;
     height: 100dvh;
-    transition: transform 300ms var(--easing-jerk),width 300ms var(--easing-jerk), height 300ms var(--easing-jerk);
     overflow: hidden;
+    min-width: 300px;
 }
 
-/*#visualizer-data {*/
-/*    overflow: scroll;*/
-/*}*/
-#node-data {
-    height: fit-content;
-    margin-top: 1em;
-    background-color: rgba(255, 255, 255, 0.02);
-    border-radius: 10px;
-    padding: 1em 0em;
-}
+#slider {
 
-#node-data > div {
-    width: 100%;
-    display: flex;
-}
-
-#node-data > div {
-    padding: 0 1em;
-}
-
-label {
-    min-width: fit-content;
-    padding: 1em;
-}
-
-#node-data > div > * {
-    flex-grow: 1;
-}
-.node {
-    display: flex;
-    padding: 1em;
-}
-
-.node > div {
-    flex-grow: 1;
-    border: 1px var(--text-on-background-color) solid;
-    padding: 1em 0em;
-    text-align: center;
+    width: 10px;
+    /*height: 10px;*/
+    background-color: var(--slider-color);
+    cursor: ew-resize;
 }
 
 #toggle-button{
@@ -141,16 +39,33 @@ label {
     padding: 1em;
 }
 
-
-/***********************************************************************************************************************
-************************************************ HIDDEN ****************************************************************
-//**********************************************************************************************************************/
- 
-
-#visualizer-data.hidden{
-    transform: translateX(-100%);
+#start-btn {
+    text-align: center;
+    bottom: 1em;
+    position: relative;
+    left: 50%;
+    transform: translate(-50%, -100%);
 }
 
-#canvas-container.hidden{
-    transform: translateX(100%);
+/***********************************************************************************************************************
+************************************************ Settings ****************************************************************
+//**********************************************************************************************************************/
+
+#settings {
+    display: block;
+    width: 100%;
+}
+
+.row {
+    display: flex;
+}
+
+.row > * {
+    border: 1px rgba(0, 0, 0, 0.12) solid;
+    padding: 1em;
+    min-width: fit-content;
+    width: max-content;
+    max-width: 100%;
+    align-content: center;
+    align-self: center;
 }

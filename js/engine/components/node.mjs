@@ -13,7 +13,7 @@ export class Node extends Drawable {
         this.radius = radius;
         this.force = new Vector(0, 0);
         this.max_velocity = 100;
-        this.damping = 0.30;
+        this.damping = 0.20;
         this.attr_force = new Vector(0, 0);
         this.repln_force = new Vector(0, 0);
         this.mass = 1;
@@ -53,9 +53,10 @@ export class Node extends Drawable {
         this.drawText(this.id, this.position.x, this.position.y, ThemeManager.getTextColor("on-primary"));
         // this.drawText(this.text, this.x, this.y + this.radius + 10, ThemeManager.getTextColor("on-background"));
 
+        // this.drawCircle(ForceQuadTree.FULL_ACCURACY_CIRCLE_RADIUS, this.position.x, this.position.y, null, true, "#0f0", 1);
 
         // this.drawText(`loc: ${this.position}`, this.position.x, this.position.y - this.radius * 2, ThemeManager.getTextColor());
-        // this.drawText(`a: ${this.attr_force.x}i + ${this.attr_force.y}j`, this.x, this.y + this.radius * 2,  ThemeManager.getTextColor())
+        //z this.drawText(`a: ${this.attr_force.x}i + ${this.attr_force.y}j`, this.x, this.y + this.radius * 2,  ThemeManager.getTextColor())
         // this.drawText(`v: ${this.velocity.x}i + ${this.velocity.y}j`, this.x, this.y - this.radius * 3,  ThemeManager.getTextColor())
 
         // this.drawPointVec(this.repln_force, "green")

@@ -9,7 +9,7 @@ import {clamp} from "../utils/PMath.mjs";
 import {AABB, ForceQuadTree} from "../utils/QuadTree.mjs";
 
 const ZERO_VEC = Object.freeze({x: 0, y: 0});
-const NATURAL_EDGE_LENGTH = 50;
+const NATURAL_EDGE_LENGTH = 20;
 const NODE_CHARGE = 1;
 const k_repl = 10e6;
 export class Scene {
@@ -23,23 +23,24 @@ export class Scene {
      */
     constructor(ctx, show_fps = false, debug = true) {
         this.ctx = ctx;
-        /** @type {Node[]}*/
-        this.nodes = [];
-        /** @type {Edge[]}*/
-        this.edges = [];
+        /** @type {string:Node | {}} */
+        this.nodes = {};
+        /** @type {string:Node | {}}*/
+        this.edges = {};
         this.accumulated_time = 0;
         this.show_fps = show_fps;
         this.last_animation_call_time = 0;
         this.is_running = false;
         this.fps = 0;
-        this.k_attr = 100;
+        this.k_attr = 150;
         this.k_repl = 10E6;
         this.drawable_selected = null;
         this.logger = new Logger();
         this.grid_size = {x: 100, y: 100};
         setupMouseInfoFor(this.ctx.canvas);
-        this.debug = debug;
+        this.debug_box = document.getElementById("debug-box");
         this.force_quad_tree = null;
+        this.is_everything_bounded = true;
     }
 
     handleCommand(command) {
@@ -176,25 +177,47 @@ export class Scene {
         for (const id in edges) {
             const node = edges[id];
             node.render();
+
         }
 
-        this.ctx.strokeStyle = ThemeManager.getColor("debug");
         this.ctx.fillStyle = ThemeManager.getTextColor("on-background");
         this.ctx.font = "1em Arial";
-
+        this.ctx.strokeStyle = "#0f0";
+        this.ctx.setLineDash([2, 3]);
         for (const id in nodes) {
             const node = nodes[id];
             node.render();
 
-
+            if (this.debug_box.checked) {
+                this.ctx.beginPath();
+                this.ctx.arc(node.position.x, node.position.y, ForceQuadTree.FULL_ACCURACY_CIRCLE_RADIUS, 0, 2 * Math.PI);
+                this.ctx.closePath();
+                this.ctx.stroke();
+            }
             node.attr_force.x = 0;
             node.attr_force.y = 0;
 
             node.repln_force.x = 0;
             node.repln_force.y = 0;
         }
+        this.ctx.setLineDash([]);
+        this.ctx.strokeStyle = ThemeManager.getColor("debug");
 
-        if (!this.debug) {
+        //drawing fps
+        if (this.show_fps) {
+            this.ctx.fillStyle = ThemeManager.getTextColor("on-background");
+            this.ctx.textAlign = "left";    // Horizontal center
+            this.ctx.font = "1em Arial";
+            this.ctx.textBaseline = "top"; // Vertical center
+            this.ctx.fillText(`FPS: ${this.fps}`, 10, 10);
+            this.ctx.fillText(`Accuracy: ${Math.round((1 - ForceQuadTree.MIN_THRESHOLD) * 10000) / 100}%`, 10, 30);
+            if (this.bounds)
+                this.ctx.fillText(`Bounds ${Math.round(this.bounds.width)}x${Math.round(this.bounds.height)}`, 10, 50);
+            this.ctx.fillText(`Nodes: ${Object.keys(this.nodes).length}`, 10, 70);
+            this.ctx.fillText(`Edges: ${Object.keys(this.edges).length}`, 10, 90);
+        }
+
+        if (!this.debug_box.checked) {
             this.ctx.restore();
             return;
         }
@@ -208,34 +231,29 @@ export class Scene {
                 b = region.boundary;
 
                 this.ctx.strokeRect(b.center.x - b.half_dimension.width, b.center.y - b.half_dimension.height, b.half_dimension.width * 2, b.half_dimension.height * 2);
-                // if(region.has_sub_divisions && region.COM !== null)
+                // if(region.COM !== null)
                 //     this.ctx.fillRect(region.COM.x, region.COM.y, 5,5)
             }
             // if(!this.mark)
             //     this.mark = true;
 
             this.ctx.closePath();
+
+
         }
-        //drawing fps
-        if (!this.show_fps)
-            return;
-        this.ctx.fillStyle = ThemeManager.getTextColor("on-background");
-        this.ctx.textAlign = "left";    // Horizontal center
-        this.ctx.font = "1em Arial";
-        this.ctx.textBaseline = "top"; // Vertical center
-        this.ctx.fillText(`FPS: ${this.fps}`, 10, 10);
-        this.ctx.fillText(`Accuracy: ${1 - ForceQuadTree.MAX_THRESHOLD_SQRD}`, 10, 30);
-        if (this.bounds)
-            this.ctx.fillText(`Bounds ${Math.round(this.bounds.width)}x${Math.round(this.bounds.height)}`, 10, 50);
+
+
         this.ctx.restore();
     }
 
 
     update(dt_ms) {
-        const node_stack = [];
+        // const node_stack = [];
         this.bounds = this.ctx.canvas.getBoundingClientRect();
-        this.force_quad_tree = new ForceQuadTree(AABB.fromRect(this.bounds.width / 2, this.bounds.height / 2, this.bounds.width / 2, this.bounds.height / 2));
+        this.force_quad_tree = new ForceQuadTree(AABB.fromRect(0, 0, this.bounds.width, this.bounds.height));
 
+
+        // this.is_everything_bounded = window.innerWidth > 740;
         // Calculate forces
         for (const id in this.nodes) {
             const node = this.nodes[id];
@@ -245,13 +263,6 @@ export class Scene {
             if (!this.drawable_selected && node.containsPoint(MouseInfo.location) && MouseInfo.is_primary_btn_down) {
                 this.drawable_selected = node;
             }
-
-
-
-
-            // console.log("Force on ", node.id, "is", node.force)
-
-            node_stack.push(id); //push ids of nodes whose repulsion has already been calculated to avoid duplicate calculation
         }
         // console.log(this.force_quad_tree)
 
@@ -274,13 +285,15 @@ export class Scene {
         for (const id in this.nodes) {
             const node = this.nodes[id];
             if (this.force_quad_tree) {
-                node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.position, computeRepulsion);
+                node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.position, node, computeRepulsion);
             }
             node.update(dt_ms);
 
 
-            node.position.x = clamp(node.position.x, node.radius, this.bounds.width - node.radius);
-            node.position.y = clamp(node.position.y, node.radius, this.bounds.height - node.radius);
+            if (this.is_everything_bounded) {
+                node.position.x = clamp(node.position.x, node.radius, this.bounds.width - node.radius);
+                node.position.y = clamp(node.position.y, node.radius, this.bounds.height - node.radius);
+            }
 
             if (isNaN(node.x)) {
                 node.position.x = this.bounds.width * Math.random();
@@ -288,12 +301,11 @@ export class Scene {
             }
             // console.log(node.repln_force);
 
-//             const node_el = document.getElementById(id);
-//             node_el.innerHTML = `
-// <div>${node.id}</div>
-// <div> ${node.position}px </div>
-// <div>${node.repln_force}</div>
-// `;
+            if (this.accumulated_time === 0) {
+                // const node_el = document.getElementById(id);
+                // node_el.innerHTML = `<div>${node.id}</div><div> ${node.position}px </div><div>${node.repln_force}</div>`;
+            }
+
         }
 
         if (this.drawable_selected) {
@@ -307,15 +319,15 @@ export class Scene {
     }
 }
 
-function computeRepulsion(vec1, vec2) {
+const softening_factor = 10 ** 2;
+
+function computeRepulsion(vec1, vec2, mass = 1) {
     const distance_vec = vec1.sub(vec2);
     const dist_sq = distance_vec.length_sqrd();
-    // if (dist_sq > NATURAL_EDGE_LENGTH_SQRD) {
-    //     return ZERO_VEC;
-    // }
 
     const angle = Math.atan2(distance_vec.y, distance_vec.x);
-    const force = k_repl / (dist_sq + 1);
+
+    const force = k_repl / (dist_sq + softening_factor) * mass;
     return {
         x: Math.round(force * Math.cos(angle)), //horizontal component of force
         y: Math.round(force * Math.sin(angle)) //vertical component of force
