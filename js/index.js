@@ -10,7 +10,6 @@ const min_screen_width = 740;
 const canvas_container = document.getElementById("canvas-container");
 
 
-
 const ctx = document.getElementById("main-canvas").getContext("2d", {alpha: false});
 const toggle_btn = document.getElementById("toggle-button");
 const visualizer_container = document.getElementById("visualizer-container");
@@ -31,12 +30,11 @@ function handleToggleBtnVisiblity() {
         //if screen is not wide enough then also toggle the hidden class
         visualizer_data_container.style.width = "";
         canvas_container.style.width = "";
-        console.log(is_canvas_visible)
-        if (!is_canvas_visible && !canvas_container.classList.contains("hidden")){
+        console.log(is_canvas_visible);
+        if (!is_canvas_visible && !canvas_container.classList.contains("hidden")) {
             canvas_container.classList.add("hidden");
             visualizer_data_container.classList.remove("hidden");
-        }
-        else if(is_canvas_visible && !visualizer_data_container.classList.contains("hidden")){
+        } else if (is_canvas_visible && !visualizer_data_container.classList.contains("hidden")) {
             canvas_container.classList.remove("hidden");
             visualizer_data_container.classList.add("hidden");
         }
@@ -112,13 +110,12 @@ window.addEventListener("mousemove", (e) => {
 });
 
 toggle_btn.addEventListener("click", () => {
-    if(is_canvas_visible){
+    if (is_canvas_visible) {
         canvas_container.classList.add("hidden");
-        visualizer_data_container.classList.remove("hidden")
-    }
-    else{
+        visualizer_data_container.classList.remove("hidden");
+    } else {
         canvas_container.classList.remove("hidden");
-        visualizer_data_container.classList.add("hidden")
+        visualizer_data_container.classList.add("hidden");
     }
 
     is_canvas_visible = !is_canvas_visible;
@@ -136,6 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const visualizer = new Visualizer(scene, algorithm);
-    visualizer.load(graphs.large_clustered);
-
+    const drop_down = document.getElementById("config-dropdown");
+    for (const graph_name in graphs) {
+        const op = document.createElement("option");
+        op.innerText = graph_name;
+        drop_down.appendChild(op);
+    }
+    drop_down.value = drop_down.options[1].value;
+    visualizer.load(graphs[drop_down.value]);
+    drop_down.addEventListener("change", () => visualizer.load(graphs[drop_down.value]));
 });

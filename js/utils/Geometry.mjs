@@ -56,7 +56,7 @@ export class Vector {
 
     /**
      * Returns this vector after performing addition operation
-     * @param {Vector} other
+     * @param {Vector | {x:number, y:number}} other
      * @returns {Vector}
      */
     add_self(other) {
@@ -65,13 +65,12 @@ export class Vector {
         return this;
     }
 
-
     /**
      * Returns a new vector after performing subtraction operation
      * @param {Vector} other
      * @returns {Vector}
      */
-    sub(other) {
+    subtract(other) {
         return new Vector(this.x - other.x, this.y - other.y);
     }
 

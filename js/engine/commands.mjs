@@ -13,7 +13,8 @@ export const COMMAND_TYPES = Object.freeze({
     NOOP: "noop",
     FINISHED: "finished",
     ERROR: "error",
-    RESET: "reset"
+    RESET: "reset",
+    CLEAR: "clear"
 });
 
 /** ---------------------------- NODE COMMANDS --------------------------
@@ -204,5 +205,8 @@ export const SceneCommands = Object.freeze({
         return {
             type: COMMAND_TYPES.RESET
         };
+    },
+    clear() {
+        return {type: COMMAND_TYPES.CLEAR};
     }
 });

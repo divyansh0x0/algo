@@ -146,7 +146,7 @@ export class ForceQuadTree {
      * @param [data]
      * @returns {boolean}
      */
-    insert(point, data) {
+    insert(point, data = {mass: 1}) {
         // Skip object outside this quadtree
         if (!this.boundary.containsPoint(point)) {
             return false;
@@ -208,7 +208,7 @@ export class ForceQuadTree {
      * @param {function(Vector,Vector,number)} force_func
      * @returns {Vector}
      */
-    getTotalForcesOnPoint(point, data, force_func) {
+    getTotalForcesOnPoint(point, data = {mass: 1}, force_func) {
         if (this.regions.length === 0)
             return new Vector(0, 0);
         const total_force = new Vector(0, 0);

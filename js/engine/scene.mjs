@@ -11,7 +11,9 @@ import {AABB, ForceQuadTree} from "../utils/QuadTree.mjs";
 const ZERO_VEC = Object.freeze({x: 0, y: 0});
 const NATURAL_EDGE_LENGTH = 20;
 const NODE_CHARGE = 1;
-const k_repl = 10e6;
+export const k_repl = 10e6;
+export const k_attr = 150;
+
 export class Scene {
     static animator = new Animator();
 
@@ -25,14 +27,13 @@ export class Scene {
         this.ctx = ctx;
         /** @type {string:Node | {}} */
         this.nodes = {};
-        /** @type {string:Node | {}}*/
+        /** @type {string:Edge | {}}*/
         this.edges = {};
         this.accumulated_time = 0;
         this.show_fps = show_fps;
         this.last_animation_call_time = 0;
         this.is_running = false;
         this.fps = 0;
-        this.k_attr = 150;
         this.k_repl = 10E6;
         this.drawable_selected = null;
         this.logger = new Logger();
@@ -41,6 +42,7 @@ export class Scene {
         this.debug_box = document.getElementById("debug-box");
         this.force_quad_tree = null;
         this.is_everything_bounded = true;
+        this.last_total_energy = null;
     }
 
     handleCommand(command) {
@@ -98,6 +100,12 @@ export class Scene {
                     const drawable = this.nodes[id];
                     drawable.reset();
                 }
+                break;
+            case COMMAND_TYPES.CLEAR:
+                delete this.edges;
+                delete this.nodes;
+                this.edges = {};
+                this.nodes = {};
                 break;
             default:
                 console.error("Unknown command: ", command);
@@ -175,8 +183,8 @@ export class Scene {
         const edges = this.edges;
         const nodes = this.nodes;
         for (const id in edges) {
-            const node = edges[id];
-            node.render();
+            const edge = edges[id];
+            edge.render();
 
         }
 
@@ -215,6 +223,7 @@ export class Scene {
                 this.ctx.fillText(`Bounds ${Math.round(this.bounds.width)}x${Math.round(this.bounds.height)}`, 10, 50);
             this.ctx.fillText(`Nodes: ${Object.keys(this.nodes).length}`, 10, 70);
             this.ctx.fillText(`Edges: ${Object.keys(this.edges).length}`, 10, 90);
+            this.ctx.fillText(`Energy: ${this.last_total_energy}`, 10, 110);
         }
 
         if (!this.debug_box.checked) {
@@ -244,12 +253,16 @@ export class Scene {
 
 
         this.ctx.restore();
+
     }
 
 
     update(dt_ms) {
+        let curr_total_energy = 0;
         // const node_stack = [];
         this.bounds = this.ctx.canvas.getBoundingClientRect();
+        // let requires_force_calc = curr_total_energy === this.last_total_energy;
+
         this.force_quad_tree = new ForceQuadTree(AABB.fromRect(0, 0, this.bounds.width, this.bounds.height));
 
 
@@ -260,9 +273,6 @@ export class Scene {
 
             this.force_quad_tree.insert(node.position, node);
 
-            if (!this.drawable_selected && node.containsPoint(MouseInfo.location) && MouseInfo.is_primary_btn_down) {
-                this.drawable_selected = node;
-            }
         }
         // console.log(this.force_quad_tree)
 
@@ -272,22 +282,30 @@ export class Scene {
             const node1 = edge.start_node;
             const node2 = edge.end_node;
 
-            const attr_force = computeAttraction(node1.position, node2.position, this.k_attr);
+            const attr_force = computeAttraction(node1.position, node2.position, k_attr);
 
             node1.attr_force.x += attr_force.x;
             node1.attr_force.y += attr_force.y;
 
             node2.attr_force.x -= attr_force.x;
             node2.attr_force.y -= attr_force.y;
+
+            curr_total_energy += 1 / edge.start_node.position.subtract(edge.end_node.position).length_sqrd();
         }
+        curr_total_energy *= k_attr;
 
         // Update nodes
         for (const id in this.nodes) {
             const node = this.nodes[id];
+            if (!this.drawable_selected && node.containsPoint(MouseInfo.location) && MouseInfo.is_primary_btn_down) {
+                this.drawable_selected = node;
+            }
             if (this.force_quad_tree) {
                 node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.position, node, computeRepulsion);
             }
             node.update(dt_ms);
+            curr_total_energy += node.velocity.length_sqrd();
+
 
 
             if (this.is_everything_bounded) {
@@ -302,11 +320,12 @@ export class Scene {
             // console.log(node.repln_force);
 
             if (this.accumulated_time === 0) {
-                // const node_el = document.getElementById(id);
-                // node_el.innerHTML = `<div>${node.id}</div><div> ${node.position}px </div><div>${node.repln_force}</div>`;
+                const node_el = document.getElementById(id);
+                node_el.innerHTML = `<div>${node.id}</div><div> ${Math.round(node.position.x)}i + ${Math.round(node.position.y)}j </div><div>${Math.round(node.velocity.x * 1000) / 1000}i + ${Math.round(node.velocity.y * 1000) / 1000}</div>`;
             }
 
         }
+        curr_total_energy *= k_repl;
 
         if (this.drawable_selected) {
             this.drawable_selected.position.x = MouseInfo.location.x;
@@ -316,13 +335,23 @@ export class Scene {
             }
         }
         Scene.animator.step(dt_ms);
+
+        if (this.accumulated_time === 0)
+            this.last_total_energy = curr_total_energy;
     }
 }
 
 const softening_factor = 10 ** 2;
 
-function computeRepulsion(vec1, vec2, mass = 1) {
-    const distance_vec = vec1.sub(vec2);
+/**
+ *
+ * @param vec1 {Vector}
+ * @param vec2 {Vector}
+ * @param mass {number}
+ * @returns {{x: number, y: number}}
+ */
+export function computeRepulsion(vec1, vec2, mass = 1) {
+    const distance_vec = vec1.subtract(vec2);
     const dist_sq = distance_vec.length_sqrd();
 
     const angle = Math.atan2(distance_vec.y, distance_vec.x);
@@ -334,8 +363,15 @@ function computeRepulsion(vec1, vec2, mass = 1) {
     };
 }
 
-function computeAttraction(vec1, vec2, k) {
-    const distance_vec = vec1.sub(vec2);
+/**
+ *
+ * @param vec1 {Vector}
+ * @param vec2 {Vector}
+ * @param k
+ * @returns {Readonly<{x: number, y: number}>|{x: number, y: number}}
+ */
+export function computeAttraction(vec1, vec2, k = k_attr) {
+    const distance_vec = vec1.subtract(vec2);
     const dist_sq = distance_vec.length_sqrd();
 
     if (dist_sq < 0.01) {

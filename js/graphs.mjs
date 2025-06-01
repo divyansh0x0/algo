@@ -1,8 +1,7 @@
 const simple_graph = {
     "A": ["B", "C"],
     "B": ["C"],
-    "C": ["D"],
-    "D": []
+    "C": []
     // "E": ["F"],
     // "F": ["G"],
     // "G": [],
@@ -326,8 +325,8 @@ const items_100_clustered = {
 
 
 export const graphs = Object.freeze({
-    simple: simple_graph,
-    clustered_graph: clustered_graph,
-    large_linear: items_100,
-    large_clustered: items_100_clustered
+    "simple": simple_graph,
+    "clustered_graph": clustered_graph,
+    "large_linear": items_100,
+    "large_clustered": items_100_clustered
 });

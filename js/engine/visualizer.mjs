@@ -1,7 +1,30 @@
 import {getAlgorithm} from "../algorithms/Algorithms.mjs";
 import {SceneCommands} from "./commands.mjs";
+import {AABB, ForceQuadTree} from "../utils/QuadTree.mjs";
+import {Size, Vector} from "../utils/Geometry.mjs";
+import {computeAttraction, computeRepulsion} from "./scene.mjs";
 
 const RADIUS = 10;
+
+function labelPropagation(graph, max_iter = 100) {
+    const labels = {};
+    const nodes = Object.keys(graph);
+    // Store name of each node as its label
+    nodes.forEach(node => labels[node] = node);
+
+    let labels_changed = false;
+    for (let i = 0; i < max_iter; i++) {
+        labels_changed = false;
+
+        // Shuffle the nodes to avoid bias
+        nodes.sort(() => Math.sort() - 0.5);
+
+
+    }
+
+
+}
+
 function getGenerator(algorithm_name, ...args) {
     switch (algorithm_name) {
         case "DFS":
@@ -12,6 +35,50 @@ function getGenerator(algorithm_name, ...args) {
     }
 }
 
+function placeNodesWithForce(graph, scene, radius = RADIUS) {
+    const rect = scene.ctx.canvas.getBoundingClientRect();
+    const nodes_unique = {};
+    for (const node in graph) {
+        nodes_unique[node] = {
+            vel: new Vector(),
+            pos: new Vector(Math.random() * 0.9 * rect.width, Math.random() * 0.9 * rect.height)
+        };
+    }
+    const damp = 0.4;
+    const dt_s = 50 / 1000;
+    const node_data = {mass: 1};
+    let quadtree;
+    const size = new Size(rect.width, rect.height);
+    const boundary = new AABB(new Vector(rect.width / 2, rect.height / 2), size);
+    for (let i = 0; i < 100; i++) {
+        quadtree = new ForceQuadTree(boundary);
+        for (const id in nodes_unique) {
+            quadtree.insert(nodes_unique[id], node_data);
+        }
+        let force;
+        for (const id in nodes_unique) {
+            const node = nodes_unique[id];
+            force = quadtree.getForceDueToRegions(node.pos, node_data, computeRepulsion);
+
+            for (const neighbour of graph[id]) {
+                force.add_self(computeAttraction(node.pos, nodes_unique[neighbour].pos));
+            }
+            node.vel.add_self(force.scale_self(dt_s));
+            node.pos.add_self(node.vel.scale_self(dt_s));
+            node.vel.scale_self(damp);
+        }
+    }
+    console.log(nodes_unique, boundary);
+    for (const id in nodes_unique) {
+        const node = nodes_unique[id];
+        scene.handleCommand(SceneCommands.addNode(id, node.pos.x, node.pos.y, RADIUS));
+    }
+
+}
+
+function placeNodesInGrid(graph, scene, radius = RADIUS) {
+
+}
 function placeNodesRadially(graph, scene, radius = RADIUS) {
     const rect = scene.ctx.canvas.getBoundingClientRect();
     let cx = rect.width / 2;
@@ -55,7 +122,7 @@ function placeNodesDiagonally(graph, scene, radius = RADIUS) {
         if (y > scene.ctx.canvas.height || x > scene.ctx.canvas.width) {
             diagonal_count += 1;
             y = diagonal_count * radius * 3 + 10;
-            x =0;
+            x = 0;
         }
         x += Math.random() * 10;
         y += Math.random() * 10;
@@ -63,6 +130,7 @@ function placeNodesDiagonally(graph, scene, radius = RADIUS) {
     }
 
 }
+
 export class Visualizer {
     constructor(scene, algorithm_name) {
         this.scene = scene;
@@ -104,10 +172,12 @@ export class Visualizer {
     }
 
     load(...args) {
+        this.scene.handleCommand(SceneCommands.clear());
+        console.log("loading", args);
         const parent = document.getElementById("node-data");
-
+        parent.textContent = "";
         const default_graph = args[0];
-        placeNodesDiagonally(default_graph, this.scene);
+        placeNodesRadially(default_graph, this.scene);
 
         for (const node in default_graph) {
             const el = document.createElement("div");

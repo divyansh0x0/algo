@@ -3,8 +3,11 @@ import {clamp} from "../../utils/PMath.mjs";
 import {ThemeManager} from "../theme.mjs";
 import {Vector} from "../../utils/Geometry.mjs";
 
+const threshold = 1;
+
 export class Node extends Drawable {
     static max_force = 10000;
+
     constructor(ctx, id, x, y, radius, text = "") {
         super(ctx, id);
         this.position.set(x, y);
@@ -13,15 +16,16 @@ export class Node extends Drawable {
         this.radius = radius;
         this.force = new Vector(0, 0);
         this.max_velocity = 100;
-        this.damping = 0.20;
+        this.damping = 0.10;
         this.attr_force = new Vector(0, 0);
         this.repln_force = new Vector(0, 0);
         this.mass = 1;
     }
 
     update(dt_ms) {
+        dt_ms = 20;
         super.update(dt_ms);
-        const dt_s = 0.02; //fixed dtms
+        const dt_s = dt_ms / 1000; //fixed dtms
         this.force.x = clamp(this.attr_force.x + this.repln_force.x, -Node.max_force, Node.max_force);
         this.force.y = clamp(this.attr_force.y + this.repln_force.y, -Node.max_force, Node.max_force);
         // if(isNaN(this.force.x)){
@@ -31,8 +35,11 @@ export class Node extends Drawable {
         //     this.force.y = Node.max_force;
         // }
         // console.log(this.id,this.force)
-        const dvx = (clamp(this.force.x * dt_s, -this.max_velocity, this.max_velocity));
-        const dvy = (clamp(this.force.y * dt_s, -this.max_velocity, this.max_velocity));
+        let dvx = (clamp(this.force.x * dt_s, -this.max_velocity, this.max_velocity));
+        let dvy = (clamp(this.force.y * dt_s, -this.max_velocity, this.max_velocity));
+
+
+        // console.log(dvx, dvy);
 
         this.velocity.x += dvx;
         this.velocity.y += dvy;
@@ -42,6 +49,12 @@ export class Node extends Drawable {
         this.velocity.y = (this.velocity.y);
         this.velocity.x *= this.damping;
         this.velocity.y *= this.damping;
+
+        if (Math.abs(this.velocity.x) < threshold)
+            this.velocity.x = 0;
+        if (Math.abs(this.velocity.y) < threshold)
+            this.velocity.y = 0;
+
         const dx = this.velocity.x * dt_s;
         const dy = this.velocity.y * dt_s;
         this.position.x += dx;

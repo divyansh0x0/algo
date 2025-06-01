@@ -24,6 +24,9 @@
     min-width: 300px;
 }
 
+#data-container {
+    overflow-y: scroll;
+}
 #slider {
 
     width: 10px;
@@ -47,6 +50,17 @@
     transform: translate(-50%, -100%);
 }
 
+#node-data > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+#node-data > div > * {
+    flex-grow: 1;
+    border: 1px #000 solid;
+    padding: 10px;
+}
+
 /***********************************************************************************************************************
 ************************************************ Settings ****************************************************************
 //**********************************************************************************************************************/
@@ -61,6 +75,7 @@
 }
 
 .row > * {
+    display: block;
     border: 1px rgba(0, 0, 0, 0.12) solid;
     padding: 1em;
     min-width: fit-content;
@@ -68,4 +83,8 @@
     max-width: 100%;
     align-content: center;
     align-self: center;
+    justify-content: center;
+    justify-items: center;
+    justify-self: center;
+    /*flex-grow: 1;*/
 }

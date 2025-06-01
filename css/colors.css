@@ -3,6 +3,7 @@
     --debug-color: #f00
 }
 [theme="light"] {
+    --overlay-color: rgba(0, 0, 0, 0.04);
     --primary-color: #0c0050;
     --primary-color-hover: #bb88fa;
 
@@ -52,6 +53,7 @@
 
 }
 [theme="dark"] {
+    --overlay-color: rgba(255, 255, 255, 0.04);
     --primary-color: #5b88fa;
     --primary-color-hover: #afc7ff;
 

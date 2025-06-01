@@ -42,6 +42,40 @@ canvas {
     /*display: none;*/
 }
 
+select {
+    /*appearance: none;*/
+    width: 100%;
+    background-color: var(--overlay-color);
+}
+
+option {
+    background-color: var(--overlay-color);
+
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    border-radius: 1em;
+    background: transparent;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    border-radius: 1em;
+    background: rgba(255, 255, 255, 0.24);
+    transition: background-color 200ms linear;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
 
 /* Base input style */
 /*input[type="range"] {*/
