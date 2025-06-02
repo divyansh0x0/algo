@@ -3,6 +3,7 @@ import {SceneCommands} from "./commands.mjs";
 import {AABB, ForceQuadTree} from "../utils/QuadTree.mjs";
 import {Size, Vector} from "../utils/Geometry.mjs";
 import {computeAttraction, computeRepulsion} from "./scene.mjs";
+import {detectKeywords} from "../editor/editor.mjs";
 
 const RADIUS = 10;
 
@@ -174,7 +175,7 @@ export class Visualizer {
     load(...args) {
         this.scene.handleCommand(SceneCommands.clear());
         console.log("loading", args);
-        const parent = document.getElementById("node-data");
+        const parent = document.getElementById("debug-data");
         parent.textContent = "";
         const default_graph = args[0];
         placeNodesRadially(default_graph, this.scene);
@@ -189,6 +190,11 @@ export class Visualizer {
             }
         }
         this.generator = this.algorithm_instance(...args);
+
+        const code_area = document.getElementById("code-area");
+        code_area.innerHTML = `<div class="code-block" >${detectKeywords(this.algorithm_instance.toString())}</div>`;
+
+
     }
 
     stop() {

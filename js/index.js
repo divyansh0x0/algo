@@ -2,6 +2,7 @@ import {Scene} from "./engine/scene.mjs";
 import {Visualizer} from "./engine/visualizer.mjs";
 import {ThemeManager, ThemeType} from "./engine/theme.mjs";
 import {graphs} from "./graphs.mjs";
+import {reserved} from "./editor/editor.mjs";
 
 ThemeManager.setThemeType(ThemeType.AUTO);
 
@@ -125,6 +126,7 @@ toggle_btn.addEventListener("click", () => {
         scene.stop();
 });
 
+console.log(reserved);
 
 document.addEventListener("DOMContentLoaded", () => {
 

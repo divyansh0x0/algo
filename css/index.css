@@ -25,6 +25,8 @@
 }
 
 #data-container {
+    display: flex;
+    flex-direction: column;
     overflow-y: scroll;
 }
 #slider {
@@ -50,24 +52,37 @@
     transform: translate(-50%, -100%);
 }
 
-#node-data > div {
+/***********************************************************************************************************************
+************************************************ Node Data ****************************************************************
+/**********************************************************************************************************************/
+
+#debug-data {
+    border: 1px var(--border-color) solid;
+    box-shadow: 0 0 10px var(--border-color) inset;
+    height: 30%;
+    overflow-y: scroll;
+    flex-grow: 1;
+}
+
+#debug-data > div {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
 }
 
-#node-data > div > * {
+#debug-data > div > * {
     flex-grow: 1;
-    border: 1px #000 solid;
+    border: 1px var(--border-color) solid;
     padding: 10px;
 }
 
 /***********************************************************************************************************************
 ************************************************ Settings ****************************************************************
-//**********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 #settings {
     display: block;
     width: 100%;
+    flex-grow: 1;
 }
 
 .row {
@@ -76,7 +91,7 @@
 
 .row > * {
     display: block;
-    border: 1px rgba(0, 0, 0, 0.12) solid;
+    border: 1px var(--border-color) solid;
     padding: 1em;
     min-width: fit-content;
     width: max-content;
@@ -87,4 +102,4 @@
     justify-items: center;
     justify-self: center;
     /*flex-grow: 1;*/
-}
+}                                                                                     

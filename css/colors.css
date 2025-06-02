@@ -1,6 +1,7 @@
 :root{
     --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
-    --debug-color: #f00
+    --debug-color: #f00;
+    --border-color: rgba(0, 0, 0, 0.52);
 }
 [theme="light"] {
     --overlay-color: rgba(0, 0, 0, 0.04);
@@ -8,9 +9,9 @@
     --primary-color-hover: #bb88fa;
 
     --slider-color: #000;
-    --grid-color: #d5d5d5;
-    --surface-bg-color: #c3c3c3;
-    --canvas-bg-default-color: #f1f1f1;
+    --grid-color: #b8b8b8;
+    --surface-bg-color: #ededed;
+    --canvas-bg-default-color: #ededed;
 
     /* === NODE COLORS === */
     --node-bg-border-color: #000;
