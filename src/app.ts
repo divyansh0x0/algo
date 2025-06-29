@@ -1,8 +1,8 @@
 "use strict";
 
 import { Scene } from "@/engine/scene";
-import { Visualizer } from "@/engine/visualizer";
 import { ThemeManager, ThemeType } from "@/engine/theme";
+import { Visualizer } from "@/engine/visualizer";
 import { clustered_graph, large_graph, simple_graph, spider_web_graph } from "@/graph";
 
 
@@ -98,18 +98,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let is_dragging = false;
 
-    if (slider) slider.addEventListener("mousedown", () => {
+    slider?.addEventListener("mousedown", () => {
+        document.body.style.cursor = "ew-resize";
         is_dragging = true;
     });
 
     window.addEventListener("mouseup", () => {
         is_dragging = false;
         if (resized_canvas) {
+            document.body.style.cursor = "default";
             updateCanvasSize(ctx);
             resized_canvas = false;
         }
     });
-    let resize_pending = false;
     let resized_canvas = false;
     window.addEventListener("mousemove", (e) => {
         if (!canvas_container)
@@ -168,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
             op.innerText = graph_name;
             drop_down.appendChild(op);
         }
-        drop_down.value = drop_down.options[3].value;
+        drop_down.value = drop_down.options[1].value;
         visualizer.load(graphs[drop_down.value as keyof typeof graphs]);
 
         drop_down.addEventListener("change", () => {

@@ -1,0 +1,56 @@
+@media screen and (max-width: 740px) {
+    .visualizer-container {
+        display: block;
+    }
+
+    #canvas-container, #data-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transition: transform 300ms var(--easing-jerk), width 300ms var(--easing-jerk), height 300ms var(--easing-jerk);
+
+    }
+
+    #canvas-container {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100dvh;
+        overflow: hidden;
+
+    }
+
+    #data-container {
+        margin: 0;
+        width: 100vw;
+        min-height: 100lvh;
+        height: 100dvh;
+    }
+
+
+    #data-container.hidden {
+        transform: translateX(-100%);
+    }
+
+    #canvas-container.hidden {
+        transform: translateX(100%);
+    }
+
+    /*#heading {*/
+    /*    position: absolute;*/
+    /*    top: 0;*/
+    /*    border-radius: 0.5em;*/
+    /*    left: 50%;*/
+    /*    transform: translateX(-50%);*/
+    /*    z-index: 100;*/
+    /*    backdrop-filter: blur(10px);*/
+    /*    padding: 1rem 2rem;*/
+    /*    align-content: center;*/
+    /*    width: max-content;*/
+    /*    background-color: rgba(243, 243, 243, 0.1);*/
+    /*}*/
+    #slider {
+        display: none;
+    }
+
+}

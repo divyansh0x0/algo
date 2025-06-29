@@ -40,7 +40,7 @@ export class Color {
 
         // Validate hex length
         if (![ 3, 4, 6, 8 ].includes(hex.length)) {
-            throw new Error("Invalid hex color code" + hex + ". Must be 3, 4, 6, or 8 digits.");
+            throw new Error("Invalid hex color code" + hex + ". Must be 3, 4, 6, or 8 digits. but was" + hex);
         }
 
         // Expand 3 or 4 digit hex to 6 or 8

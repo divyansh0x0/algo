@@ -9,7 +9,6 @@ import { AABB, ForceQuadTree, QuadTreeNode } from "@/utils/quadtree";
 import { Vmath } from "@/utils/vmath";
 
 const ZERO_VEC = Object.freeze({ x: 0, y: 0 });
-const NATURAL_EDGE_LENGTH = 20;
 const NODE_CHARGE = 1;
 
 export class Scene {
@@ -174,14 +173,13 @@ export class Scene {
 
 
     render() {
-        this.ctx.save();
         //Background of canvas
+        this.ctx.resetTransform();
         const rect = this.ctx.canvas.getBoundingClientRect();
         this.ctx.clearRect(0, 0, rect.width, rect.height);
         this.ctx.fillStyle = ThemeManager.getBgColor("canvas").hex;
         this.ctx.fillRect(0, 0, rect.width, rect.height);
         //Gridlines
-        this.ctx.save();
         this.ctx.strokeStyle = ThemeManager.getColor("grid").hex;
         for (let x = 0; x < rect.width; x += this.grid_size.width) {
             this.ctx.moveTo(x, 0);
@@ -192,8 +190,9 @@ export class Scene {
             this.ctx.lineTo(rect.width, y);
         }
         this.ctx.stroke();
-        this.ctx.restore();
 
+        this.ctx.save();
+        this.ctx.translate(this.offset.x, this.offset.y);
         //Drawing drawables
         const edges = this.edges;
         const nodes = this.nodes;
@@ -202,48 +201,20 @@ export class Scene {
 
         }
 
-        this.ctx.fillStyle = ThemeManager.getTextColor(ColorStates.ON_BACKGROUND).hex;
-        this.ctx.font = "1em Arial";
-        this.ctx.strokeStyle = "#0f0";
-        this.ctx.setLineDash([ 2, 3 ]);
+
         for (const [ id, node ] of nodes) {
             if (!node)
                 continue;
             node.render();
 
-            if (this.debug_box_el?.checked) {
-                this.ctx.beginPath();
-                this.ctx.arc(node.pos.x, node.pos.y, ForceQuadTree.FULL_ACCURACY_CIRCLE_RADIUS, 0, 2 * Math.PI);
-                this.ctx.closePath();
-                this.ctx.stroke();
-            }
-
-        }
-        this.ctx.setLineDash([]);
-        this.ctx.strokeStyle = ThemeManager.getColor("debug").hex;
-
-        //drawing fps
-        if (this.show_fps) {
-            this.ctx.fillStyle = ThemeManager.getTextColor(ColorStates.ON_BACKGROUND).hex;
-            this.ctx.textAlign = "left";    // Horizontal center
-            this.ctx.font = "1em Arial";
-            this.ctx.textBaseline = "top"; // Vertical center
-            this.ctx.fillText(`FPS: ${ this.fps }`, 10, 10);
-            this.ctx.fillText(`Accuracy: ${ Math.round((1 - ForceQuadTree.MIN_THRESHOLD) * 10000) / 100 }%`, 10, 30);
-            if (this.bounds)
-                this.ctx.fillText(`Bounds ${ Math.round(this.bounds.width) }x${ Math.round(this.bounds.height) }`, 10, 50);
-            this.ctx.fillText(`Nodes: ${ this.nodes.size }`, 10, 70);
-            this.ctx.fillText(`Edges: ${ this.edges.size }`, 10, 90);
-            // this.ctx.fillText(`Energy: ${ this.last_total_energy }`, 10, 110);
         }
 
-        if (!this.debug_box_el?.checked) {
-            this.ctx.restore();
-            return;
-        }
+
         //Quad tree debug
-        if (this.force_quad_tree) {
+        if (this.force_quad_tree && this.debug_box_el?.checked) {
             this.ctx.beginPath();
+            this.ctx.setLineDash([]);
+            this.ctx.strokeStyle = ThemeManager.getColor("debug").hex;
 
             let b = null;
             let cy = 0;
@@ -261,8 +232,23 @@ export class Scene {
 
 
         }
+        this.ctx.restore();
 
-
+        this.ctx.save();
+        //drawing fps
+        if (this.show_fps) {
+            this.ctx.fillStyle = ThemeManager.getTextColor(ColorStates.ON_BACKGROUND).hex;
+            this.ctx.textAlign = "left";    // Horizontal center
+            this.ctx.font = "1em Arial";
+            this.ctx.textBaseline = "top"; // Vertical center
+            this.ctx.fillText(`FPS: ${ this.fps }`, 10, 10);
+            this.ctx.fillText(`Accuracy: ${ Math.round((1 - ForceQuadTree.MIN_THRESHOLD) * 10000) / 100 }%`, 10, 30);
+            if (this.bounds)
+                this.ctx.fillText(`Bounds ${ Math.round(this.bounds.width) }x${ Math.round(this.bounds.height) }`, 10, 50);
+            this.ctx.fillText(`Nodes: ${ this.nodes.size }`, 10, 70);
+            this.ctx.fillText(`Edges: ${ this.edges.size }`, 10, 90);
+            // this.ctx.fillText(`Energy: ${ this.last_total_energy }`, 10, 110);
+        }
         this.ctx.restore();
 
     }
@@ -297,7 +283,7 @@ export class Scene {
         this.accumulated_alpha = 0;
         // Update nodes
         for (const [ id, node ] of this.nodes) {
-            if (!this.drawable_selected && node.containsPoint(this.mouse_info.location) && this.mouse_info.isButtonDown(MouseButton.Primary)) {
+            if (!this.drawable_selected && node.containsPoint(this.mouse_info.location.subtract(this.offset)) && this.mouse_info.isButtonDown(MouseButton.Primary)) {
                 this.drawable_selected = node;
             }
             if (this.force_quad_tree) {
@@ -322,8 +308,6 @@ export class Scene {
             }
             this.accumulated_alpha += node.alpha;
 
-            node.pos.add_self(this.offset);
-
         }
 
         if (this.drawable_selected) {
@@ -336,9 +320,9 @@ export class Scene {
             }
 
         } else {
-            if (this.mouse_info.isButtonDown(MouseButton.Primary)) {
+            if (this.mouse_info.location.x < this.bounds.width && this.mouse_info.location.y < this.bounds.height && this.mouse_info.location.x > 0 && this.mouse_info.location.y > 0 && this.mouse_info.isButtonDown(MouseButton.Primary)) {
                 this.ctx.canvas.style.cursor = "move";
-                this.offset.add_self(this.prev_mouse_pos.subtract(this.mouse_info.location).scale_self(-1));
+                this.offset.add_self(this.mouse_info.location.subtract(this.prev_mouse_pos));
             } else {
                 this.ctx.canvas.style.cursor = "default";
             }
@@ -447,8 +431,9 @@ export class Scene {
 const softening_factor = 10 ** 2;
 
 
-export const k_repl = 1e4;
-export const k_attr = 1500;
+export const k_repl = 1e3;
+export const k_attr = 100;
+const NATURAL_EDGE_LENGTH = 20;
 
 export function computeRepulsion(node1: QuadTreeNode, node2: QuadTreeNode): Vector {
     const distance_vec = node1.point.subtract(node2.point);

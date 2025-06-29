@@ -12,16 +12,15 @@ export abstract class Drawable {
 
     pos = new Vector(0, 0);
     is_color_animating = false;
-    color: Color;
+    color: Color = new Color("#f00");
 
     readonly id: string;
 
 
-    protected constructor(ctx: CanvasRenderingContext2D, id: string) {
+    protected constructor(ctx: CanvasRenderingContext2D, id: string, private class_name: string) {
         this.ctx = ctx;
         this.id = id;
         this.color_state = ColorStates.DEFAULT;
-        this.color = ThemeManager.getBgColor(this.getName(), this.color_state);
     }
 
     public highlight() {
@@ -30,7 +29,7 @@ export abstract class Drawable {
     }
 
     public getName() {
-        return this.constructor.name.toLowerCase();
+        return this.class_name.toLowerCase();
     }
 
     public update(dt_ms: number) {

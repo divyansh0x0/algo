@@ -6,7 +6,7 @@ import { Vmath } from "@/utils/vmath";
 
 
 export class Node extends Drawable {
-    static readonly alphaDecay = 0.002;
+    static readonly alphaDecay = 0.0018;
 
     mass: number;
     quad_tree_node: QuadTreeNode;
@@ -25,7 +25,7 @@ export class Node extends Drawable {
     private readonly min_velocity = 1;
 
     constructor(ctx: CanvasRenderingContext2D, id: string, pos: Vector, radius: number, text: string = "") {
-        super(ctx, id);
+        super(ctx, id, "node");
         this.pos.set(pos.x, pos.y);
         this.text = text;
         this.radius = radius;

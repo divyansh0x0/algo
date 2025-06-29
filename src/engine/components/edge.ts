@@ -7,15 +7,8 @@ export class Edge extends Drawable {
     readonly start_node: Node;
     readonly end_node: Node;
 
-    /**
-     *
-     * @param ctx {CanvasRenderingContext2D}
-     * @param start_node {Node}
-     * @param end_node {Node}
-     */
-
     constructor(ctx: CanvasRenderingContext2D, start_node: Node, end_node: Node) {
-        super(ctx, Edge.getEdgeKey(start_node.id, end_node.id));
+        super(ctx, Edge.getEdgeKey(start_node.id, end_node.id), "edge");
         this.start_node = start_node;
         this.end_node = end_node;
     }

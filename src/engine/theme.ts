@@ -135,7 +135,7 @@ export const ThemeManager = (function () {
             const property_name = `--${ item_name }-color`;
             const val = styles.getPropertyValue(property_name);
             if (val === "")
-                console.error(property_name, " is not defined.");
+                console.error(property_name, "is not defined.");
             return new Color(val);
         }
     };
