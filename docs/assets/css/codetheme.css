@@ -1,0 +1,52 @@
+[theme="light"] {
+    --code-background: #fff;
+    --keyword-color: #028c8c;
+    --string-color: #034703;
+    --number-color: #022681;
+    --function-color: #7a0d0d;
+}
+
+[theme="dark"] {
+    --code-background: #292929;
+    --keyword-color: #0ff;
+    --string-color: #66bf66;
+    --number-color: #5b88fa;
+    --function-color: #e41616;
+}
+
+
+/***********************************************************************************************************************
+************************************************ Code ****************************************************************
+/**********************************************************************************************************************/
+#code-area {
+    border: 1px var(--border-color) solid;
+    /*min-width: max-content;*/
+    width: 100%;
+    white-space: pre-wrap;
+    overflow: scroll;
+}
+
+.code-block {
+    padding: 1em;
+    min-width: max-content;
+    min-height: fit-content;
+    width: 100%;
+    height: 100%;
+    background-color: var(--code-background);
+}
+
+.code-number {
+    color: var(--number-color);
+}
+
+.code-function {
+    color: var(--function-color);
+}
+.code-keyword {
+    color: var(--keyword-color);
+    font-weight: bolder;
+}
+
+.code-string {
+    color: var(--string-color);
+}
