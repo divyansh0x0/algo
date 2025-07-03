@@ -1,6 +1,6 @@
 "use strict";
 
-import { Scene } from "@/engine/scene";
+import { Scene, SceneLogger } from "@/engine/scene";
 import { ThemeManager, ThemeType } from "@/engine/theme";
 import { Visualizer } from "@/engine/visualizer";
 import { clustered_graph, large_graph, simple_graph, spider_web_graph } from "@/graph";
@@ -30,40 +30,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const algorithm = "DFS Graph Traversal";
 
 
-    function handleToggleBtnVisiblity() {
+    function handleToggleBtnVisibility() {
         if (!toggle_btn || !canvas_container || !visualizer_data_container)
             return;
-        toggle_btn.hidden = (window.innerWidth > min_screen_width);
-        if (toggle_btn.hidden) {
-            // if we don't need toggle button then screen is wide enough
+
+        const is_wide = window.innerWidth > min_screen_width;
+
+        toggle_btn.hidden = is_wide;
+
+        if (is_wide) {
+            // Large screen: show both
             canvas_container.classList.remove("hidden");
             visualizer_data_container.classList.remove("hidden");
             is_canvas_visible = true;
         } else {
-            // if screen is not wide enough then also toggle the hidden class
-            visualizer_data_container.style.width = "";
-            canvas_container.style.width = "";
-            console.log(is_canvas_visible);
-            if (!is_canvas_visible && !canvas_container.classList.contains("hidden")) {
-                canvas_container.classList.add("hidden");
-                visualizer_data_container.classList.remove("hidden");
-            } else if (is_canvas_visible && !visualizer_data_container.classList.contains("hidden")) {
-                canvas_container.classList.remove("hidden");
-                visualizer_data_container.classList.add("hidden");
-            }
-
+            // Small screen: show canvas only by default
+            canvas_container.classList.remove("hidden");
+            visualizer_data_container.classList.add("hidden");
+            is_canvas_visible = true;
         }
 
-        is_canvas_visible = !canvas_container.classList.contains("hidden");
         if (is_canvas_visible)
             scene.start();
         else
             scene.stop();
     }
 
-    /**
-     * @param {CanvasRenderingContext2D} ctx
-     */
+
     function updateCanvasSize(ctx: CanvasRenderingContext2D) {
         if (!canvas_container)
             return;
@@ -91,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.addEventListener("resize", () => {
-        handleToggleBtnVisiblity();
+        handleToggleBtnVisibility();
         updateCanvasSize(ctx);
     });
 
@@ -105,17 +98,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("mouseup", () => {
         is_dragging = false;
-        if (resized_canvas) {
-            document.body.style.cursor = "default";
-            updateCanvasSize(ctx);
-            resized_canvas = false;
-        }
+
+        document.body.style.cursor = "default";
+        updateCanvasSize(ctx);
+        resized_canvas = false;
     });
     let resized_canvas = false;
     window.addEventListener("mousemove", (e) => {
         if (!canvas_container)
             return;
-        if (window.innerWidth < min_screen_width)
+        if (window.innerWidth <= min_screen_width)
             return;
 
         if (is_dragging && e.clientX < window.innerWidth && e.clientX > 0) {
@@ -127,33 +119,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    if (toggle_btn && canvas_container && visualizer_data_container) {
-        toggle_btn.addEventListener("click", () => {
-            if (is_canvas_visible) {
-                canvas_container.classList.add("hidden");
-                visualizer_data_container.classList.remove("hidden");
-            } else {
-                canvas_container.classList.remove("hidden");
-                visualizer_data_container.classList.add("hidden");
-            }
 
-            is_canvas_visible = !is_canvas_visible;
-            if (is_canvas_visible)
-                scene.start();
-            else
-                scene.stop();
-        });
-    }
+    toggle_btn?.addEventListener("click", () => {
+        if (is_canvas_visible) {
+            canvas_container?.classList.add("hidden");
+            visualizer_data_container?.classList.remove("hidden");
+        } else {
+            canvas_container?.classList.remove("hidden");
+            visualizer_data_container?.classList.add("hidden");
+        }
+
+        is_canvas_visible = !is_canvas_visible;
+        if (is_canvas_visible)
+            scene.start();
+        else
+            scene.stop();
+    });
 
 
     ThemeManager.setThemeType(ThemeType.AUTO);
 
-    if (canvas_container && slider)
+    if (canvas_container && slider && window.innerWidth > min_screen_width)
         canvas_container.style.width = `${ slider.getBoundingClientRect().x }px`;
+
+
     updateCanvasSize(ctx);
-    handleToggleBtnVisiblity();
-
-
+    handleToggleBtnVisibility();
     const visualizer = new Visualizer(scene, algorithm);
 
     const drop_down = document.getElementById("config-dropdown") as HTMLSelectElement;
@@ -177,4 +168,11 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("changing");
         });
     }
+
+    /**
+     * FULLSCREEN LOGIC
+     * */
+    SceneLogger.info("Loaded");
+    const doc_el = document.documentElement;
+    // doc_el.requestFullscreen({ navigationUI: "hide" }).then(r  => SceneLogger.success("Browser nav bar hidden"));
 });

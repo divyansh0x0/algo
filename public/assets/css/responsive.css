@@ -1,4 +1,8 @@
 @media screen and (max-width: 740px) {
+    body {
+        background-color: var(--surface-bg-color);
+        overflow: hidden;
+    }
     .visualizer-container {
         display: block;
     }
@@ -8,23 +12,9 @@
         top: 0;
         left: 0;
         transition: transform 300ms var(--easing-jerk), width 300ms var(--easing-jerk), height 300ms var(--easing-jerk);
-
-    }
-
-    #canvas-container {
-        margin: 0;
-        padding: 0;
-        width: 100vw;
-        height: 100dvh;
-        overflow: hidden;
-
-    }
-
-    #data-container {
-        margin: 0;
-        width: 100vw;
-        min-height: 100lvh;
-        height: 100dvh;
+        min-width: 100lvw;
+        max-width: 100lvw;
+        height: 100lvh;
     }
 
 

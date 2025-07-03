@@ -3,7 +3,7 @@ import { Node } from "@/engine/components/node";
 
 
 export class Edge extends Drawable {
-    static thickness = 2;
+    static thickness = 3;
     readonly start_node: Node;
     readonly end_node: Node;
 

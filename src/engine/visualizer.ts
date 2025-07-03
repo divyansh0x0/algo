@@ -1,3 +1,4 @@
+import { DFS_Graph_Traversal } from "@/algorithms/algorithms";
 import { Scene } from "@/engine/scene";
 import { Graph } from "@/graph";
 import { Vector } from "@/utils/geometry";
@@ -179,14 +180,23 @@ export class Visualizer {
                 debug_data_panel.append(el);
             }
             for (const neighbour of graph.getNeighbors(node)) {
-                if (nodes_added.has(neighbour))
-                    continue;
                 console.log(node, "->", neighbour);
                 this.scene.addEdge(node, neighbour);
                 nodes_added.add(neighbour);
             }
             nodes_added.add(node);
         }
+
+        const generator = DFS_Graph_Traversal(graph, graph.start_node);
+
+        const algo_interval = setInterval(() => {
+            const obj = generator.next();
+            if (obj.done) {
+                clearInterval(algo_interval);
+                return;
+            }
+            obj.value.execute(this.scene);
+        }, this.step_time_ms);
         // this.generator = getGenerator(this.algorithm_name, ...args);
 
         // const code_area = document.getElementById("code-area");

@@ -38,9 +38,11 @@
 .code-number {
     color: var(--number-color);
 }
+
 .code-function {
     color: var(--function-color);
 }
+
 .code-keyword {
     color: var(--keyword-color);
     font-weight: bolder;

@@ -1,28 +1,27 @@
 import { Animator } from "@/engine/animation";
 import { Drawable } from "@/engine/components/drawable";
 import { Edge } from "@/engine/components/edge";
+import { Logger } from "@/engine/components/logger";
 import { Node } from "@/engine/components/node";
-import { ColorStates, ThemeManager } from "@/engine/theme";
+import { ThemeManager } from "@/engine/theme";
 import { Size, Vector } from "@/utils/geometry";
 import { Mouse, MouseButton } from "@/utils/mouse";
 import { AABB, ForceQuadTree, QuadTreeNode } from "@/utils/quadtree";
 import { Vmath } from "@/utils/vmath";
 
 const ZERO_VEC = Object.freeze({ x: 0, y: 0 });
-const NODE_CHARGE = 1;
 
+export const SceneLogger = new Logger("scene-logger");
 export class Scene {
     static animator = new Animator();
     static LOCATION_ERROR = 5;//5px
 
 
     private readonly is_everything_bounded = true;
-
     private nodes: Map<string, Node> = new Map;
     private edges: Map<string, Edge> = new Map;
     private accumulated_time = 0;
     private fps = 0;
-    private k_repl = 10e6;
     private last_animation_call_time = 0;
     private drawable_selected: null | Drawable = null;
     private grid_size: Size = new Size(100, 100);
@@ -46,86 +45,15 @@ export class Scene {
         this.mouse_info = new Mouse(this.ctx.canvas);
 
 
-        const resize_observer = new ResizeObserver((entries) => {
+        const resize_observer = new ResizeObserver(() => {
             for (const [ id, node ] of this.nodes) {
-                node.alpha = 0.9;
+                node.alpha = 0.5;
             }
         });
         resize_observer.observe(this.ctx.canvas);
 
     }
 
-    // handleCommand(command) {
-    //     // console.log("Command: ", command)
-    //     switch (command.type) {
-    //         //Addition
-    //         case COMMAND_TYPES.ADD_NODE:
-    //             const node = new Node(this.ctx, command.id, command.pos.x, command.pos.y, command.radius);
-    //             this.nodes[node.id] = node;
-    //             break;
-    //         case COMMAND_TYPES.ADD_EDGE:
-    //             const from = this.nodes[command.from];
-    //             const end = this.nodes[command.end];
-    //             const edge = new Edge(this.ctx, from, end);
-    //             this.edges[edge.id] = edge;
-    //             break;
-    //
-    //         //Highlight
-    //         case COMMAND_TYPES.HIGHLIGHT_NODE:
-    //             const node_to_highlight = this.nodes[command.id];
-    //             if (node_to_highlight)
-    //                 this.highlight(node_to_highlight);
-    //             else
-    //                 console.error("[HIGHLIGHT] Node not found: ", command.id);
-    //             break;
-    //         case COMMAND_TYPES.HIGHLIGHT_EDGE:
-    //             const id = Edge.getEdgeKey(command.from, command.end);
-    //             const edge_to_highlight = this.edges[id];
-    //             if (edge_to_highlight)
-    //                 this.highlight(edge_to_highlight);
-    //             else
-    //                 console.error("[HIGHLIGHT] Edge not found: ", id);
-    //             break;
-    //         //Modification
-    //         case COMMAND_TYPES.LABEL_NODE:
-    //             const node_to_label = this.nodes[command.id];
-    //             if (node_to_label) {
-    //                 node_to_label.text = command.label;
-    //             } else {
-    //                 console.error("Node not found: ", command.id);
-    //             }
-    //             break;
-    //         case COMMAND_TYPES.NOOP:
-    //             // Do nothing
-    //             break;
-    //         case COMMAND_TYPES.FINISHED:
-    //             this.logger.log("Finished", Logger.SUCCESS);
-    //             break;
-    //         case COMMAND_TYPES.RESET:
-    //             for (const id in this.edges) {
-    //                 const drawable = this.edges[id];
-    //                 drawable.reset();
-    //             }
-    //             for (const id in this.nodes) {
-    //                 const drawable = this.nodes[id];
-    //                 drawable.reset();
-    //             }
-    //             break;
-    //         case COMMAND_TYPES.CLEAR:
-    //             delete this.edges;
-    //             delete this.nodes;
-    //             this.edges = {};
-    //             this.nodes = {};
-    //             break;
-    //         default:
-    //             console.error("Unknown command: ", command);
-    //             break;
-    //     }
-    // }
-
-    highlight(drawable: Drawable) {
-        drawable.highlight();
-    }
 
     loop(curr_animation_call_time: number) {
         if (!this.is_running) return;
@@ -174,7 +102,6 @@ export class Scene {
 
     render() {
         //Background of canvas
-        this.ctx.resetTransform();
         const rect = this.ctx.canvas.getBoundingClientRect();
         this.ctx.clearRect(0, 0, rect.width, rect.height);
         this.ctx.fillStyle = ThemeManager.getBgColor("canvas").hex;
@@ -192,7 +119,6 @@ export class Scene {
         this.ctx.stroke();
 
         this.ctx.save();
-        this.ctx.translate(this.offset.x, this.offset.y);
         //Drawing drawables
         const edges = this.edges;
         const nodes = this.nodes;
@@ -233,30 +159,19 @@ export class Scene {
 
         }
         this.ctx.restore();
-
-        this.ctx.save();
-        //drawing fps
-        if (this.show_fps) {
-            this.ctx.fillStyle = ThemeManager.getTextColor(ColorStates.ON_BACKGROUND).hex;
-            this.ctx.textAlign = "left";    // Horizontal center
-            this.ctx.font = "1em Arial";
-            this.ctx.textBaseline = "top"; // Vertical center
-            this.ctx.fillText(`FPS: ${ this.fps }`, 10, 10);
-            this.ctx.fillText(`Accuracy: ${ Math.round((1 - ForceQuadTree.MIN_THRESHOLD) * 10000) / 100 }%`, 10, 30);
-            if (this.bounds)
-                this.ctx.fillText(`Bounds ${ Math.round(this.bounds.width) }x${ Math.round(this.bounds.height) }`, 10, 50);
-            this.ctx.fillText(`Nodes: ${ this.nodes.size }`, 10, 70);
-            this.ctx.fillText(`Edges: ${ this.edges.size }`, 10, 90);
-            // this.ctx.fillText(`Energy: ${ this.last_total_energy }`, 10, 110);
-        }
-        this.ctx.restore();
-
     }
 
 
     update(dt_ms: number) {
-        this.ctx.resetTransform();
+        SceneLogger.getReactiveLog("FPS").set(this.fps.toString());
+        SceneLogger.getReactiveLog("Accuracy").set(Vmath.round(ForceQuadTree.ACCURACY, 2).toString());
+        SceneLogger.getReactiveLog("OFFSET").set(`x: ${ Vmath.round(this.offset.x, 2) }, y: ${ Vmath.round(this.offset.y, 2) }`);
+        SceneLogger.getReactiveLog("Nodes").set(this.nodes.size.toString());
+        SceneLogger.getReactiveLog("Edges").set(this.edges.size.toString());
+
         this.bounds = this.ctx.canvas.getBoundingClientRect();
+        SceneLogger.getReactiveLog("Bounds").set(`${ Vmath.round(this.bounds.width, 2) }x${ Vmath.round(this.bounds.height, 2) }`);
+
         if (this.accumulated_alpha !== 0) {
             this.force_quad_tree = new ForceQuadTree(AABB.fromRect(0, 0, this.bounds.width, this.bounds.height));
 
@@ -283,7 +198,8 @@ export class Scene {
         this.accumulated_alpha = 0;
         // Update nodes
         for (const [ id, node ] of this.nodes) {
-            if (!this.drawable_selected && node.containsPoint(this.mouse_info.location.subtract(this.offset)) && this.mouse_info.isButtonDown(MouseButton.Primary)) {
+            if (!this.drawable_selected && node.containsPoint(this.mouse_info.location.subtract(this.offset))
+                && (this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
                 this.drawable_selected = node;
             }
             if (this.force_quad_tree) {
@@ -314,20 +230,25 @@ export class Scene {
             this.ctx.canvas.style.cursor = "pointer";
             this.drawable_selected.pos.x = this.mouse_info.location.x;
             this.drawable_selected.pos.y = this.mouse_info.location.y;
-            if (!this.mouse_info.isButtonDown(MouseButton.Primary)) {
+            for (const [ id, node ] of this.nodes) {
+                node.alpha = 0.5;
+            }
+            if (!(this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
                 this.ctx.canvas.style.cursor = "default";
                 this.drawable_selected = null;
             }
-
-        } else {
-            if (this.mouse_info.location.x < this.bounds.width && this.mouse_info.location.y < this.bounds.height && this.mouse_info.location.x > 0 && this.mouse_info.location.y > 0 && this.mouse_info.isButtonDown(MouseButton.Primary)) {
-                this.ctx.canvas.style.cursor = "move";
-                this.offset.add_self(this.mouse_info.location.subtract(this.prev_mouse_pos));
-            } else {
-                this.ctx.canvas.style.cursor = "default";
-            }
         }
-
+        // } else {
+        //     if (this.mouse_info.location.x < this.bounds.width && this.mouse_info.location.y < this.bounds.height
+        //         && this.mouse_info.location.x > 0 && this.mouse_info.location.y > 0
+        //         && (this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
+        //         this.ctx.canvas.style.cursor = "move";
+        //         this.offset.add_self(this.mouse_info.location.subtract(this.prev_mouse_pos));
+        //     } else {
+        //         this.ctx.canvas.style.cursor = "default";
+        //     }
+        // }
+        //
 
         this.prev_mouse_pos = this.mouse_info.location;
         Scene.animator.step(dt_ms);
@@ -351,7 +272,7 @@ export class Scene {
         const node = this.nodes.get(id);
         if (!node)
             return false;
-        this.highlight(node);
+        node.highlight();
         return true;
     }
 
@@ -380,15 +301,16 @@ export class Scene {
     }
 
     removeEdge(from_id: string, to_id: string): boolean {
-        const node1 = this.nodes.get(from_id);
-        const node2 = this.nodes.get(to_id);
-        if (!node1 || !node2)
-            return false;
         return this.edges.delete(Edge.getEdgeKey(from_id, to_id));
     }
 
     highlightEdge(from_id: string, to_id: string): boolean {
-        return false;
+        const edge = this.edges.get(Edge.getEdgeKey(from_id, to_id));
+        if (!edge)
+            return false;
+        console.log("EDGE KEY", Edge.getEdgeKey(from_id, to_id));
+        edge.highlight();
+        return true;
 
     }
 
@@ -432,8 +354,8 @@ const softening_factor = 10 ** 2;
 
 
 export const k_repl = 1e3;
-export const k_attr = 100;
-const NATURAL_EDGE_LENGTH = 20;
+export const k_attr = 1000;
+const NATURAL_EDGE_LENGTH = 50;
 
 export function computeRepulsion(node1: QuadTreeNode, node2: QuadTreeNode): Vector {
     const distance_vec = node1.point.subtract(node2.point);

@@ -1,7 +1,7 @@
 import { Scene } from "@/engine/scene";
 import { Vector } from "@/utils/geometry";
 
-interface SceneCommand {
+export interface SceneCommand {
     execute(scene: Scene): Promise<void> | void;
 }
 

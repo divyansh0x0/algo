@@ -1,5 +1,6 @@
 import { Vector } from "@/utils/geometry";
 
+const isPASSIVE = false;
 export enum MouseButton {
     Primary = 0,
     Auxiliary = 1,
@@ -24,8 +25,8 @@ export class Mouse {
         window.addEventListener("mouseup", this.onMouseUp as EventListener);
 
         // Touch events
-        window.addEventListener("touchstart", this.onTouchStart as EventListener, { passive: false });
-        window.addEventListener("touchmove", this.onTouchMove as EventListener, { passive: false });
+        window.addEventListener("touchstart", this.onTouchStart as EventListener, { passive: isPASSIVE });
+        window.addEventListener("touchmove", this.onTouchMove as EventListener, { passive: isPASSIVE });
         window.addEventListener("touchend", this.onTouchEnd as EventListener);
         window.addEventListener("touchcancel", this.onTouchEnd as EventListener);
     }
@@ -36,7 +37,8 @@ export class Mouse {
     };
 
     private onMouseDown = (e: MouseEvent) => {
-        this.buttonsPressed.add(e.button);
+        if (e.target === this.element)
+            this.buttonsPressed.add(e.button);
     };
 
     private onMouseUp = (e: MouseEvent) => {
@@ -44,7 +46,8 @@ export class Mouse {
     };
 
     private onTouchStart = (e: TouchEvent) => {
-        e.preventDefault(); // Prevent mouse emulation
+        if (e.target !== this.element)
+            return;
         const bounding_rect = this.element.getBoundingClientRect();
         this.isTouching = true;
         this.touches = Array.from(e.touches).map(t => (new Vector(t.clientX - bounding_rect.x, t.clientY - bounding_rect.y)));

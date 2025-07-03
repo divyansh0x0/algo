@@ -81,7 +81,7 @@ export class ColorAnimation extends Animation {
     private from: Color;
     private readonly to: Color;
 
-    constructor(drawable: Drawable, from: Color, to: Color, duration_ms = 250, easing_function: ((t: number) => number) = EasingFunctions.easeInOutSin) {
+    constructor(drawable: Drawable, from: Color, to: Color, duration_ms = 250, easing_function: ((t: number) => number) = EasingFunctions.easeInSin) {
         super(drawable, duration_ms, easing_function);
         this.from = from;
         this.to = to;
@@ -89,11 +89,12 @@ export class ColorAnimation extends Animation {
     }
 
     setNormalizedTime(t: number) {
-        const r = Vmath.roundedClamp(transition(this.from.r, this.from.r, t, this.easing), 0, 255);
-        const g = Vmath.roundedClamp(transition(this.from.g, this.from.g, t, this.easing), 0, 255);
-        const b = Vmath.roundedClamp(transition(this.from.b, this.from.b, t, this.easing), 0, 255);
-        const a = Vmath.roundedClamp(transition(this.from.a, this.from.a, t, this.easing), 0, 255);
+        const r = Vmath.roundedClamp(transition(this.from.r, this.to.r, t, this.easing), 0, 255);
+        const g = Vmath.roundedClamp(transition(this.from.g, this.to.g, t, this.easing), 0, 255);
+        const b = Vmath.roundedClamp(transition(this.from.b, this.to.b, t, this.easing), 0, 255);
+        const a = Vmath.roundedClamp(transition(this.from.a, this.to.a, t, this.easing), 0, 255);
         this.drawable.color = new Color(r, g, b, a);
+        // console.log()
     }
 
     finalize() {
@@ -122,12 +123,7 @@ export class Animator {
     }
 
     step(dt_ms: number) {
-        for (const id in this.animations_map) {
-            const animation = this.animations_map.get(id);
-            if (!animation) {
-                continue;
-            }
-
+        for (const [ id, animation ] of this.animations_map) {
             animation.duration_passed_ms += dt_ms;
 
             if (animation.duration_passed_ms > animation.total_duration_ms) {

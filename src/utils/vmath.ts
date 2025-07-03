@@ -8,5 +8,9 @@ export class Vmath {
         return Math.max(Math.min(val, max), min);
 
     }
+
+    static round(val: number, accuracy: number) {
+        return Math.round(val * 10 ** (accuracy)) / (10 ** (accuracy));
+    }
 }
 

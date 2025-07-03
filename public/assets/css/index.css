@@ -22,6 +22,7 @@
     height: 100dvh;
     overflow: hidden;
     min-width: 300px;
+    max-width: calc(100lvw - 10px);
 }
 
 #data-container {

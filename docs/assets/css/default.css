@@ -59,9 +59,11 @@ option {
 ::-webkit-scrollbar {
     width: 10px;
 }
+
 ::-webkit-scrollbar-corner {
     background-color: transparent;
 }
+
 /* Track */
 ::-webkit-scrollbar-track {
     border-radius: 1em;

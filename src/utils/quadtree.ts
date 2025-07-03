@@ -76,11 +76,11 @@ export class QuadTreeNode {
 }
 
 setInterval(() => {
-    ForceQuadTree.MIN_THRESHOLD = 1 - ((document.getElementById("threshold-slider") as HTMLInputElement)?.valueAsNumber);
+    ForceQuadTree.ACCURACY = (document.getElementById("accuracy-slider") as HTMLInputElement)?.valueAsNumber;
 }, 100);
 
 export class ForceQuadTree {
-    static MIN_THRESHOLD = 0.9;
+    static ACCURACY = 0.9;
     static FULL_ACCURACY_AREA = new Size(100, 100);
     static FULL_ACCURACY_CIRCLE_RADIUS = 100;
     COM: Vector | undefined;
@@ -204,6 +204,7 @@ export class ForceQuadTree {
 
     getForceDueToRegions(quad_tree_node: QuadTreeNode, force_func: (a: QuadTreeNode, b: QuadTreeNode) => Vector, excluded_nodes: QuadTreeNode[] = [], depth = 0): Vector {
         const force = new Vector(0, 0);
+        const min_threshold = 1 - ForceQuadTree.ACCURACY;
         for (const region of this.regions) {
             if (!region.COM || region.mass === 0) continue;
 
@@ -214,7 +215,7 @@ export class ForceQuadTree {
             // Apply Barnes-Hut approximation
             const region_size = region.boundary.half_dimension.width;
             const threshold = region_size / Math.sqrt(l);
-            if (threshold > ForceQuadTree.MIN_THRESHOLD && region.has_sub_divisions) {
+            if (threshold > min_threshold && region.has_sub_divisions) {
                 force.add_self(region.getForceDueToRegions(quad_tree_node, force_func, excluded_nodes, depth + 1));
             } else {
                 // Skip if same node or at same position

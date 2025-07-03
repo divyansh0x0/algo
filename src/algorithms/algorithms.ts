@@ -1,26 +1,37 @@
 import {
-    ErrorCommand, FinishedCommand,
+    FinishedCommand,
     HighlightEdgeCommand,
     HighlightNodeCommand,
-    LabelNodeCommand
+    SceneCommand
 } from "@/engine/commands/scenecommands";
 import { Scene } from "@/engine/scene";
 import { Graph } from "@/graph";
 
-function* DFS_Graph_Traversal(scene: Scene, graph: Graph, start_node: string): Generator {
-    const visited = new Set();
-    const queue = Object.keys(graph);
-    if (!start_node) {
-        yield new ErrorCommand("Start node is not defined so using first node");
-        start_node = Object.keys(graph)[0];
+export function* DFS_Graph_Traversal(graph: Graph, start_node: string): Generator<SceneCommand> {
+    const visited: string[] = [];
+
+    //stores tuples (parent_node, curr_node)
+    const stack: [ string | null, string | null ][] = [ [ null, start_node ] ];
+
+    while (stack.length > 0) {
+        const last_el = stack.pop()!;
+        const parent = last_el[0]!;
+        const curr = last_el[1]!;
+        if (!visited.includes(curr)) {
+            console.log(last_el);
+            yield new HighlightEdgeCommand(parent, curr);
+            yield new HighlightNodeCommand(curr);
+
+
+            visited.push(curr);
+
+            for (const neigbour of graph.getNeighbors(curr)) {
+                if (!visited.includes(neigbour)) {
+                    stack.push([ curr, neigbour ]);
+                }
+            }
+        }
     }
-    yield new HighlightNodeCommand(start_node);
-    yield new LabelNodeCommand(start_node, "Visited");
-
-    while (queue.length > 0) {
-
-    }
-
     return new FinishedCommand();
 }
 
