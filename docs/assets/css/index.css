@@ -9,7 +9,6 @@
 }
 
 .visualizer-container {
-    background-color: var(--surface-bg-color);
     width: 100vw;
     max-height: 100dvh;
     display: grid;
@@ -20,6 +19,7 @@
 
 
 #data-container, #canvas-container {
+    background-color: var(--surface-bg-color);
     will-change: width;
     height: 100vh;
     overflow: hidden;
@@ -105,10 +105,12 @@
     width: fit-content;
     max-width: calc(100% - var(--slider-width));
 }
-.util-btns-container > button{
+
+.util-btns-container > button {
     margin-right: 0.5em;
 }
-#toggle-btn{
+
+#toggle-btn {
     position: fixed;
     display: none;
     top: 0.5em;

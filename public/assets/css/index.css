@@ -20,6 +20,7 @@
 
 
 #data-container, #canvas-container {
+    background-color: var(--surface-bg-color);
     will-change: width;
     height: 100vh;
     overflow: hidden;

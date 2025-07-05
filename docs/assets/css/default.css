@@ -19,7 +19,7 @@ body, body:fullscreen {
     width: 100vw;
 }
 
-select{
+select {
     color: var(--text-on-background-color);
 }
 button {

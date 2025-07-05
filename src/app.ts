@@ -9,7 +9,6 @@ const FULLSCREEN_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2
 const EXIT_FULLSCREEN_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M6 18H4q-.425 0-.712-.288T3 17t.288-.712T4 16h3q.425 0 .713.288T8 17v3q0 .425-.288.713T7 21t-.712-.288T6 20zm12 0v2q0 .425-.288.713T17 21t-.712-.288T16 20v-3q0-.425.288-.712T17 16h3q.425 0 .713.288T21 17t-.288.713T20 18zM6 6V4q0-.425.288-.712T7 3t.713.288T8 4v3q0 .425-.288.713T7 8H4q-.425 0-.712-.288T3 7t.288-.712T4 6zm12 0h2q.425 0 .713.288T21 7t-.288.713T20 8h-3q-.425 0-.712-.288T16 7V4q0-.425.288-.712T17 3t.713.288T18 4z\"/></svg>";
 document.addEventListener("DOMContentLoaded", () => {
     const fullscreen_btn = document.getElementById("fullscreen-btn")!;
-    const visualizer_container = document.getElementById("visualizer-container")!;
     let is_fullscreen = false;
     fullscreen_btn?.addEventListener("click", () => {
         if (!is_fullscreen)
@@ -22,6 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 fullscreen_btn.innerHTML = FULLSCREEN_ICON_SVG;
                 is_fullscreen = false;
             });
+    });
+    document.body.addEventListener("fullscreenchange", (e) => {
+        is_fullscreen = document.fullscreenElement !== null;
+        fullscreen_btn.innerHTML = is_fullscreen ? EXIT_FULLSCREEN_ICON_SVG : FULLSCREEN_ICON_SVG;
+
     });
     let is_canvas_visible = true;
     const min_screen_width = 740;
