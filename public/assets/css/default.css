@@ -4,18 +4,24 @@
     padding: 0;
     border: none;
 
-    color: var(--text-on-background-color);
+
     box-sizing: border-box !important;
     -webkit-tap-highlight-color: transparent;
 }
 
-body {
+body, body:fullscreen {
+    color: var(--text-on-background-color);
     background-color: var(--surface-bg-color);
-    overflow: hidden;
-    max-height: 100vh;
-    max-width: 100vw;
+    position: absolute;
+    /*overflow: hidden;*/
+    /*max-height: 100vh;*/
+    /*max-width: 100vw;*/
+    width: 100vw;
 }
 
+select {
+    color: var(--text-on-background-color);
+}
 button {
     width: fit-content;
     height: fit-content;
@@ -25,9 +31,10 @@ button {
     cursor: pointer;
     transition: background-color 200ms ease-in-out;
     box-shadow: var(--box-shadow);
-    padding: 0.9em 2em;
-    font-size: 1em;
+    padding: 0.5em 1em;
+    font-size: 1.1em;
 }
+
 
 button:hover {
     background-color: var(--primary-color-hover);

@@ -10,7 +10,8 @@ import { AABB, ForceQuadTree, QuadTreeNode } from "@/utils/quadtree";
 import { Vmath } from "@/utils/vmath";
 
 const ZERO_VEC = Object.freeze({ x: 0, y: 0 });
-
+const PAUSE_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M14 19V5h4v14zm-8 0V5h4v14z\"/></svg>";
+const PLAY_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M8 17.175V6.825q0-.425.3-.713t.7-.287q.125 0 .263.037t.262.113l8.15 5.175q.225.15.338.375t.112.475t-.112.475t-.338.375l-8.15 5.175q-.125.075-.262.113T9 18.175q-.4 0-.7-.288t-.3-.712\"/></svg>";
 export const SceneLogger = new Logger("scene-logger");
 export class Scene {
     static animator = new Animator();
@@ -20,7 +21,7 @@ export class Scene {
     private readonly is_everything_bounded = true;
     private nodes: Map<string, Node> = new Map;
     private edges: Map<string, Edge> = new Map;
-    private accumulated_time = 0;
+    private accumulated_frame_time = 0;
     private fps = 0;
     private last_animation_call_time = 0;
     private drawable_selected: null | Drawable = null;
@@ -35,6 +36,7 @@ export class Scene {
     private readonly mouse_info: Mouse;
     private accumulated_alpha: number = 1;
     private offset: Vector = new Vector(0);
+    private readonly start_btn: HTMLButtonElement;
 
     constructor(public ctx: CanvasRenderingContext2D, private readonly show_fps: boolean = false) {
         this.show_fps = show_fps;
@@ -50,13 +52,26 @@ export class Scene {
                 node.alpha = 0.5;
             }
         });
+
+
+        this.start_btn = document.getElementById("start-btn") as HTMLButtonElement;
+        if (this.start_btn) {
+            this.start_btn.addEventListener("click", () => {
+                if (this.is_running)
+                    this.stop();
+                else
+                    this.start();
+
+
+            });
+        }
         resize_observer.observe(this.ctx.canvas);
 
     }
 
 
-    loop(curr_animation_call_time: number) {
-        if (!this.is_running) return;
+    async loop(curr_animation_call_time: number) {
+
         const t1 = this.last_animation_call_time;
         const dt_ms = curr_animation_call_time - this.last_animation_call_time;
         this.last_animation_call_time = curr_animation_call_time;
@@ -68,42 +83,43 @@ export class Scene {
         const frame_time = curr_animation_call_time - t1;
 
 
-        this.accumulated_time += frame_time;
+        this.accumulated_frame_time += frame_time;
         if (this.show_fps) {
-            if (this.accumulated_time >= 1000) {
-                this.accumulated_time = 0;
+            if (this.accumulated_frame_time >= 1000) {
+                // console.log("counter reset", this.accumulated_frame_time)
+                this.accumulated_frame_time = 0;
                 this.fps = this.fps_counter;
                 this.fps_counter = 0;
-            }
-            this.fps_counter += 1;
+            } else
+                this.fps_counter += 1;
         }
         requestAnimationFrame((time) => {
             this.loop(time);
         });
     }
 
-    async start() {
+    start() {
         if (this.is_running)
             return;
         this.is_running = true;
         this.last_animation_call_time = performance.now();
-        this.accumulated_time = 0;
+        this.accumulated_frame_time = 0;
 
         this.prev_mouse_pos = this.mouse_info.location;
         this.loop(this.last_animation_call_time);
+        this.start_btn.innerHTML = PAUSE_ICON_SVG;
 
     }
 
     stop() {
         this.is_running = false;
-
+        this.start_btn.innerHTML = PLAY_ICON_SVG;
     }
 
 
     render() {
         //Background of canvas
         const rect = this.ctx.canvas.getBoundingClientRect();
-        this.ctx.clearRect(0, 0, rect.width, rect.height);
         this.ctx.fillStyle = ThemeManager.getBgColor("canvas").hex;
         this.ctx.fillRect(0, 0, rect.width, rect.height);
         //Gridlines
@@ -163,6 +179,8 @@ export class Scene {
 
 
     update(dt_ms: number) {
+        if (!this.is_running)
+            return;
         SceneLogger.getReactiveLog("FPS").set(this.fps.toString());
         SceneLogger.getReactiveLog("Accuracy").set(Vmath.round(ForceQuadTree.ACCURACY, 2).toString());
         SceneLogger.getReactiveLog("OFFSET").set(`x: ${ Vmath.round(this.offset.x, 2) }, y: ${ Vmath.round(this.offset.y, 2) }`);
@@ -212,7 +230,7 @@ export class Scene {
                 node.pos.y = Vmath.clamp(node.pos.y, node.radius, this.bounds.height - node.radius);
             }
 
-            if (this.accumulated_time === 0) {
+            if (this.accumulated_frame_time === 0) {
                 const node_el = document.getElementById(id);
                 if (node_el)
                     node_el.innerHTML =

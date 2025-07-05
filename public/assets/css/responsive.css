@@ -7,22 +7,28 @@
         display: block;
     }
 
+    #toggle-btn {
+        display: block;
+    }
     #canvas-container, #data-container {
+        z-index: 0;
         position: fixed;
         top: 0;
         left: 0;
-        transition: transform 300ms var(--easing-jerk), width 300ms var(--easing-jerk), height 300ms var(--easing-jerk);
+        transition: transform 300ms var(--easing-jerk);
         min-width: 100lvw;
         max-width: 100lvw;
-        height: 100lvh;
+        height: 100vh;
     }
 
 
     #data-container.hidden {
+        z-index: -1;
         transform: translateX(-100%);
     }
 
     #canvas-container.hidden {
+        z-index: -1;
         transform: translateX(100%);
     }
 

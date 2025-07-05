@@ -158,4 +158,8 @@ export class Size {
         return this.width + "x" + this.height + "j";
     }
 
+    set(width: number, height: number): void {
+        this.width = width;
+        this.height = height;
+    }
 }

@@ -1,6 +1,7 @@
 
 :root {
     --easing-jerk: cubic-bezier(1, .06, .66, .79);
+    --slider-width: 10px;
 }
 
 #heading {
@@ -8,6 +9,7 @@
 }
 
 .visualizer-container {
+    background-color: var(--surface-bg-color);
     width: 100vw;
     max-height: 100dvh;
     display: grid;
@@ -19,7 +21,7 @@
 
 #data-container, #canvas-container {
     will-change: width;
-    height: 100dvh;
+    height: 100vh;
     overflow: hidden;
     min-width: 300px;
     max-width: calc(100lvw - 10px);
@@ -30,28 +32,15 @@
     flex-direction: column;
     overflow-y: scroll;
 }
+
 #slider {
 
-    width: 10px;
+    width: var(--slider-width);
     /*height: 10px;*/
     background-color: var(--slider-color);
     cursor: ew-resize;
 }
 
-#toggle-button {
-    position: fixed;
-    top: 1em;
-    right: 1em;
-    padding: 1em;
-}
-
-#start-btn {
-    text-align: center;
-    bottom: 1em;
-    position: relative;
-    left: 50%;
-    transform: translate(-50%, -100%);
-}
 
 /***********************************************************************************************************************
 ************************************************ Node Data ****************************************************************
@@ -103,4 +92,25 @@
     justify-items: center;
     justify-self: center;
     /*flex-grow: 1;*/
+}
+
+/***********************************************************************************************************************
+************************************************ UTIL BUTTONS **********************************************************
+/**********************************************************************************************************************/
+.util-btns-container {
+    position: fixed;
+    bottom: 1em;
+    left: 1em;
+    display: flex;
+    width: fit-content;
+    max-width: calc(100% - var(--slider-width));
+}
+.util-btns-container > button{
+    margin-right: 0.5em;
+}
+#toggle-btn{
+    position: fixed;
+    display: none;
+    top: 0.5em;
+    left: 0.5em;
 }

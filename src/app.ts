@@ -5,10 +5,25 @@ import { ThemeManager, ThemeType } from "@/engine/theme";
 import { Visualizer } from "@/engine/visualizer";
 import { clustered_graph, large_graph, simple_graph, spider_web_graph } from "@/graph";
 
-
+const FULLSCREEN_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M5 19h2q.425 0 .713.288T8 20t-.288.713T7 21H4q-.425 0-.712-.288T3 20v-3q0-.425.288-.712T4 16t.713.288T5 17zm14 0v-2q0-.425.288-.712T20 16t.713.288T21 17v3q0 .425-.288.713T20 21h-3q-.425 0-.712-.288T16 20t.288-.712T17 19zM5 5v2q0 .425-.288.713T4 8t-.712-.288T3 7V4q0-.425.288-.712T4 3h3q.425 0 .713.288T8 4t-.288.713T7 5zm14 0h-2q-.425 0-.712-.288T16 4t.288-.712T17 3h3q.425 0 .713.288T21 4v3q0 .425-.288.713T20 8t-.712-.288T19 7z\"/></svg>";
+const EXIT_FULLSCREEN_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M6 18H4q-.425 0-.712-.288T3 17t.288-.712T4 16h3q.425 0 .713.288T8 17v3q0 .425-.288.713T7 21t-.712-.288T6 20zm12 0v2q0 .425-.288.713T17 21t-.712-.288T16 20v-3q0-.425.288-.712T17 16h3q.425 0 .713.288T21 17t-.288.713T20 18zM6 6V4q0-.425.288-.712T7 3t.713.288T8 4v3q0 .425-.288.713T7 8H4q-.425 0-.712-.288T3 7t.288-.712T4 6zm12 0h2q.425 0 .713.288T21 7t-.288.713T20 8h-3q-.425 0-.712-.288T16 7V4q0-.425.288-.712T17 3t.713.288T18 4z\"/></svg>";
 document.addEventListener("DOMContentLoaded", () => {
-
-    let is_canvas_visible = false;
+    const fullscreen_btn = document.getElementById("fullscreen-btn")!;
+    const visualizer_container = document.getElementById("visualizer-container")!;
+    let is_fullscreen = false;
+    fullscreen_btn?.addEventListener("click", () => {
+        if (!is_fullscreen)
+            document.body.requestFullscreen().then(() => {
+                fullscreen_btn.innerHTML = EXIT_FULLSCREEN_ICON_SVG;
+                is_fullscreen = true;
+            });
+        else
+            document.exitFullscreen().then(() => {
+                fullscreen_btn.innerHTML = FULLSCREEN_ICON_SVG;
+                is_fullscreen = false;
+            });
+    });
+    let is_canvas_visible = true;
     const min_screen_width = 740;
     const canvas_container = document.getElementById("canvas-container");
 
@@ -22,38 +37,33 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Context is undefined");
         return;
     }
-    const toggle_btn = document.getElementById("toggle-button");
-    // const visualizer_container = document.getElementById("visualizer-container");
+    const toggle_btn = document.getElementById("toggle-btn");
     const visualizer_data_container = document.getElementById("data-container");
     const slider = document.getElementById("slider");
     const scene = new Scene(ctx, true);
     const algorithm = "DFS Graph Traversal";
 
 
-    function handleToggleBtnVisibility() {
-        if (!toggle_btn || !canvas_container || !visualizer_data_container)
-            return;
-
+    function validateContainerVisibility() {
         const is_wide = window.innerWidth > min_screen_width;
-
-        toggle_btn.hidden = is_wide;
 
         if (is_wide) {
             // Large screen: show both
-            canvas_container.classList.remove("hidden");
-            visualizer_data_container.classList.remove("hidden");
+            canvas_container?.classList.remove("hidden");
+            visualizer_data_container?.classList.remove("hidden");
             is_canvas_visible = true;
         } else {
-            // Small screen: show canvas only by default
-            canvas_container.classList.remove("hidden");
-            visualizer_data_container.classList.add("hidden");
-            is_canvas_visible = true;
-        }
+            if (!is_canvas_visible) {
+                canvas_container?.classList.add("hidden");
+                visualizer_data_container?.classList.remove("hidden");
+                is_canvas_visible = false;
+            } else {
+                canvas_container?.classList.remove("hidden");
+                visualizer_data_container?.classList.add("hidden");
+                is_canvas_visible = true;
+            }
 
-        if (is_canvas_visible)
-            scene.start();
-        else
-            scene.stop();
+        }
     }
 
 
@@ -68,31 +78,35 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.canvas.width = Math.round(rect.width * ratio);
         ctx.canvas.height = Math.round(rect.height * ratio);
 
-        // Set CSS size (display size)
-        ctx.canvas.style.width = `${ rect.width }px`;
-        ctx.canvas.style.height = `${ rect.height }px`;
+        // // Set CSS size (display size)
+        // ctx.canvas.style.width = `${ rect.width }px`;
+        // ctx.canvas.style.height = `${ rect.height }px`;
 
         // Reset and scale the context
         ctx.resetTransform();
         ctx.scale(ratio, ratio);
 
-        console.debug("Canvas resized:", {
-            css: `${ rect.width }x${ rect.height }`,
-            actual: `${ ctx.canvas.width }x${ ctx.canvas.height }`,
-            ratio
-        });
+        SceneLogger.getReactiveLog("CanvasSize").set(`${ ctx.canvas.offsetWidth }x${ ctx.canvas.offsetHeight }`);
+        SceneLogger.getReactiveLog("CanvasContainerSize").set(`${ canvas_container.offsetWidth }x${ canvas_container.offsetHeight }`);
+
     }
 
     window.addEventListener("resize", () => {
-        handleToggleBtnVisibility();
+        canvas_container!.style.width = "";
+        validateContainerVisibility();
         updateCanvasSize(ctx);
     });
-
-
+    window.addEventListener("orientationchange", () => {
+        canvas_container!.style.width = "";
+        validateContainerVisibility();
+        updateCanvasSize(ctx);
+    });
     let is_dragging = false;
-
     slider?.addEventListener("mousedown", () => {
         document.body.style.cursor = "ew-resize";
+        is_dragging = true;
+    });
+    slider?.addEventListener("touchstart", () => {
         is_dragging = true;
     });
 
@@ -101,9 +115,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.body.style.cursor = "default";
         updateCanvasSize(ctx);
-        resized_canvas = false;
     });
-    let resized_canvas = false;
+    window.addEventListener("touchend", () => {
+        is_dragging = false;
+        updateCanvasSize(ctx);
+    });
     window.addEventListener("mousemove", (e) => {
         if (!canvas_container)
             return;
@@ -118,7 +134,21 @@ document.addEventListener("DOMContentLoaded", () => {
             e.stopImmediatePropagation();
         }
     });
+    window.addEventListener("touchmove", (e) => {
+        const touch = e.touches[0];
+        if (!canvas_container)
+            return;
+        if (window.innerWidth <= min_screen_width)
+            return;
 
+        if (is_dragging && touch.clientX < window.innerWidth && touch.clientX > 0) {
+            const offsetX = touch.pageX;
+            canvas_container.style.width = `${ offsetX }px`;
+            updateCanvasSize(ctx);
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
+    });
 
     toggle_btn?.addEventListener("click", () => {
         if (is_canvas_visible) {
@@ -144,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     updateCanvasSize(ctx);
-    handleToggleBtnVisibility();
+    validateContainerVisibility();
     const visualizer = new Visualizer(scene, algorithm);
 
     const drop_down = document.getElementById("config-dropdown") as HTMLSelectElement;

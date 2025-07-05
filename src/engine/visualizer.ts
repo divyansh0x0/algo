@@ -107,7 +107,6 @@ export class Visualizer {
     private playing: boolean;
     private generator: Generator | null;
     private finished: boolean = false;
-    private start_btn: HTMLButtonElement;
 
     constructor(scene: Scene, algorithm_name: string) {
         this.scene = scene;
@@ -120,20 +119,6 @@ export class Visualizer {
         this.playing = true;
 
 
-        this.start_btn = document.getElementById("start-btn") as HTMLButtonElement;
-        if (this.start_btn) {
-            this.start_btn.addEventListener("click", () => {
-                if (this.playing)
-                    scene.stop();
-                else
-                    scene.start();
-                this.playing = !this.playing;
-                this.start_btn.innerText = this.playing ? "Pause" : "Play";
-
-
-            });
-            this.start_btn.innerText = this.playing ? "Pause" : "Play";
-        }
 
         // const interval = setInterval(() => {
         //     if(!is_ready ||)
@@ -206,10 +191,14 @@ export class Visualizer {
 
     }
 
-    stop() {
+    stop(): void {
 
     }
 
     reset() {
+    }
+
+    start(): void {
+
     }
 }
