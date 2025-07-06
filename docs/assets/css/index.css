@@ -9,6 +9,7 @@
 }
 
 .visualizer-container {
+    background-color: var(--surface-bg-color);
     width: 100vw;
     max-height: 100dvh;
     display: grid;
@@ -40,8 +41,19 @@
     background-color: var(--slider-color);
     cursor: ew-resize;
 }
+#canvas-overlay-img{
+    top: 0;
+    left: 0;
+    position: fixed;
+    height: inherit;
+    width: inherit;
+    min-width: inherit;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none;
 
-
+    pointer-events: none;
+}
 /***********************************************************************************************************************
 ************************************************ Node Data ****************************************************************
 /**********************************************************************************************************************/

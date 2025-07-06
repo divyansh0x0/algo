@@ -13,6 +13,20 @@ const ZERO_VEC = Object.freeze({ x: 0, y: 0 });
 const PAUSE_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M14 19V5h4v14zm-8 0V5h4v14z\"/></svg>";
 const PLAY_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M8 17.175V6.825q0-.425.3-.713t.7-.287q.125 0 .263.037t.262.113l8.15 5.175q.225.15.338.375t.112.475t-.112.475t-.338.375l-8.15 5.175q-.125.075-.262.113T9 18.175q-.4 0-.7-.288t-.3-.712\"/></svg>";
 export const SceneLogger = new Logger("scene-logger");
+
+class Throttle {
+    private lastCall = 0;
+
+    constructor(private func: (...args: any[]) => any, private wait_ms: number) {}
+
+    call(...args: any[]) {
+        const now = Date.now();
+        if (now - this.lastCall >= this.wait_ms) {
+            this.lastCall = now;
+            this.func(...args);
+        }
+    }
+}
 export class Scene {
     static animator = new Animator();
     static LOCATION_ERROR = 5;//5px
@@ -21,7 +35,9 @@ export class Scene {
     private readonly is_everything_bounded = true;
     private nodes: Map<string, Node> = new Map;
     private edges: Map<string, Edge> = new Map;
+    private accumulated_alpha: number = -1;
     private accumulated_frame_time = 0;
+    private accumulated_node_position_change: number = -1;
     private fps = 0;
     private last_animation_call_time = 0;
     private drawable_selected: null | Drawable = null;
@@ -34,25 +50,70 @@ export class Scene {
     private fps_counter: number = 0;
     private bounds: DOMRect | undefined;
     private readonly mouse_info: Mouse;
-    private accumulated_alpha: number = 1;
     private offset: Vector = new Vector(0);
     private readonly start_btn: HTMLButtonElement;
+    private debounceSelectedNodeAlphaReset: Throttle;
+    private debounceCanvasResizeNodeAlphaReset: Throttle;
 
     constructor(public ctx: CanvasRenderingContext2D, private readonly show_fps: boolean = false) {
         this.show_fps = show_fps;
         this.is_running = false;
         this.debug_box_el = document.getElementById("debug-box") as HTMLInputElement;
 
-
         this.mouse_info = new Mouse(this.ctx.canvas);
 
 
-        const resize_observer = new ResizeObserver(() => {
-            for (const [ id, node ] of this.nodes) {
-                node.alpha = 0.5;
-            }
-        });
+        this.debounceSelectedNodeAlphaReset = new Throttle(() => {
+            const increment_alpha = () => {
+                let increased_alpha = false;
+                if (!this.drawable_selected)
+                    return;
+                for (const quad_node of this.force_quad_tree!.getNodesInCircularRange(this.drawable_selected.pos, 300)) {
+                    const node = this.nodes.get(quad_node.id);
+                    if (!node)
+                        continue;
+                    if (node.alpha === 0)
+                        node.alpha += 0.1;
+                    if (node.alpha < 0.5) {
+                        node.alpha += Node.alphaDecay;
+                        increased_alpha = true;
+                    }
 
+                }
+                if (increased_alpha)
+                    frame_id = requestAnimationFrame(increment_alpha);
+                else cancelAnimationFrame(frame_id);
+
+            };
+
+            let frame_id = requestAnimationFrame(increment_alpha);
+        }, 3000);
+        this.debounceCanvasResizeNodeAlphaReset = new Throttle(() => {
+            const increment_alpha = () => {
+                let increased_alpha = false;
+                for (const [ id, node ] of this.nodes) {
+
+                    if (node.alpha < 0.5) {
+                        node.alpha += Node.alphaDecay;
+                        increased_alpha = true;
+                    }
+                }
+                if (increased_alpha)
+                    frame_id = requestAnimationFrame(increment_alpha);
+                else cancelAnimationFrame(frame_id);
+
+            };
+
+            let frame_id = requestAnimationFrame(increment_alpha);
+
+
+        }, 5000);
+
+        const resize_observer = new ResizeObserver(() => {
+            this.debounceCanvasResizeNodeAlphaReset.call();
+            console.log("Resized canvas");
+        });
+        resize_observer.observe(this.ctx.canvas);
 
         this.start_btn = document.getElementById("start-btn") as HTMLButtonElement;
         if (this.start_btn) {
@@ -65,13 +126,13 @@ export class Scene {
 
             });
         }
-        resize_observer.observe(this.ctx.canvas);
 
     }
 
 
     async loop(curr_animation_call_time: number) {
-
+        if (!this.is_running)
+            return;
         const t1 = this.last_animation_call_time;
         const dt_ms = curr_animation_call_time - this.last_animation_call_time;
         this.last_animation_call_time = curr_animation_call_time;
@@ -103,16 +164,19 @@ export class Scene {
             return;
         this.is_running = true;
         this.last_animation_call_time = performance.now();
-        this.accumulated_frame_time = 0;
 
         this.prev_mouse_pos = this.mouse_info.location;
         this.loop(this.last_animation_call_time);
         this.start_btn.innerHTML = PAUSE_ICON_SVG;
-
     }
 
     stop() {
+        this.render();
+
         this.is_running = false;
+        this.accumulated_frame_time = 0;
+        this.fps = 0;
+        this.fps_counter = 0;
         this.start_btn.innerHTML = PLAY_ICON_SVG;
     }
 
@@ -179,10 +243,8 @@ export class Scene {
 
 
     update(dt_ms: number) {
-        if (!this.is_running)
-            return;
         SceneLogger.getReactiveLog("FPS").set(this.fps.toString());
-        SceneLogger.getReactiveLog("Accuracy").set(Vmath.round(ForceQuadTree.ACCURACY, 2).toString());
+        SceneLogger.getReactiveLog("Accumulated position change").set(this.accumulated_node_position_change.toString());
         SceneLogger.getReactiveLog("OFFSET").set(`x: ${ Vmath.round(this.offset.x, 2) }, y: ${ Vmath.round(this.offset.y, 2) }`);
         SceneLogger.getReactiveLog("Nodes").set(this.nodes.size.toString());
         SceneLogger.getReactiveLog("Edges").set(this.edges.size.toString());
@@ -190,37 +252,43 @@ export class Scene {
         this.bounds = this.ctx.canvas.getBoundingClientRect();
         SceneLogger.getReactiveLog("Bounds").set(`${ Vmath.round(this.bounds.width, 2) }x${ Vmath.round(this.bounds.height, 2) }`);
 
-        if (this.accumulated_alpha !== 0) {
+        if (this.accumulated_node_position_change !== 0) {
             this.force_quad_tree = new ForceQuadTree(AABB.fromRect(0, 0, this.bounds.width, this.bounds.height));
 
             //Building QUADTREE
             for (const [ id, node ] of this.nodes) {
                 this.force_quad_tree.insert(node.quad_tree_node);
             }
+            SceneLogger.getReactiveLog("Building quadtree").set("True");
+        } else {
+            SceneLogger.getReactiveLog("Building quadtree").set("False");
         }
 
 
-        for (const [ id, edge ] of this.edges) {
-            edge.update(dt_ms);
-            const node1 = edge.start_node;
-            const node2 = edge.end_node;
+        if (this.accumulated_alpha !== 0) {
+            for (const [ id, edge ] of this.edges) {
+                edge.update(dt_ms);
+                const node1 = edge.start_node;
+                const node2 = edge.end_node;
 
-            const attr_force = computeAttraction(node1.pos, node2.pos);
+                const attr_force = computeAttraction(node1.pos, node2.pos);
 
-            node1.attr_force.x += attr_force.x;
-            node1.attr_force.y += attr_force.y;
+                node1.attr_force.x += attr_force.x;
+                node1.attr_force.y += attr_force.y;
 
-            node2.attr_force.x -= attr_force.x;
-            node2.attr_force.y -= attr_force.y;
+                node2.attr_force.x -= attr_force.x;
+                node2.attr_force.y -= attr_force.y;
+            }
         }
-        this.accumulated_alpha = 0;
+
+        this.accumulated_node_position_change = 0;
         // Update nodes
         for (const [ id, node ] of this.nodes) {
             if (!this.drawable_selected && node.containsPoint(this.mouse_info.location.subtract(this.offset))
                 && (this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
                 this.drawable_selected = node;
             }
-            if (this.force_quad_tree) {
+            if (this.force_quad_tree && this.accumulated_alpha !== 0) {
                 node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.quad_tree_node, computeRepulsion);
             }
             node.update(dt_ms);
@@ -240,17 +308,18 @@ export class Scene {
                         `<div>vel: ${ Math.round(node.velocity.x * 1000) / 1000 }i + ${ Math.round(node.velocity.y * 1000) / 1000 }</div>` +
                         `<div>force: ${ Math.round(node.force.x * 1000) / 1000 }i + ${ Math.round(node.force.y * 1000) / 1000 }</div>`;
             }
+            this.accumulated_node_position_change += Vmath.round(Math.abs(node.position_change.x + node.position_change.y), 2);
             this.accumulated_alpha += node.alpha;
-
         }
 
         if (this.drawable_selected) {
             this.ctx.canvas.style.cursor = "pointer";
             this.drawable_selected.pos.x = this.mouse_info.location.x;
             this.drawable_selected.pos.y = this.mouse_info.location.y;
-            for (const [ id, node ] of this.nodes) {
-                node.alpha = 0.5;
-            }
+
+            this.debounceSelectedNodeAlphaReset.call();
+
+
             if (!(this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
                 this.ctx.canvas.style.cursor = "default";
                 this.drawable_selected = null;

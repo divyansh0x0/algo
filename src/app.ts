@@ -4,31 +4,16 @@ import { Scene, SceneLogger } from "@/engine/scene";
 import { ThemeManager, ThemeType } from "@/engine/theme";
 import { Visualizer } from "@/engine/visualizer";
 import { clustered_graph, large_graph, simple_graph, spider_web_graph } from "@/graph";
+import { Display } from "@/settings";
 
 const FULLSCREEN_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M5 19h2q.425 0 .713.288T8 20t-.288.713T7 21H4q-.425 0-.712-.288T3 20v-3q0-.425.288-.712T4 16t.713.288T5 17zm14 0v-2q0-.425.288-.712T20 16t.713.288T21 17v3q0 .425-.288.713T20 21h-3q-.425 0-.712-.288T16 20t.288-.712T17 19zM5 5v2q0 .425-.288.713T4 8t-.712-.288T3 7V4q0-.425.288-.712T4 3h3q.425 0 .713.288T8 4t-.288.713T7 5zm14 0h-2q-.425 0-.712-.288T16 4t.288-.712T17 3h3q.425 0 .713.288T21 4v3q0 .425-.288.713T20 8t-.712-.288T19 7z\"/></svg>";
 const EXIT_FULLSCREEN_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M6 18H4q-.425 0-.712-.288T3 17t.288-.712T4 16h3q.425 0 .713.288T8 17v3q0 .425-.288.713T7 21t-.712-.288T6 20zm12 0v2q0 .425-.288.713T17 21t-.712-.288T16 20v-3q0-.425.288-.712T17 16h3q.425 0 .713.288T21 17t-.288.713T20 18zM6 6V4q0-.425.288-.712T7 3t.713.288T8 4v3q0 .425-.288.713T7 8H4q-.425 0-.712-.288T3 7t.288-.712T4 6zm12 0h2q.425 0 .713.288T21 7t-.288.713T20 8h-3q-.425 0-.712-.288T16 7V4q0-.425.288-.712T17 3t.713.288T18 4z\"/></svg>";
-document.addEventListener("DOMContentLoaded", () => {
-    const fullscreen_btn = document.getElementById("fullscreen-btn")!;
-    let is_fullscreen = false;
-    fullscreen_btn?.addEventListener("click", () => {
-        if (!is_fullscreen)
-            document.body.requestFullscreen().then(() => {
-                fullscreen_btn.innerHTML = EXIT_FULLSCREEN_ICON_SVG;
-                is_fullscreen = true;
-            });
-        else
-            document.exitFullscreen().then(() => {
-                fullscreen_btn.innerHTML = FULLSCREEN_ICON_SVG;
-                is_fullscreen = false;
-            });
-    });
-    document.body.addEventListener("fullscreenchange", (e) => {
-        is_fullscreen = document.fullscreenElement !== null;
-        fullscreen_btn.innerHTML = is_fullscreen ? EXIT_FULLSCREEN_ICON_SVG : FULLSCREEN_ICON_SVG;
 
-    });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+
     let is_canvas_visible = true;
-    const min_screen_width = 740;
     const canvas_container = document.getElementById("canvas-container");
 
     const main_canvas = document.getElementById("main-canvas") as HTMLCanvasElement;
@@ -49,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function validateContainerVisibility() {
-        const is_wide = window.innerWidth > min_screen_width;
+        const is_wide = window.innerWidth > Display.MIN_SCREEN_WIDTH;
 
         if (is_wide) {
             // Large screen: show both
@@ -68,8 +53,36 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         }
+        if (window.innerWidth <= Display.MIN_SCREEN_WIDTH) {
+            if (is_canvas_visible)
+                scene.start();
+            else
+                scene.stop();
+        }
+
     }
 
+    (function enableFullscreenLogic() {
+        const fullscreen_btn = document.getElementById("fullscreen-btn")!;
+        let is_fullscreen = false;
+        fullscreen_btn?.addEventListener("click", () => {
+            is_fullscreen = document.fullscreenElement !== null;
+            if (!is_fullscreen)
+                document.body.requestFullscreen().then(() => {
+                    fullscreen_btn.innerHTML = EXIT_FULLSCREEN_ICON_SVG;
+                    is_fullscreen = true;
+                });
+            else
+                document.exitFullscreen().then(() => {
+                    fullscreen_btn.innerHTML = FULLSCREEN_ICON_SVG;
+                    is_fullscreen = false;
+                });
+        });
+        document.body.addEventListener("fullscreenchange", (e) => {
+            is_fullscreen = document.fullscreenElement !== null;
+            fullscreen_btn.innerHTML = is_fullscreen ? EXIT_FULLSCREEN_ICON_SVG : FULLSCREEN_ICON_SVG;
+        });
+    })();
 
     function updateCanvasSize(ctx: CanvasRenderingContext2D) {
         if (!canvas_container)
@@ -92,6 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         SceneLogger.getReactiveLog("CanvasSize").set(`${ ctx.canvas.offsetWidth }x${ ctx.canvas.offsetHeight }`);
         SceneLogger.getReactiveLog("CanvasContainerSize").set(`${ canvas_container.offsetWidth }x${ canvas_container.offsetHeight }`);
+
+        //rerender the frame
+        scene.render();
 
     }
 
@@ -127,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("mousemove", (e) => {
         if (!canvas_container)
             return;
-        if (window.innerWidth <= min_screen_width)
+        if (window.innerWidth <= Display.MIN_SCREEN_WIDTH)
             return;
 
         if (is_dragging && e.clientX < window.innerWidth && e.clientX > 0) {
@@ -142,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const touch = e.touches[0];
         if (!canvas_container)
             return;
-        if (window.innerWidth <= min_screen_width)
+        if (window.innerWidth <= Display.MIN_SCREEN_WIDTH)
             return;
 
         if (is_dragging && touch.clientX < window.innerWidth && touch.clientX > 0) {
@@ -173,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ThemeManager.setThemeType(ThemeType.AUTO);
 
-    if (canvas_container && slider && window.innerWidth > min_screen_width)
+    if (canvas_container && slider && window.innerWidth > Display.MIN_SCREEN_WIDTH)
         canvas_container.style.width = `${ slider.getBoundingClientRect().x }px`;
 
 
@@ -202,11 +218,4 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("changing");
         });
     }
-
-    /**
-     * FULLSCREEN LOGIC
-     * */
-    SceneLogger.info("Loaded");
-    const doc_el = document.documentElement;
-    // doc_el.requestFullscreen({ navigationUI: "hide" }).then(r  => SceneLogger.success("Browser nav bar hidden"));
 });

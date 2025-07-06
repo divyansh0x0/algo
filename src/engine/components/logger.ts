@@ -49,13 +49,15 @@ class ReactiveLogger {
             backgroundColor: "rgba(255,255,255,0.04)",
             fontFamily: "sans-serif",
             width: "fit-content",
-            justifyContent: "space-between"
+            justifyContent: "space-between",
+            padding: "0.1em"
         });
 
         Object.assign(name_el.style, {
             fontWeight: "bold",
             color: "#ececec",
-            padding: "0.5em"
+            padding: "0.5em",
+            minWidth: "max-content"
         });
 
         Object.assign(this.value_el.style, {
@@ -90,8 +92,8 @@ export class Logger {
         Object.assign(this.container_el.style, {
             display: "flex",
             flexDirection: "column",
-            width: "max-content",
-            minWidth: "200px",
+            width: "300px",
+            minWidth: "50",
             maxWidth: "100vw",
             padding: "0.5em",
             overflow: "scroll",
@@ -100,10 +102,11 @@ export class Logger {
             backgroundColor: "#000000",
             boxShadow: "0 0 40px rgba(0, 0, 0, 0.8)",
             fontFamily: "sans-serif",
-            maxHeight: "50vh",
+            maxHeight: "90vh",
+            minHeight: "50px",
             height: "fit-content",
             position: "fixed",
-            top: "0",
+            top: "1em",
             left: "50%",
             zIndex: "1000",
             resize: "both",
