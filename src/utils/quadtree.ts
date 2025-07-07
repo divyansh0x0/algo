@@ -54,14 +54,14 @@ export class AABB {
      * @param {Vector} vec
      */
     containsPoint(vec: Vector): boolean {
-        return Math.abs(vec.x - this.center.x) < this.half_dimension.width
-            && Math.abs(vec.y - this.center.y) < this.half_dimension.height;
+        return Math.abs(vec.x - this.center.x) <= this.half_dimension.width
+            && Math.abs(vec.y - this.center.y) <= this.half_dimension.height;
 
     }
 
     intersectsAABB(other: AABB): boolean {
-        return this.center.x - other.center.x < this.half_dimension.width + other.half_dimension.width
-            && this.center.y - other.center.y < this.half_dimension.height + other.half_dimension.height;
+        return this.center.x - other.center.x <= this.half_dimension.width + other.half_dimension.width
+            && this.center.y - other.center.y <= this.half_dimension.height + other.half_dimension.height;
     }
 
     toString() {
@@ -80,6 +80,7 @@ setInterval(() => {
 }, 100);
 
 export class ForceQuadTree {
+
     static ACCURACY = 0.9;
     static FULL_ACCURACY_AREA = new Size(100, 100);
     static FULL_ACCURACY_CIRCLE_RADIUS = 100;
@@ -121,6 +122,9 @@ export class ForceQuadTree {
         this.has_sub_divisions = true;
     }
 
+    contains(pos: Vector) {
+        return this.boundary.containsPoint(pos);
+    }
 
     insert(node: QuadTreeNode) {
         // Skip object outside this quadtree
@@ -215,7 +219,7 @@ export class ForceQuadTree {
             // Apply Barnes-Hut approximation
             const region_size = region.boundary.half_dimension.width;
             const threshold = region_size / Math.sqrt(l);
-            if (threshold > min_threshold && region.has_sub_divisions) {
+            if (threshold >= min_threshold && region.has_sub_divisions) {
                 force.add_self(region.getForceDueToRegions(quad_tree_node, force_func, excluded_nodes, depth + 1));
             } else {
                 // Skip if same node or at same position

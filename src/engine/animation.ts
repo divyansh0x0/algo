@@ -55,10 +55,10 @@ export class EasingFunctions {
 abstract class Animation {
     public total_duration_ms: number;
     public duration_passed_ms: number;
-    public drawable: Drawable;
+    public drawable: Drawable | null;
     protected easing: (t: number) => number;
 
-    protected constructor(drawable: Drawable, total_duration_ms: number, easing_function: ((t: number) => number)) {
+    protected constructor(drawable: Drawable | null, total_duration_ms: number, easing_function: ((t: number) => number)) {
         this.total_duration_ms = total_duration_ms;
         this.duration_passed_ms = 0;
         this.easing = easing_function;
@@ -70,7 +70,10 @@ abstract class Animation {
     abstract finalize(): void;
 
     getId() {
-        return this.constructor.name + this.drawable.id;
+        if (this.drawable)
+            return this.constructor.name + this.drawable.id;
+        else
+            return this.constructor.name;
     }
 
     abstract interrupt(): void;
@@ -85,7 +88,18 @@ export class ColorAnimation extends Animation {
         super(drawable, duration_ms, easing_function);
         this.from = from;
         this.to = to;
-        this.drawable.is_color_animating = true;
+        this.drawable!.is_color_animating = true;
+    }
+
+    finalize() {
+        this.setNormalizedTime(1);
+        this.drawable!.is_color_animating = false;
+        this.drawable!.color = this.to;
+        this.interrupt();
+    }
+
+    interrupt() {
+        this.drawable!.is_color_animating = false;
     }
 
     setNormalizedTime(t: number) {
@@ -93,21 +107,30 @@ export class ColorAnimation extends Animation {
         const g = Vmath.roundedClamp(transition(this.from.g, this.to.g, t, this.easing), 0, 255);
         const b = Vmath.roundedClamp(transition(this.from.b, this.to.b, t, this.easing), 0, 255);
         const a = Vmath.roundedClamp(transition(this.from.a, this.to.a, t, this.easing), 0, 255);
-        this.drawable.color = new Color(r, g, b, a);
+        this.drawable!.color = new Color(r, g, b, a);
         // console.log()
+    }
+
+
+}
+
+export class ValueAnimation extends Animation {
+
+    constructor(private callback: ((t: number, completed: boolean) => any), private from: number, private to: number, duration_ms = 250, easing_function: ((t: number) => number) = EasingFunctions.easeInSin) {
+        super(null, duration_ms, easing_function);
     }
 
     finalize() {
         this.setNormalizedTime(1);
-        this.drawable.is_color_animating = false;
-        this.drawable.color = this.to;
-        this.interrupt();
     }
 
-    interrupt() {
-        this.drawable.is_color_animating = false;
+    interrupt(): void {
     }
 
+    setNormalizedTime(t: number) {
+        this.callback(transition(this.from, this.to, t, this.easing), t === 1);
+        // console.log()
+    }
 
 }
 

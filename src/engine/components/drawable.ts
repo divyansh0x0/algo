@@ -6,7 +6,7 @@ import { Vector } from "@/utils/geometry";
 
 
 export abstract class Drawable {
-    private ctx: CanvasRenderingContext2D;
+    protected ctx: CanvasRenderingContext2D;
     private color_state: ColorStates;
 
 
@@ -17,14 +17,14 @@ export abstract class Drawable {
     readonly id: string;
 
 
-    protected constructor(ctx: CanvasRenderingContext2D, id: string, private class_name: string) {
-        this.ctx = ctx;
+    protected constructor(private scene: Scene, id: string, private class_name: string) {
+        this.ctx = scene.ctx;
         this.id = id;
         this.color_state = ColorStates.DEFAULT;
     }
 
     public highlight() {
-        Scene.animator.add(new ColorAnimation(this, this.color, ThemeManager.getBgColor(this.getName(), ColorStates.HIGHLIGHTED)));
+        this.scene.animator.add(new ColorAnimation(this, this.color, ThemeManager.getBgColor(this.getName(), ColorStates.HIGHLIGHTED)));
         this.color_state = ColorStates.HIGHLIGHTED;
     }
 
@@ -40,7 +40,7 @@ export abstract class Drawable {
 
     public abstract render(): void;
 
-    drawPointVec(vec_obj: Vector, color = "green") {
+    protected drawPointVec(vec_obj: Vector, color = "green") {
         const length_attr = Math.sqrt(vec_obj.x ** 2 + vec_obj.y ** 2);
         if (length_attr > 1)
             this.drawArrow(100 * vec_obj.x / length_attr, 100 * vec_obj.y / length_attr, color);
@@ -48,7 +48,7 @@ export abstract class Drawable {
 
     }
 
-    drawArrow(length_x: number, length_y: number, color = "green") {
+    protected drawArrow(length_x: number, length_y: number, color = "green") {
         if (length_x === 0 && length_y === 0)
             return;
         this.ctx.save();
@@ -79,7 +79,7 @@ export abstract class Drawable {
         this.ctx.restore();
     }
 
-    drawCircle(radius: number, x: number, y: number, color: string, b_add_border: boolean = false, border_color: string, border_width = 1) {
+    protected drawCircle(radius: number, x: number, y: number, color: string, b_add_border: boolean = false, border_color: string, border_width = 1) {
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -96,7 +96,7 @@ export abstract class Drawable {
         this.ctx.restore();
     }
 
-    reset() {
+    protected reset() {
         console.error("Reset not implemented for", this.constructor.name);
     }
 
@@ -115,7 +115,7 @@ export abstract class Drawable {
         this.ctx.restore();
     }
 
-    drawText(text: string, x: number, y: number, color: string, font_size_em = 1) {
+    protected drawText(text: string, x: number, y: number, color: string, font_size_em = 1) {
         this.ctx.save();
 
         this.ctx.textAlign = "center";    // Horizontal center
@@ -126,7 +126,7 @@ export abstract class Drawable {
         this.ctx.restore();
     }
 
-    drawRect(x: number, y: number, width: number, height: number, bg_color = "#000", border_color: string, border_width = 0, border_radius: number) {
+    protected drawRect(x: number, y: number, width: number, height: number, bg_color = "#000", border_color: string, border_width = 0, border_radius: number) {
         this.ctx.save();
         this.ctx.fillStyle = bg_color;
         if (border_width > 0) {

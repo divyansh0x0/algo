@@ -91,17 +91,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const rect = canvas_container.getBoundingClientRect();
 
+
+        const prev_transform = ctx.getTransform();
         // Set actual canvas resolution (for drawing)
         ctx.canvas.width = Math.round(rect.width * ratio);
         ctx.canvas.height = Math.round(rect.height * ratio);
 
+        ctx.setTransform(prev_transform);
         // // Set CSS size (display size)
         // ctx.canvas.style.width = `${ rect.width }px`;
         // ctx.canvas.style.height = `${ rect.height }px`;
-
-        // Reset and scale the context
-        ctx.resetTransform();
-        ctx.scale(ratio, ratio);
 
         SceneLogger.getReactiveLog("CanvasSize").set(`${ ctx.canvas.offsetWidth }x${ ctx.canvas.offsetHeight }`);
         SceneLogger.getReactiveLog("CanvasContainerSize").set(`${ canvas_container.offsetWidth }x${ canvas_container.offsetHeight }`);

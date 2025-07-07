@@ -1,4 +1,5 @@
 import { Drawable } from "@/engine/components/drawable";
+import { Scene } from "@/engine/scene";
 import { ColorStates, ThemeManager } from "@/engine/theme";
 import { Vector } from "@/utils/geometry";
 import { QuadTreeNode } from "@/utils/quadtree";
@@ -24,8 +25,9 @@ export class Node extends Drawable {
     private readonly max_velocity: number = 100;
     private readonly velocity_decay: number = 0.5;
     private readonly min_velocity = 1;
-    constructor(ctx: CanvasRenderingContext2D, id: string, pos: Vector, radius: number, text: string = "") {
-        super(ctx, id, "node");
+
+    constructor(scene: Scene, id: string, pos: Vector, radius: number, text: string = "") {
+        super(scene, id, "node");
         this.pos.set(pos.x, pos.y);
         this.text = text;
         this.radius = radius;
@@ -99,9 +101,11 @@ export class Node extends Drawable {
     }
 
 
-    containsPoint(point: Vector) {
+    containsPoint(x: number, y: number) {
+        const p1 = this.pos;
+        const p2 = new Vector(x, y);
         // Check if the point is inside the circle using the distance formula
-        const dist_sqrd = this.pos.subtract(point).length_sqrd();
+        const dist_sqrd = p2.sub_self(p1).length_sqrd();
         return this.radius ** 2 > dist_sqrd;
     }
 

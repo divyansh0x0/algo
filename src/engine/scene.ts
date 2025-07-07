@@ -1,11 +1,11 @@
-import { Animator } from "@/engine/animation";
+import { Animator, EasingFunctions, ValueAnimation } from "@/engine/animation";
 import { Drawable } from "@/engine/components/drawable";
 import { Edge } from "@/engine/components/edge";
 import { Logger } from "@/engine/components/logger";
 import { Node } from "@/engine/components/node";
 import { ThemeManager } from "@/engine/theme";
 import { Size, Vector } from "@/utils/geometry";
-import { Mouse, MouseButton } from "@/utils/mouse";
+import { Mouse } from "@/utils/mouse";
 import { AABB, ForceQuadTree, QuadTreeNode } from "@/utils/quadtree";
 import { Vmath } from "@/utils/vmath";
 
@@ -27,12 +27,26 @@ class Throttle {
         }
     }
 }
+
+function getTouchById(touchList: TouchList, id: number): Touch | null {
+    for (const touch of touchList) {
+        if (touch.identifier === id)
+            return touch;
+    }
+    return null;
+}
+
 export class Scene {
-    static animator = new Animator();
-    static LOCATION_ERROR = 5;//5px
+    static ZOOM_DELTA = 0.1;
+    static MIN_ZOOM = 0.1;
+    static MAX_ZOOM = 10;
+    readonly animator = new Animator();
+    private camera = {
+        x: 0,
+        y: 0,
+        zoom: 1
+    };
 
-
-    private readonly is_everything_bounded = true;
     private nodes: Map<string, Node> = new Map;
     private edges: Map<string, Edge> = new Map;
     private accumulated_alpha: number = -1;
@@ -49,13 +63,20 @@ export class Scene {
     private force_quad_tree: undefined | ForceQuadTree;
     private fps_counter: number = 0;
     private bounds: DOMRect | undefined;
-    private readonly mouse_info: Mouse;
     private offset: Vector = new Vector(0);
-    private readonly start_btn: HTMLButtonElement;
     private debounceSelectedNodeAlphaReset: Throttle;
     private debounceCanvasResizeNodeAlphaReset: Throttle;
 
+    private readonly mouse_info: Mouse;
+    private readonly start_btn: HTMLButtonElement;
+    private dragging_camera: boolean = false;
+    private is_zooming: boolean = false;
+
+    private initial_touches: TouchList | null = null;
+    private pinching_to_zoom: boolean = false;
+
     constructor(public ctx: CanvasRenderingContext2D, private readonly show_fps: boolean = false) {
+        this.ctx.scale(devicePixelRatio, devicePixelRatio);
         this.show_fps = show_fps;
         this.is_running = false;
         this.debug_box_el = document.getElementById("debug-box") as HTMLInputElement;
@@ -87,11 +108,11 @@ export class Scene {
             };
 
             let frame_id = requestAnimationFrame(increment_alpha);
-        }, 3000);
+        }, 4000);
         this.debounceCanvasResizeNodeAlphaReset = new Throttle(() => {
             const increment_alpha = () => {
                 let increased_alpha = false;
-                for (const [ id, node ] of this.nodes) {
+                for (const [ , node ] of this.nodes) {
 
                     if (node.alpha < 0.5) {
                         node.alpha += Node.alphaDecay;
@@ -111,7 +132,6 @@ export class Scene {
 
         const resize_observer = new ResizeObserver(() => {
             this.debounceCanvasResizeNodeAlphaReset.call();
-            console.log("Resized canvas");
         });
         resize_observer.observe(this.ctx.canvas);
 
@@ -127,8 +147,122 @@ export class Scene {
             });
         }
 
+
+        this.ctx.canvas.addEventListener("mousedown", (e) => this.handleMousePressed(e));
+        this.ctx.canvas.addEventListener("touchstart", (e) => {
+
+            this.initial_touches = e.touches;
+            //treat single touch as mouse touch
+            if (e.touches.length === 1)
+                this.handleMousePressed(e);
+            else
+                this.handleMultiTouch(e);
+
+        });
+        this.ctx.canvas.addEventListener("wheel", (e) => {
+            this.zoomAt(e.clientX * devicePixelRatio, e.clientY * devicePixelRatio, e.deltaY < 0);
+        });
+        window.addEventListener("mouseup", () => this.handleMouseUp());
+        window.addEventListener("touchend", () => {
+            this.handleMouseUp();
+            this.pinching_to_zoom = false;
+        });
+        window.addEventListener("mousemove", (e) => this.handleMouseMove(e));
+        window.addEventListener("touchmove", (e) => {
+            SceneLogger.getReactiveLog("Touch count").set(e.touches[0].identifier.toString());
+            if (e.touches.length === 1)
+                this.handleMouseMove(e);
+            else
+                this.handleMultiTouchMove(e);
+        });
     }
 
+    getTransformedPoint(screenX: number, screenY: number): Vector {
+        return new Vector(
+            screenX / (this.camera.zoom * devicePixelRatio) + this.camera.x,
+            screenY / (this.camera.zoom * devicePixelRatio) + this.camera.y
+        );
+    }
+
+    render() {
+        const dpr = devicePixelRatio || 1;
+        this.ctx.setTransform(
+            dpr * this.camera.zoom, 0,
+            0, dpr * this.camera.zoom,
+            -this.camera.x * dpr * this.camera.zoom,
+            -this.camera.y * dpr * this.camera.zoom
+        );
+
+
+        const canvas_width = this.ctx.canvas.width;
+        const canvas_height = this.ctx.canvas.height;
+        //Background of canvas
+        this.ctx.save();
+        this.ctx.resetTransform();
+        this.ctx.fillStyle = ThemeManager.getBgColor("canvas").hex;
+        this.ctx.fillRect(0, 0, canvas_width, canvas_height);
+
+        this.ctx.beginPath();
+
+        const startX = -((this.camera.x * this.camera.zoom * dpr) % (this.grid_size.width * this.camera.zoom * dpr));
+        const startY = -((this.camera.y * this.camera.zoom * dpr) % (this.grid_size.height * this.camera.zoom * dpr));
+        //Gridlines
+        this.ctx.strokeStyle = ThemeManager.getColor("grid").hex;
+        this.ctx.lineWidth = 1;
+
+        for (let x = startX; x < canvas_width; x += this.grid_size.width * this.camera.zoom * dpr) {
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, canvas_height);
+        }
+        for (let y = startY; y < canvas_height; y += this.grid_size.height * this.camera.zoom * dpr) {
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(canvas_width, y);
+        }
+        this.ctx.stroke();
+        this.ctx.restore();
+
+
+        this.ctx.save();
+        //Drawing drawables
+        const edges = this.edges;
+        const nodes = this.nodes;
+        for (const [ , edge ] of edges) {
+            edge.render();
+
+        }
+
+
+        for (const [ , node ] of nodes) {
+            if (!node)
+                continue;
+            node.render();
+
+        }
+
+
+        //Quad tree debug
+        if (this.force_quad_tree && this.debug_box_el?.checked) {
+            this.ctx.beginPath();
+            this.ctx.setLineDash([]);
+            this.ctx.strokeStyle = ThemeManager.getColor("debug").hex;
+
+            let b = null;
+            for (const region of this.force_quad_tree.getAllRegions()) {
+                b = region.boundary;
+
+                this.ctx.strokeRect(b.center.x - b.half_dimension.width, b.center.y - b.half_dimension.height, b.half_dimension.width * 2, b.half_dimension.height * 2);
+                if (region.COM)
+                    this.ctx.fillText(`${ region.mass }`, region.COM.x, region.COM.y);
+            }
+            // if(!this.mark)
+            //     this.mark = true;
+
+            this.ctx.closePath();
+
+
+        }
+        this.ctx.restore();
+    }
 
     async loop(curr_animation_call_time: number) {
         if (!this.is_running)
@@ -147,7 +281,6 @@ export class Scene {
         this.accumulated_frame_time += frame_time;
         if (this.show_fps) {
             if (this.accumulated_frame_time >= 1000) {
-                // console.log("counter reset", this.accumulated_frame_time)
                 this.accumulated_frame_time = 0;
                 this.fps = this.fps_counter;
                 this.fps_counter = 0;
@@ -165,10 +298,14 @@ export class Scene {
         this.is_running = true;
         this.last_animation_call_time = performance.now();
 
-        this.prev_mouse_pos = this.mouse_info.location;
+        // this.prev_mouse_pos = this.mouse_info.location;
         this.loop(this.last_animation_call_time);
         this.start_btn.innerHTML = PAUSE_ICON_SVG;
     }
+
+    // private getScaledEventLocation(e: MouseEvent | TouchEvent, touch_index = 0): [ number, number ] {
+    // return [  ];
+    // }
 
     stop() {
         this.render();
@@ -180,83 +317,32 @@ export class Scene {
         this.start_btn.innerHTML = PLAY_ICON_SVG;
     }
 
-
-    render() {
-        //Background of canvas
-        const rect = this.ctx.canvas.getBoundingClientRect();
-        this.ctx.fillStyle = ThemeManager.getBgColor("canvas").hex;
-        this.ctx.fillRect(0, 0, rect.width, rect.height);
-        //Gridlines
-        this.ctx.strokeStyle = ThemeManager.getColor("grid").hex;
-        for (let x = 0; x < rect.width; x += this.grid_size.width) {
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, rect.height);
-        }
-        for (let y = 0; y < rect.height; y += this.grid_size.height) {
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(rect.width, y);
-        }
-        this.ctx.stroke();
-
-        this.ctx.save();
-        //Drawing drawables
-        const edges = this.edges;
-        const nodes = this.nodes;
-        for (const [ id, edge ] of edges) {
-            edge.render();
-
-        }
-
-
-        for (const [ id, node ] of nodes) {
-            if (!node)
-                continue;
-            node.render();
-
-        }
-
-
-        //Quad tree debug
-        if (this.force_quad_tree && this.debug_box_el?.checked) {
-            this.ctx.beginPath();
-            this.ctx.setLineDash([]);
-            this.ctx.strokeStyle = ThemeManager.getColor("debug").hex;
-
-            let b = null;
-            let cy = 0;
-            for (const region of this.force_quad_tree.getAllRegions()) {
-                b = region.boundary;
-
-                this.ctx.strokeRect(b.center.x - b.half_dimension.width, b.center.y - b.half_dimension.height, b.half_dimension.width * 2, b.half_dimension.height * 2);
-                if (region.COM)
-                    this.ctx.fillText(`${ region.mass }`, region.COM.x, region.COM.y);
-            }
-            // if(!this.mark)
-            //     this.mark = true;
-
-            this.ctx.closePath();
-
-
-        }
-        this.ctx.restore();
-    }
-
-
     update(dt_ms: number) {
         SceneLogger.getReactiveLog("FPS").set(this.fps.toString());
+        SceneLogger.getReactiveLog("ZOOM").set(this.camera.zoom.toString());
+        SceneLogger.getReactiveLog("Prev Mouse Loc").set(`${ this.prev_mouse_pos.x }i + ${ this.prev_mouse_pos.y }j`);
+        SceneLogger.getReactiveLog("Camera").set(`${ this.camera.x }i + ${ this.camera.y }j`);
         SceneLogger.getReactiveLog("Accumulated position change").set(this.accumulated_node_position_change.toString());
         SceneLogger.getReactiveLog("OFFSET").set(`x: ${ Vmath.round(this.offset.x, 2) }, y: ${ Vmath.round(this.offset.y, 2) }`);
         SceneLogger.getReactiveLog("Nodes").set(this.nodes.size.toString());
         SceneLogger.getReactiveLog("Edges").set(this.edges.size.toString());
+        SceneLogger.getReactiveLog("DPR").set(devicePixelRatio.toString());
 
-        this.bounds = this.ctx.canvas.getBoundingClientRect();
-        SceneLogger.getReactiveLog("Bounds").set(`${ Vmath.round(this.bounds.width, 2) }x${ Vmath.round(this.bounds.height, 2) }`);
+        const canvas_width = this.ctx.canvas.width;
+        const canvas_height = this.ctx.canvas.height;
+        SceneLogger.getReactiveLog("Bounds").set(`${ Vmath.round(canvas_width, 2) }x${ Vmath.round(canvas_height, 2) }`);
 
         if (this.accumulated_node_position_change !== 0) {
-            this.force_quad_tree = new ForceQuadTree(AABB.fromRect(0, 0, this.bounds.width, this.bounds.height));
+            const topLeft = this.getTransformedPoint(0, 0);
+            const bottomRight = this.getTransformedPoint(canvas_width, canvas_height);
+
+            const width = bottomRight.x - topLeft.x;
+            const height = bottomRight.y - topLeft.y;
+            const padding = 300;
+            this.force_quad_tree = new ForceQuadTree(AABB.fromRect(topLeft.x - padding, topLeft.y - padding, width + 2 * padding, height + 2 * padding));
 
             //Building QUADTREE
-            for (const [ id, node ] of this.nodes) {
+            for (const [ , node ] of this.nodes) {
                 this.force_quad_tree.insert(node.quad_tree_node);
             }
             SceneLogger.getReactiveLog("Building quadtree").set("True");
@@ -266,7 +352,7 @@ export class Scene {
 
 
         if (this.accumulated_alpha !== 0) {
-            for (const [ id, edge ] of this.edges) {
+            for (const [ , edge ] of this.edges) {
                 edge.update(dt_ms);
                 const node1 = edge.start_node;
                 const node2 = edge.end_node;
@@ -281,22 +367,16 @@ export class Scene {
             }
         }
 
-        this.accumulated_node_position_change = 0;
         // Update nodes
         for (const [ id, node ] of this.nodes) {
-            if (!this.drawable_selected && node.containsPoint(this.mouse_info.location.subtract(this.offset))
-                && (this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
-                this.drawable_selected = node;
-            }
-            if (this.force_quad_tree && this.accumulated_alpha !== 0) {
+
+            if (this.drawable_selected === node) {
+                node.repln_force.set(0, 0);
+                node.attr_force.set(0, 0);
+            } else if (this.force_quad_tree && this.accumulated_alpha !== 0) {
                 node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.quad_tree_node, computeRepulsion);
             }
             node.update(dt_ms);
-
-            if (this.is_everything_bounded) {
-                node.pos.x = Vmath.clamp(node.pos.x, node.radius, this.bounds.width - node.radius);
-                node.pos.y = Vmath.clamp(node.pos.y, node.radius, this.bounds.height - node.radius);
-            }
 
             if (this.accumulated_frame_time === 0) {
                 const node_el = document.getElementById(id);
@@ -304,7 +384,7 @@ export class Scene {
                     node_el.innerHTML =
                         `<div>id: ${ node.id }</div>` +
                         `<div>alpha: ${ node.alpha }</div>` +
-                        `<div> pos: ${ Math.round(node.pos.x) }i + ${ Math.round(node.pos.y) }j </div>` +
+                        `<div> pos: ${ this.getTransformedPoint(node.pos.x, node.pos.y) } </div>` +
                         `<div>vel: ${ Math.round(node.velocity.x * 1000) / 1000 }i + ${ Math.round(node.velocity.y * 1000) / 1000 }</div>` +
                         `<div>force: ${ Math.round(node.force.x * 1000) / 1000 }i + ${ Math.round(node.force.y * 1000) / 1000 }</div>`;
             }
@@ -314,31 +394,11 @@ export class Scene {
 
         if (this.drawable_selected) {
             this.ctx.canvas.style.cursor = "pointer";
-            this.drawable_selected.pos.x = this.mouse_info.location.x;
-            this.drawable_selected.pos.y = this.mouse_info.location.y;
-
             this.debounceSelectedNodeAlphaReset.call();
-
-
-            if (!(this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
-                this.ctx.canvas.style.cursor = "default";
-                this.drawable_selected = null;
-            }
+        } else {
+            this.ctx.canvas.style.cursor = "default";
         }
-        // } else {
-        //     if (this.mouse_info.location.x < this.bounds.width && this.mouse_info.location.y < this.bounds.height
-        //         && this.mouse_info.location.x > 0 && this.mouse_info.location.y > 0
-        //         && (this.mouse_info.isButtonDown(MouseButton.Primary) || this.mouse_info.isTouching)) {
-        //         this.ctx.canvas.style.cursor = "move";
-        //         this.offset.add_self(this.mouse_info.location.subtract(this.prev_mouse_pos));
-        //     } else {
-        //         this.ctx.canvas.style.cursor = "default";
-        //     }
-        // }
-        //
-
-        this.prev_mouse_pos = this.mouse_info.location;
-        Scene.animator.step(dt_ms);
+        this.animator.step(dt_ms);
     }
 
     /*******************************************************************************************************************
@@ -347,8 +407,120 @@ export class Scene {
     addNode(id: string, pos: Vector, radius: number): boolean {
         if (this.nodes.has(id))
             return false;
-        this.nodes.set(id, new Node(this.ctx, id, pos, radius));
+        this.nodes.set(id, new Node(this, id, pos, radius));
         return true;
+    }
+
+    addEdge(from_id: string, to_id: string): boolean {
+        const node1 = this.nodes.get(from_id);
+        const node2 = this.nodes.get(to_id);
+        if (!node1 || !node2)
+            return false;
+        if (this.edges.get(Edge.getEdgeKey(from_id, to_id)))
+            return true;
+
+
+        this.edges.set(Edge.getEdgeKey(from_id, to_id), new Edge(this, node1, node2));
+        return true;
+
+    }
+
+    private handleMultiTouchMove(e: TouchEvent) {
+        if (!this.pinching_to_zoom || e.touches.length !== 2) return;
+
+        if (!this.initial_touches) {
+            this.initial_touches = e.touches;
+            return;
+        }
+
+        // --- Compute old and new pinch distance ---
+        const getDistance = (a: Touch, b: Touch) => {
+            const dx = a.clientX - b.clientX;
+            const dy = a.clientY - b.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        const oldDist = getDistance(this.initial_touches[0], this.initial_touches[1]);
+        const newDist = getDistance(e.touches[0], e.touches[1]);
+
+        // Prevent divide by zero
+        if (oldDist === 0) return;
+
+        // --- Compute zoom factor ---
+        const zoomFactor = newDist / oldDist;
+        const newZoom = Vmath.clamp(this.camera.zoom * zoomFactor, Scene.MIN_ZOOM, Scene.MAX_ZOOM);
+
+        // --- Get screen midpoint of new touches ---
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 * devicePixelRatio;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 * devicePixelRatio;
+
+        // --- Compute world point under midpoint before zoom ---
+        const worldBefore = this.getTransformedPoint(midX, midY);
+
+        // --- Apply new zoom ---
+        this.camera.zoom = newZoom;
+
+        // --- Compute world point under same screen midpoint after zoom ---
+        const worldAfter = this.getTransformedPoint(midX, midY);
+
+        // --- Offset camera so world point stays fixed under pinch center ---
+        this.camera.x += worldBefore.x - worldAfter.x;
+        this.camera.y += worldBefore.y - worldAfter.y;
+
+        // Update for next move
+        this.initial_touches = e.touches;
+        this.debounceCanvasResizeNodeAlphaReset.call();
+    }
+
+    private handleMultiTouch(e: TouchEvent) {
+
+        if (e.touches.length === 2)
+            this.pinching_to_zoom = true;
+
+
+    }
+
+    private handleMouseUp() {
+        this.drawable_selected = null;
+        this.dragging_camera = false;
+    }
+
+    private zoomAt(x: number, y: number, zoom_in: boolean): void {
+
+        const zoom_to = this.camera.zoom + (Scene.ZOOM_DELTA * this.camera.zoom * (zoom_in ? 1 : -1));
+        if (zoom_to > Scene.MAX_ZOOM || zoom_to < Scene.MIN_ZOOM)
+            return;
+        const zoom_from = this.camera.zoom;
+        const world_focus = this.getTransformedPoint(x, y); // fixed world point under cursor
+
+        this.animator.add(new ValueAnimation((new_zoom, completed) => {
+            this.is_zooming = !completed;
+            if (completed)
+                this.debounceCanvasResizeNodeAlphaReset.call();
+
+            // Adjust camera to keep the world_focus under the cursor
+            this.camera.x = world_focus.x - (x / (devicePixelRatio * new_zoom));
+            this.camera.y = world_focus.y - (y / (devicePixelRatio * new_zoom));
+
+            this.camera.zoom = Vmath.clamp(new_zoom, Scene.MIN_ZOOM, Scene.MAX_ZOOM);
+
+        }, zoom_from, zoom_to, 100, EasingFunctions.linear));
+    }
+
+    private handleMouseMove(e: MouseEvent | TouchEvent) {
+        const val = e instanceof MouseEvent ? e : e.touches[0];
+        const pt = this.getTransformedPoint(val.clientX * devicePixelRatio, val.clientY * devicePixelRatio);
+        const dx = pt.x - this.prev_mouse_pos.x;
+        const dy = pt.y - this.prev_mouse_pos.y;
+        if (this.drawable_selected) {
+            this.drawable_selected.pos.x += dx;
+            this.drawable_selected.pos.y += dy;
+            this.prev_mouse_pos.set(pt.x, pt.y);
+        } else if (this.dragging_camera) {
+            this.camera.x -= dx;
+            this.camera.y -= dy;
+            SceneLogger.getReactiveLog("mouse translate point").set(`${ pt.x }i+${ pt.y }j`);
+        }
     }
 
     removeNode(id: string): boolean {
@@ -377,14 +549,22 @@ export class Scene {
 
     }
 
-    addEdge(from_id: string, to_id: string): boolean {
-        const node1 = this.nodes.get(from_id);
-        const node2 = this.nodes.get(to_id);
-        if (!node1 || !node2)
-            return false;
-        this.edges.set(Edge.getEdgeKey(from_id, to_id), new Edge(this.ctx, node1, node2));
-        return true;
+    private handleMousePressed(e: MouseEvent | TouchEvent) {
+        if (!this.nodes) return;
 
+        const val = e instanceof MouseEvent ? e : e.touches[0];
+        // Transform mouse coordinates to world space
+        const pt = this.getTransformedPoint(val.clientX * devicePixelRatio, val.clientY * devicePixelRatio);
+        this.prev_mouse_pos.set(pt.x, pt.y);
+
+        for (const [ , node ] of this.nodes) {
+            if (node.containsPoint(pt.x, pt.y)) {
+                this.drawable_selected = node;
+                break;
+            }
+        }
+        if (!this.drawable_selected)
+            this.dragging_camera = true;
     }
 
     removeEdge(from_id: string, to_id: string): boolean {
@@ -395,7 +575,6 @@ export class Scene {
         const edge = this.edges.get(Edge.getEdgeKey(from_id, to_id));
         if (!edge)
             return false;
-        console.log("EDGE KEY", Edge.getEdgeKey(from_id, to_id));
         edge.highlight();
         return true;
 
@@ -435,6 +614,8 @@ export class Scene {
         this.edges.clear();
         return true;
     }
+
+
 }
 
 const softening_factor = 10 ** 2;

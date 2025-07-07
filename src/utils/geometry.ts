@@ -20,6 +20,10 @@ export class Vector {
         return this.x * this.x + this.y * this.y;
     }
 
+    length(): number {
+        return Math.sqrt(this.length_sqrd());
+    }
+
     /**
      * Sets the value of this vector
      */
