@@ -63,7 +63,7 @@ export const clustered_graph =
     .attach("Cluster1", [ "Cluster2" ])
     .attach("Cluster2", [ "Cluster3" ]);
 
-console.log("clustered", clustered_graph);
+//console.log("clustered", clustered_graph);
 export const spider_web_graph =
     new Graph("Center")
     .attach("Center", [ "N1", "N2", "N3", "N4", "N5", "N6" ])

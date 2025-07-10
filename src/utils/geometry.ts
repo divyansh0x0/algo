@@ -159,11 +159,15 @@ export class Size {
     }
 
     toString() {
-        return this.width + "x" + this.height + "j";
+        return this.width + "x" + this.height;
     }
 
     set(width: number, height: number): void {
         this.width = width;
         this.height = height;
+    }
+
+    copy(): Size {
+        return new Size(this.width, this.height);
     }
 }

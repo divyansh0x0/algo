@@ -49,6 +49,11 @@ export class AABB {
         this.half_dimension = half_dimension;
     }
 
+    updateRect(x: number, y: number, w: number, h: number) {
+        this.center.set(x + w / 2, y + h / 2);
+        this.half_dimension.set(w / 2, h / 2);
+    }
+
     /**
      * Checks if point is inside this rectangle
      * @param {Vector} vec
@@ -68,6 +73,9 @@ export class AABB {
         return `${ this.center } ${ this.half_dimension }`;
     }
 
+    copy(): AABB {
+        return new AABB(this.center.copy(), this.half_dimension.copy());
+    }
 }
 
 export class QuadTreeNode {
@@ -202,7 +210,7 @@ export class ForceQuadTree {
         }
 
         total_force.add_self(this.getForceDueToRegions(quad_tree_node, force_func, nearby_nodes));
-        // console.log(total_force);
+        // //console.log(total_force);
         return total_force;
     }
 

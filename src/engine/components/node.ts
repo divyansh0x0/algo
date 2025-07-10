@@ -7,7 +7,7 @@ import { Vmath } from "@/utils/vmath";
 
 
 export class Node extends Drawable {
-    static readonly alphaDecay = 0.0010;
+    static readonly alphaDecay = 0.0016;
 
     mass: number;
     quad_tree_node: QuadTreeNode;
@@ -15,7 +15,9 @@ export class Node extends Drawable {
     attr_force: Vector = new Vector(0);
     repln_force: Vector = new Vector(0);
     alpha = 1;
-    public position_change = new Vector(0, 0);
+    public readonly position_change = new Vector(0, 0);
+
+
 
 
     private text: string;
@@ -35,6 +37,7 @@ export class Node extends Drawable {
         this.quad_tree_node = new QuadTreeNode(id, this.pos, 100);
     }
 
+
     update(dt_ms: number) {
         dt_ms = 20;
         super.update(dt_ms);
@@ -49,7 +52,7 @@ export class Node extends Drawable {
         let dvy = (Vmath.clamp(this.force.y * dt_s, -this.max_velocity, this.max_velocity));
 
 
-        // console.log(dvx, dvy);
+        // //console.log(dvx, dvy);
 
         this.velocity.x += dvx;
         this.velocity.y += dvy;
@@ -70,7 +73,7 @@ export class Node extends Drawable {
         this.position_change.set(dx, dy);
 
         this.alpha -= this.alpha * Node.alphaDecay;
-        if (this.alpha < 1e-2)
+        if (this.alpha < 1e-9)
             this.alpha = 0;
         this.repln_force.set(0, 0);
         this.attr_force.set(0, 0);

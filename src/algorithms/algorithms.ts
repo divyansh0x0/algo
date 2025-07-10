@@ -18,7 +18,7 @@ export function* DFS_Graph_Traversal(graph: Graph, start_node: string): Generato
         const parent = last_el[0]!;
         const curr = last_el[1]!;
         if (!visited.includes(curr)) {
-            console.log(last_el);
+            //console.log(last_el);
             yield new HighlightEdgeCommand(parent, curr);
             yield new HighlightNodeCommand(curr);
 

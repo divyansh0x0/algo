@@ -39,7 +39,7 @@ const RADIUS = 20;
 //             node.vel.scale_self(damp);
 //         }
 //     }
-//     console.log(nodes_unique, boundary);
+//     //console.log(nodes_unique, boundary);
 //     for (const id in nodes_unique) {
 //         const node = nodes_unique[id];
 //         scene.handleCommand(SceneCommands.addNode(id, node.pos.x, node.pos.y, RADIUS));
@@ -63,7 +63,7 @@ function placeNodesRadially(graph: Graph, scene: Scene, radius: number = RADIUS)
 
         let x = h * Math.cos(curr_angle) - k * Math.sin(curr_angle) + cx;
         let y = h * Math.sin(curr_angle) + k * Math.cos(curr_angle) + cy;
-        console.log("ADDED", node, ":", scene.addNode(node, new Vector(x, y), RADIUS));
+        scene.addNode(node, new Vector(x, y), RADIUS);
         circles_in_row++;
         curr_angle += angle_increment;
         if (circles_in_row === max_circles_in_curr_row) {
@@ -83,7 +83,7 @@ function placeNodesDiagonally(graph: Graph, scene: Scene, radius: number = RADIU
     let y = radius;
     let diagonal_count = 0;
     for (const node in graph) {
-        console.log(node, x, y);
+        //console.log(node, x, y);
         // scene.handleCommand(SceneCommands.addNode(node, x, y, radius));
         y += radius * 2 + 10;
         x += radius * 2 + 10;
@@ -151,13 +151,13 @@ export class Visualizer {
 
 
         const nodes_added = new Set<string>();
-        console.log("loading", graph);
         const debug_data_panel = document.getElementById("debug-data");
         if (debug_data_panel)
             debug_data_panel.textContent = "";
         else console.error("Debugging panel not found");
         placeNodesRadially(graph, this.scene);
         for (const node of graph.getNodes()) {
+
             if (debug_data_panel) {
                 const el = document.createElement("div");
                 el.id = node.toString();
@@ -165,7 +165,6 @@ export class Visualizer {
                 debug_data_panel.append(el);
             }
             for (const neighbour of graph.getNeighbors(node)) {
-                console.log(node, "->", neighbour);
                 this.scene.addEdge(node, neighbour);
                 nodes_added.add(neighbour);
             }

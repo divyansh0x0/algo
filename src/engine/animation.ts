@@ -108,7 +108,7 @@ export class ColorAnimation extends Animation {
         const b = Vmath.roundedClamp(transition(this.from.b, this.to.b, t, this.easing), 0, 255);
         const a = Vmath.roundedClamp(transition(this.from.a, this.to.a, t, this.easing), 0, 255);
         this.drawable!.color = new Color(r, g, b, a);
-        // console.log()
+        // //console.log()
     }
 
 
@@ -129,7 +129,7 @@ export class ValueAnimation extends Animation {
 
     setNormalizedTime(t: number) {
         this.callback(transition(this.from, this.to, t, this.easing), t === 1);
-        // console.log()
+        // //console.log()
     }
 
 }
@@ -139,7 +139,7 @@ export class Animator {
 
     add(animation: Animation) {
         const animation_id = animation.getId();
-        // console.log("Adding animation", animation_id)
+        // //console.log("Adding animation", animation_id)
         if (this.animations_map.has(animation_id))
             this.animations_map.get(animation_id)?.interrupt();
         this.animations_map.set(animation_id, animation);

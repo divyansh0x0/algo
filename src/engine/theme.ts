@@ -31,7 +31,7 @@ export const ThemeManager = (function () {
             match_system_theme = true;
             if (match_media_color_scheme.matches) {
                 document.documentElement.setAttribute(theme_attrib, "dark");
-                console.log("Dark theme enabled");
+                //console.log("Dark theme enabled");
             } else
                 document.documentElement.setAttribute(theme_attrib, "light");
 
@@ -47,7 +47,7 @@ export const ThemeManager = (function () {
                     themeUpdated();
                     if (e.matches) {
                         document.documentElement.setAttribute(theme_attrib, "dark");
-                        console.log("Dark theme enabled");
+                        //console.log("Dark theme enabled");
                         return;
                     }
                     document.documentElement.setAttribute(theme_attrib, "light");
@@ -55,14 +55,14 @@ export const ThemeManager = (function () {
             );
 
         } else {
-            console.log("No support for matchMedia. Defaulting to light theme");
+            //console.log("No support for matchMedia. Defaulting to light theme");
             document.documentElement.setAttribute(theme_attrib, "light");
         }
     }
 
     function themeUpdated() {
         styles = getComputedStyle(document.documentElement);
-        console.log("theme updated", styles);
+        //console.log("theme updated", styles);
 
     }
 

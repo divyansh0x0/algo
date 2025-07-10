@@ -41,7 +41,8 @@
     background-color: var(--slider-color);
     cursor: ew-resize;
 }
-#canvas-overlay-img{
+
+#canvas-overlay-img {
     top: 0;
     left: 0;
     position: fixed;
