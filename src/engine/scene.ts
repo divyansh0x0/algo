@@ -96,8 +96,8 @@ export class Scene {
     private debug_box_el: HTMLInputElement | null;
     private force_quad_tree: undefined | ForceQuadTree;
     private fps_counter: number = 0;
-    private bounds: AABB = AABB.fromRect(0, 0, 0, 0);
-    private required_size: Size | null = null;
+    private boundary_bounds: AABB = AABB.fromRect(0, 0, 0, 0);
+    private required_half_size: Size | null = null;
     private offset: Vector = new Vector(0);
     private debounceSelectedNodeAlphaReset: Throttle;
 
@@ -112,6 +112,7 @@ export class Scene {
     private bounds_updated: boolean = false;
     private last_draw_image: HTMLImageElement | null = null;
     private is_loop_running: boolean = false;
+    private viewport: AABB = AABB.fromRect(0, 0, 0, 0);
 
     constructor(public ctx: CanvasRenderingContext2D, private readonly show_fps: boolean = false) {
         this.ctx.scale(devicePixelRatio, devicePixelRatio);
@@ -121,28 +122,33 @@ export class Scene {
 
         this.mouse_info = new Mouse(this.ctx.canvas);
 
-        this.camera.onupdate = () => this.updateBounds(this.ctx.canvas.width, this.ctx.canvas.height);
+        this.camera.onupdate = () => {
+            this.updateViewportFromScreen(this.ctx.canvas.width, this.ctx.canvas.height);
+            // this.updateBoundaryCenter();
+        };
 
-        this.debounceSelectedNodeAlphaReset = new Throttle((node: Node) => {
+        this.debounceSelectedNodeAlphaReset = new Throttle((...nodes: Node[]) => {
 
-            if (!node || !this.force_quad_tree)
-                return;
-            if (node.alpha < 0.5)
-                node.alpha = 0.5;
-            for (const quad_node of this.force_quad_tree.getNodesInCircularRange(node.pos, 300)) {
-                const other = this.nodes.get(quad_node.id);
-                if (!other)
-                    continue;
-                if (other.alpha < 0.5) {
-                    other.alpha = 0.6;
+            for (const node of nodes) {
+                if (!node || !this.force_quad_tree)
+                    return;
+                if (node.alpha < 0.5)
+                    node.alpha = 0.5;
+                for (const quad_node of this.force_quad_tree.getNodesInCircularRange(node.pos, 300)) {
+                    const other = this.nodes.get(quad_node.id);
+                    if (!other)
+                        continue;
+                    if (other.alpha < 0.5) {
+                        other.alpha = 0.6;
+                    }
+
                 }
-
             }
+
         }, 100);
 
-        const resize_observer = new ResizeObserver((entries) => {
-            const el = entries[0].target;
-            this.updateBounds(el.clientWidth, el.clientHeight);
+        const resize_observer = new ResizeObserver(() => {
+            this.updateViewportFromScreen(this.ctx.canvas.width, this.ctx.canvas.height);
         });
         resize_observer.observe(this.ctx.canvas);
 
@@ -162,30 +168,35 @@ export class Scene {
         this.ctx.canvas.addEventListener("mousedown", (e) => this.handleMousePressed(e));
         this.ctx.canvas.addEventListener("touchstart", (e) => {
 
+
             this.initial_touches = e.touches;
             //treat single touch as mouse touch
             if (e.touches.length === 1)
                 this.handleMousePressed(e);
-            else
+            else {
+                e.preventDefault();
                 this.handleMultiTouch(e);
+            }
 
-        });
+        }, { passive: false });
         this.ctx.canvas.addEventListener("wheel", (e) => {
-            this.zoomAt(e.clientX * devicePixelRatio, e.clientY * devicePixelRatio, e.deltaY < 0);
-        });
+            if (e.shiftKey)
+                this.zoomAt(e.clientX * devicePixelRatio, e.clientY * devicePixelRatio, e.deltaY < 0);
+        }, { passive: false });
         window.addEventListener("mouseup", () => this.handleMouseUp());
         window.addEventListener("touchend", () => {
             this.handleMouseUp();
             this.pinching_to_zoom = false;
         });
-        window.addEventListener("mousemove", (e) => this.handleMouseMove(e));
+        window.addEventListener("mousemove", (e) => this.handleMouseMove(e), { passive: false });
         window.addEventListener("touchmove", (e) => {
             SceneLogger.getReactiveLog("Touch count").set(e.touches[0].identifier.toString());
             if (e.touches.length === 1)
                 this.handleMouseMove(e);
-            else
+            else {
                 this.handleMultiTouchMove(e);
-        });
+            }
+        }, { passive: false });
     }
 
     getTransformedPoint(screenX: number, screenY: number): Vector {
@@ -220,7 +231,7 @@ export class Scene {
         SceneLogger.getReactiveLog("Accumulated Alpha").set(this.accumulated_alpha.toString());
         SceneLogger.getReactiveLog("Nodes").set(this.nodes.size.toString());
         SceneLogger.getReactiveLog("Edges").set(this.edges.size.toString());
-        SceneLogger.getReactiveLog("Bounds").set(this.bounds.half_dimension.toString());
+        SceneLogger.getReactiveLog("Bounds").set(this.boundary_bounds.half_dimension.toString());
         const frame_time = curr_animation_call_time - t1;
 
 
@@ -329,14 +340,19 @@ export class Scene {
         const edges = this.edges;
         const nodes = this.nodes;
         for (const [ , edge ] of edges) {
+
+            if (!this.viewport.containsPoint(edge.start_node.pos) && !this.viewport.containsPoint(edge.end_node.pos))
+                continue;
             edge.render();
 
         }
 
 
         for (const [ , node ] of nodes) {
-            if (!this.force_quad_tree?.contains(node.pos))
+            if (!this.viewport.containsPoint(node.pos))
                 continue;
+
+
             node?.render();
 
         }
@@ -357,6 +373,9 @@ export class Scene {
                     this.ctx.fillText(`${ region.mass }`, region.COM.x, region.COM.y);
 
             }
+            b = this.viewport;
+            this.ctx.strokeStyle = "#00f";
+            this.ctx.strokeRect(b.center.x - b.half_dimension.width, b.center.y - b.half_dimension.height, b.half_dimension.width * 2, b.half_dimension.height * 2);
             // if(!this.mark)
             //     this.mark = true;
 
@@ -369,12 +388,17 @@ export class Scene {
 
     update(dt_ms: number) {
 
+        const COM = new Vector();
+        let total_mass = 0;
         this.accumulated_alpha = 0;
         for (const [ , node ] of this.nodes) {
             this.accumulated_alpha += node.alpha;
+            COM.add_self(node.pos.scale(node.mass));
+            total_mass += node.mass;
         }
+        COM.scale_self(1 / total_mass);
         if (this.accumulated_alpha !== 0 || this.bounds_updated || this.camera.camera_updated) {
-            this.force_quad_tree = new ForceQuadTree(this.bounds);
+            this.force_quad_tree = new ForceQuadTree(this.boundary_bounds);
 
             //Building QUADTREE
             for (const [ , node ] of this.nodes) {
@@ -387,6 +411,7 @@ export class Scene {
             SceneLogger.getReactiveLog("Building quadtree").set("False");
         }
 
+        let bounds_updated = false;
         if (this.accumulated_alpha !== 0) {
             for (const [ , edge ] of this.edges) {
                 edge.update(dt_ms);
@@ -402,7 +427,6 @@ export class Scene {
                 node2.attr_force.y -= attr_force.y;
             }
 
-            let required_size_changed = false;
             for (const [ id, node ] of this.nodes) {
 
                 if (this.drawable_selected === node || !this.force_quad_tree!.contains(node.pos)) {
@@ -411,19 +435,7 @@ export class Scene {
                 } else if (this.force_quad_tree && this.accumulated_alpha !== 0) {
                     node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.quad_tree_node, computeRepulsion);
                 }
-                // if (!this.force_quad_tree!.contains(node.pos)) {
-                //     if (!this.required_size)
-                //         this.required_size = this.bounds.half_dimension.scale(2);
-                //
-                //     //get gap between centers of node and aabb
-                //     const padding = 300;
-                //     const gap_vec = node.pos.subtract(this.bounds.center);
-                //     const new_width= Math.abs(gap_vec.dot(Vector.unit_x))*2 + padding
-                //     const new_height= Math.abs(gap_vec.dot(Vector.unit_y))*2 + padding
-                //     this.required_size.set(new_width > this.required_size.width ? new_width :
-                // this.required_size.width, new_height > this.required_size.height ? new_height :
-                // this.required_size.height); required_size_changed = true; SceneLogger.getReactiveLog("Required
-                // size").set(this.required_size.toString()) }
+                this.recheckQuadtreeBounds(node, COM);
 
                 node.update(dt_ms);
 
@@ -439,9 +451,11 @@ export class Scene {
                             `<div>force: ${ Math.round(node.force.x * 1000) / 1000 }i + ${ Math.round(node.force.y * 1000) / 1000 }</div>`;
                 }
             }
-            if (required_size_changed && this.required_size)
-                this.updateBounds(this.required_size.width, this.required_size.height);
 
+        }
+
+        for (const [ , node ] of this.nodes) {
+            this.recheckQuadtreeBounds(node, COM);
         }
 
         if (this.drawable_selected) {
@@ -452,6 +466,11 @@ export class Scene {
         }
     }
 
+    /*
+     --------------------------------------------------------------------------------------------------------------------
+     ------------------------------------------SCENE COMMANDS------------------------------------------------------------
+     --------------------------------------------------------------------------------------------------------------------
+     */
     /**
      * Adds node to scene
      */
@@ -562,31 +581,10 @@ export class Scene {
 
         node1.alpha = 0.5;
         node2.alpha = 0.5;
+        this.debounceSelectedNodeAlphaReset.call(node1, node2);
         this.edges.set(Edge.getEdgeKey(from_id, to_id), new Edge(this, node1, node2));
         return true;
 
-    }
-
-
-    /*
-     --------------------------------------------------------------------------------------------------------------------
-     ------------------------------------------SCENE COMMANDS------------------------------------------------------------
-     --------------------------------------------------------------------------------------------------------------------
-     */
-
-    private updateBounds(new_width: number, new_height: number) {
-        const inv_scale = 1 / (devicePixelRatio * this.camera.zoom);
-        const canvas_width = new_width * inv_scale;
-        const canvas_height = new_height * inv_scale;
-        const topLeft = this.getTransformedPoint(0, 0);
-        const bottomRight = this.getTransformedPoint(canvas_width, canvas_height);
-        const width = bottomRight.x - topLeft.x;
-        const height = bottomRight.y - topLeft.y;
-        const padding = 100;
-
-
-        this.bounds.updateRect(topLeft.x - padding, topLeft.y - padding, width + 2 * padding, height + 2 * padding);
-        this.bounds_updated = true;
     }
 
     private handleMouseMove(e: MouseEvent | TouchEvent) {
@@ -605,6 +603,55 @@ export class Scene {
             this.camera.y -= dy;
             SceneLogger.getReactiveLog("mouse translate point").set(`${ pt.x }i+${ pt.y }j`);
         }
+    }
+
+    private recheckQuadtreeBounds(node: Node, COM: Vector): void {
+        if (!(this.force_quad_tree?.contains(node.pos) ?? false) || COM.x !== this.boundary_bounds.center.x || COM.y !== this.boundary_bounds.center.y) {
+            if (!this.required_half_size)
+                this.required_half_size = this.boundary_bounds.half_dimension.copy();
+
+            //get gap between centers of node and aabb
+            const padding = 300;
+            const gap_vec = node.pos.subtract(this.boundary_bounds.center);
+            const new_width = Math.abs(gap_vec.dot(Vector.unit_x)) + padding;
+            const new_height = Math.abs(gap_vec.dot(Vector.unit_y)) + padding;
+            this.boundary_bounds.center.set(COM.x, COM.y);
+            this.boundary_bounds.half_dimension.set(new_width, new_height);
+            this.required_half_size.set(new_width, new_height);
+            SceneLogger.getReactiveLog("Required size").set(this.required_half_size.toString());
+            this.bounds_updated = true;
+        }
+    }
+
+    private updateViewportFromScreen(new_screen_width: number, new_screen_height: number) {
+        const canvas_width = new_screen_width;
+        const canvas_height = new_screen_height;
+        const topLeft = this.getTransformedPoint(0, 0);
+        const bottomRight = this.getTransformedPoint(canvas_width, canvas_height);
+        const width = bottomRight.x - topLeft.x;
+        const height = bottomRight.y - topLeft.y;
+
+        this.viewport.updateRect(topLeft.x, topLeft.y, width, height);
+        // SceneLogger.info(this.viewport.toString())
+        this.bounds_updated = true;
+    }
+
+    private handleMousePressed(e: MouseEvent | TouchEvent) {
+        if (!this.nodes) return;
+
+        const val = e instanceof MouseEvent ? e : e.touches[0];
+        // Transform mouse coordinates to world space
+        const pt = this.getTransformedPoint(val.clientX * devicePixelRatio, val.clientY * devicePixelRatio);
+        this.prev_mouse_pos.set(pt.x, pt.y);
+
+        for (const [ , node ] of this.nodes) {
+            if (node.containsPoint(pt.x, pt.y)) {
+                this.drawable_selected = node;
+                break;
+            }
+        }
+        if (!this.drawable_selected)
+            this.dragging_camera = true;
     }
 
     removeNode(id: string): boolean {
@@ -633,23 +680,6 @@ export class Scene {
 
     }
 
-    private handleMousePressed(e: MouseEvent | TouchEvent) {
-        if (!this.nodes) return;
-
-        const val = e instanceof MouseEvent ? e : e.touches[0];
-        // Transform mouse coordinates to world space
-        const pt = this.getTransformedPoint(val.clientX * devicePixelRatio, val.clientY * devicePixelRatio);
-        this.prev_mouse_pos.set(pt.x, pt.y);
-
-        for (const [ , node ] of this.nodes) {
-            if (node.containsPoint(pt.x, pt.y)) {
-                this.drawable_selected = node;
-                break;
-            }
-        }
-        if (!this.drawable_selected)
-            this.dragging_camera = true;
-    }
 
     removeEdge(from_id: string, to_id: string): boolean {
         return this.edges.delete(Edge.getEdgeKey(from_id, to_id));
@@ -705,7 +735,7 @@ export class Scene {
 const softening_factor = 10 ** 2;
 
 export const NATURAL_EDGE_LENGTH = 0;
-export const k_repl = 100000;
+export const k_repl = 10000;
 export const k_attr = 10000;
 
 export function computeRepulsion(node1: QuadTreeNode, node2: QuadTreeNode): Vector {

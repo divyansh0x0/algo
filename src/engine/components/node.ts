@@ -73,7 +73,7 @@ export class Node extends Drawable {
         this.position_change.set(dx, dy);
 
         this.alpha -= this.alpha * Node.alphaDecay;
-        if (this.alpha < 1e-9)
+        if (this.alpha < 1e-3)
             this.alpha = 0;
         this.repln_force.set(0, 0);
         this.attr_force.set(0, 0);
