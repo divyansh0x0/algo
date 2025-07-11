@@ -624,6 +624,7 @@ export class Scene {
     }
 
     private updateViewportFromScreen(new_screen_width: number, new_screen_height: number) {
+        const padding = 100;
         const canvas_width = new_screen_width;
         const canvas_height = new_screen_height;
         const topLeft = this.getTransformedPoint(0, 0);
@@ -631,7 +632,7 @@ export class Scene {
         const width = bottomRight.x - topLeft.x;
         const height = bottomRight.y - topLeft.y;
 
-        this.viewport.updateRect(topLeft.x, topLeft.y, width, height);
+        this.viewport.updateRect(topLeft.x - padding, topLeft.y - padding, width + padding, height + padding);
         // SceneLogger.info(this.viewport.toString())
         this.bounds_updated = true;
     }
