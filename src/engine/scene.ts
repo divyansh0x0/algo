@@ -97,7 +97,7 @@ export class Scene {
     private force_quad_tree: undefined | ForceQuadTree;
     private fps_counter: number = 0;
     private boundary_bounds: AABB = AABB.fromRect(0, 0, 0, 0);
-    private required_half_size: Size | null = null;
+    private required_half_size: Size = new Size(0, 0);
     private offset: Vector = new Vector(0);
     private debounceSelectedNodeAlphaReset: Throttle;
 
@@ -141,7 +141,7 @@ export class Scene {
                     if (other.alpha < 0.5) {
                         other.alpha = 0.6;
                     }
-
+                    // this.debounceSelectedNodeAlphaReset.call(other)
                 }
             }
 
@@ -217,12 +217,21 @@ export class Scene {
         this.last_animation_call_time = curr_animation_call_time;
 
 
+        let temp_t1 = performance.now();
         if (this.is_running) {
             this.update(dt_ms);
             this.animator.step(dt_ms);
         }
+        let temp_t2 = performance.now();
+        const update_time = temp_t2 - temp_t1;
 
+        temp_t1 = performance.now();
         this.render();
+        temp_t2 = performance.now();
+        const render_time = temp_t2 - temp_t1;
+
+        SceneLogger.getReactiveLog("Update Time(ms)").set(update_time.toString());
+        SceneLogger.getReactiveLog("Render Time(ms)").set(render_time.toString());
 
         SceneLogger.getReactiveLog("FPS").set(this.fps.toString());
         SceneLogger.getReactiveLog("Target FPS").set(this.target_frame_rate.toString());
@@ -387,6 +396,8 @@ export class Scene {
     }
 
     update(dt_ms: number) {
+        if (this.accumulated_alpha < 1e-3)
+            this.accumulated_alpha = 0;
 
         const COM = new Vector();
         let total_mass = 0;
@@ -411,7 +422,6 @@ export class Scene {
             SceneLogger.getReactiveLog("Building quadtree").set("False");
         }
 
-        let bounds_updated = false;
         if (this.accumulated_alpha !== 0) {
             for (const [ , edge ] of this.edges) {
                 edge.update(dt_ms);
@@ -435,7 +445,7 @@ export class Scene {
                 } else if (this.force_quad_tree && this.accumulated_alpha !== 0) {
                     node.repln_force = this.force_quad_tree.getTotalForcesOnPoint(node.quad_tree_node, computeRepulsion);
                 }
-                this.recheckQuadtreeBounds(node, COM);
+
 
                 node.update(dt_ms);
 
@@ -454,8 +464,13 @@ export class Scene {
 
         }
 
+        this.required_half_size.set(0, 0);
         for (const [ , node ] of this.nodes) {
             this.recheckQuadtreeBounds(node, COM);
+            if (node.position_change.x === 0 && node.position_change.y === 0 && node.alpha !== 0) {
+                node.alpha = Math.max(0, node.alpha - node.alpha * 0.1);
+
+            }
         }
 
         if (this.drawable_selected) {
@@ -606,18 +621,17 @@ export class Scene {
     }
 
     private recheckQuadtreeBounds(node: Node, COM: Vector): void {
-        if (!(this.force_quad_tree?.contains(node.pos) ?? false) || COM.x !== this.boundary_bounds.center.x || COM.y !== this.boundary_bounds.center.y) {
-            if (!this.required_half_size)
-                this.required_half_size = this.boundary_bounds.half_dimension.copy();
-
+        if (!(this.boundary_bounds.containsPoint(node.pos))) {
             //get gap between centers of node and aabb
             const padding = 300;
             const gap_vec = node.pos.subtract(this.boundary_bounds.center);
             const new_width = Math.abs(gap_vec.dot(Vector.unit_x)) + padding;
             const new_height = Math.abs(gap_vec.dot(Vector.unit_y)) + padding;
+            const max_width = Math.max(new_width, this.required_half_size.width);
+            const max_height = Math.max(new_height, this.required_half_size.height);
             this.boundary_bounds.center.set(COM.x, COM.y);
-            this.boundary_bounds.half_dimension.set(new_width, new_height);
-            this.required_half_size.set(new_width, new_height);
+            this.boundary_bounds.half_dimension.set(max_width, max_height);
+            this.required_half_size.set(max_width, max_height);
             SceneLogger.getReactiveLog("Required size").set(this.required_half_size.toString());
             this.bounds_updated = true;
         }

@@ -1,4 +1,4 @@
-import { keywords, Token, TokenType } from "@/algoLang/Tokens/token";
+import { keywords, Token, TokenType } from "@/motion/tokens/token";
 
 export interface LexerError {
     message: string;
@@ -13,7 +13,7 @@ export class Lexer {
     private curr_col = 0;
     private start_read_index = 0;
     private next_read_index = 0;
-    private end_of_literal_regex = /[\s\n(){},:;+/*%&|^<=>!\-\[\]]/;
+    private end_of_literal_regex = /[\s\n(){},.:;+/*%&|^<=>!\-\[\]]/;
     private whitespace_regex = /\s/;
     private is_analysis_complete = false;
 
@@ -43,8 +43,7 @@ export class Lexer {
 
     scanToken() {
         const c = this.consume();
-        if (c.match(this.whitespace_regex))
-            return;
+
         if (c.match(/[a-zA-Z_]/)) {
             this.consume_identifier(c);
             return;
@@ -54,6 +53,15 @@ export class Lexer {
             return;
         }
         switch (c) {
+            case ";":
+            case "\n":
+                this.addToken(TokenType.STATEMENT_END, null);
+                break;
+            case "\t":
+            case " ":
+            case "\r":
+                break;
+
             case "(":
             case ")":
             case "[":
@@ -63,7 +71,6 @@ export class Lexer {
             case ".":
             case ",":
             case ":":
-            case ";":
             case "&":
             case "|":
             case "^":
@@ -231,7 +238,7 @@ export class Lexer {
     private addToken(type: TokenType, obj: Object | null = null) {
         const lexeme = this.text.slice(this.start_read_index, this.next_read_index);
         this.tokens_list.push({
-            token_type: type,
+            type: type,
             lexeme: lexeme,
             literal: obj,
             col: this.curr_col,
@@ -260,6 +267,8 @@ export class Lexer {
                 this.addToken(TokenType.TRUE, true);
             else if (identifier === "false")
                 this.addToken(TokenType.FALSE, false);
+            else if (identifier === "null")
+                this.addToken(TokenType.NULL, null);
             else
                 this.addToken(identifier as TokenType, identifier);
 
@@ -279,7 +288,8 @@ export class Lexer {
             c = this.peek();
 
             if (c.match(this.end_of_literal_regex))
-                break;
+                if ((c === "." && has_decimal) || c !== ".")
+                    break;
             if (is_error) {
                 this.consume();
                 continue;
@@ -300,7 +310,7 @@ export class Lexer {
         }
 
         if (!is_error)
-            this.addToken(TokenType.NUMBER, num_str);
+            this.addToken(TokenType.NUMBER, parseInt(num_str));
     }
 
     private consume_string(start_symbol: "\"" | "\'"): void {

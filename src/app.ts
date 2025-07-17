@@ -1,6 +1,5 @@
 "use strict";
 
-import { testLexer } from "@/algoLang/Tokens/tests";
 import { Scene, SceneLogger } from "@/engine/scene";
 import { ThemeManager, ThemeType } from "@/engine/theme";
 import { Visualizer } from "@/engine/visualizer";
@@ -219,32 +218,3 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-
-
-const code =
-    `
-let&100
-let y = 20;
-let result = x + y * 2 - 5 / (3 + 1);
-
-if (result >= 25 and result != 30) {
-    result += 5;
-} else {
-    result -= 2;
-}
-
-fn square(n) {
-    return n ** 2;
-}
-
-let flag = true;
-while (flag) {
-    x--;
-    if (x <= 0) {
-        flag = false;
-        break;
-    }
-}
-
-`;
-testLexer(code);

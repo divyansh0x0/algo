@@ -1,0 +1,28 @@
+{
+    "type": "Call",
+    "identifier": {
+        "type": "Identifier",
+        "name": "x"
+    },
+    "args": [
+        {
+            "type": "Call",
+            "identifier": {
+                "type": "Property Access",
+                "parent_node": {
+                    "type": "Identifier",
+                    "name": "x"
+                },
+                "child_node": {
+                    "type": "Identifier",
+                    "name": "a"
+                }
+            },
+            "args": []
+        },
+        {
+            "type": "Literal",
+            "value": 1
+        }
+    ]
+}

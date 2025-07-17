@@ -1,5 +1,6 @@
 export enum TokenType {
     // Comparison
+    STATEMENT_END = ";",
     EQUAL_TO = "==",
     NOT_EQUAL_TO = "!=",
     LESS_THAN = "<",
@@ -55,6 +56,7 @@ export enum TokenType {
     DEFAULT = "default",
     FOR = "for",
     WHILE = "while",
+    THEN = "then",
     DO = "do",
     BREAK = "break",
     CONTINUE = "continue",
@@ -73,12 +75,11 @@ export enum TokenType {
     LBRACE = "{",
     RBRACE = "}",
     COMMA = ",",
+    DOT = ".",
     COLON = ":",
-    SEMICOLON = ";",
 
-    COMMENT = "//",
     IDENTIFIER = "identifier",
-    EOF = "\0"
+    EOF = "\0",
 }
 
 export const keywords = Object.freeze(new Map<string, TokenType>(
@@ -104,14 +105,15 @@ export const keywords = Object.freeze(new Map<string, TokenType>(
         [ "and", TokenType.AND ],
         [ "or", TokenType.OR ],
         [ "not", TokenType.NOT ],
-        [ "null", TokenType.NULL ]
+        [ "null", TokenType.NULL ],
+        [ "then", TokenType.THEN ]
     ]
 ));
 
 export interface Token {
-    token_type: TokenType;
+    type: TokenType;
     lexeme: string;
-    literal: Object | null;
+    literal: Object | string | number | boolean | null;
     line: number;
     col: number;
 
