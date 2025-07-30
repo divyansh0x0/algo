@@ -1,4 +1,4 @@
-import { keywords, Token, TokenType } from "@/motion/tokens/token";
+import { keywords, Token, TokenType } from "@/motion/ast/token";
 
 export interface LexerError {
     message: string;
@@ -251,13 +251,13 @@ export class Lexer {
         let identifier = start_letter;
         while (!this.isEOF()) {
             const c = this.peek();
-            if (c.match(this.end_of_literal_regex))
-                break;
+            // if (c.match(this.end_of_literal_regex))
+            //     break;
             if (c.match(regex)) {
                 identifier += c;
             } else {
-                this.error(`"${ c }" is an invalid character used for identifier`);
-                this.consume();
+                // this.error(`"${ c }" is an invalid character used for identifier`);
+                // this.consume();
                 break;
             }
             this.consume();
@@ -283,34 +283,34 @@ export class Lexer {
         let has_decimal = false;
         let num_str = start_number;
         let c = start_number;
-        let is_error = false;
         while (!this.isEOF()) {
             c = this.peek();
 
-            if (c.match(this.end_of_literal_regex))
-                if ((c === "." && has_decimal) || c !== ".")
-                    break;
-            if (is_error) {
-                this.consume();
-                continue;
-            }
+            // if (c.match(this.end_of_literal_regex))
+            //     if ((c === "." && has_decimal) || c !== ".")
+            //         break;
             if (c.match(regex)) {
                 if (c !== "_")
                     num_str += c;
-            } else if (c == "." && !has_decimal) {
-                has_decimal = true;
-                num_str += c;
+            } else if (c == ".") {
+                if (!has_decimal) {
+                    has_decimal = true;
+                    num_str += c;
+                } else {
+                    this.error("Invalid decimal after a decimal number");
+                    break;
+                }
             } else {
-                if (c.match(/[a-zA-Z]/))
-                    this.error("Identifiers cannot begin with a number");
-                else
-                    this.error(`Invalid character used for a number: "${ c }"`);
+                // if (c.match(/[a-zA-Z]/))
+                //     this.error("Identifiers cannot begin with a number");
+                // else
+                //     this.error(`Invalid character used for a number: "${ c }"`);
+                break;
             }
             this.consume();
         }
 
-        if (!is_error)
-            this.addToken(TokenType.NUMBER, parseInt(num_str));
+        this.addToken(TokenType.NUMBER, parseInt(num_str));
     }
 
     private consume_string(start_symbol: "\"" | "\'"): void {

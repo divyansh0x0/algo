@@ -1,4 +1,4 @@
-import { Token } from "@/motion/tokens/token";
+import { Token } from "@/motion/ast/token";
 
 export namespace Ast {
 
@@ -38,18 +38,25 @@ export namespace Ast {
         unset = "",
     }
 
+    export function isIdentifier(node: Ast.Node): node is Ast.IdentifierNode {
+        return node.type === NodeType.IDENTIFIER;
+    }
+
+    export function isPropertyAccess(node: Ast.Node): node is Ast.PropertyAccessExpression {
+        return node.type === NodeType.PROPERTY_ACCESS_EXPRESSION;
+    }
     export interface PostfixOperation extends Node {
         operator: Token;
         identifier: Node;
     }
 
     export interface PropertyAccessExpression extends Node {
-        parent_node: Node,
-        child_node: Node,
+        parent_node: IdentifierNode | PropertyAccessExpression,
+        child_node: IdentifierNode,
     }
 
     export interface Node {
-        node_type: NodeType;
+        type: NodeType;
         next_node: Node | null;
     }
 
@@ -105,10 +112,10 @@ export namespace Ast {
         types: Set<ValueType> | null
     }
 
-    export interface AssignmentStatement extends Node {
+    export interface AssignmentExpression extends Node {
         operator: Token,
-        identifier_node: Node,
-        value: Node,
+        lvalue: IdentifierNode | PropertyAccessExpression,
+        rvalue: Node,
     }
 
     export interface FunctionDefinitionStatement extends Node {
@@ -154,7 +161,7 @@ export namespace Ast {
     export function createBinaryExpression(op: Token, expression_left: Node, expression_right: Node): BinaryExpression {
         return {
             op,
-            node_type: NodeType.BINARY_EXPRESSION,
+            type: NodeType.BINARY_EXPRESSION,
             expression_left,
             expression_right
             , next_node: null
@@ -164,19 +171,19 @@ export namespace Ast {
     export function createUnaryExpression(op: Token, expression: Node): UnaryExpression {
         return {
             op,
-            node_type: NodeType.UNARY_EXPRESSION, expression, next_node: null
+            type: NodeType.UNARY_EXPRESSION, expression, next_node: null
         };
     }
 
     export function createBlockStatement(): BLockStatement {
         return {
-            node_type: NodeType.BLOCK_STATEMENT, next_node: null
+            type: NodeType.BLOCK_STATEMENT, next_node: null
         };
     }
 
     export function createTernaryExpression(condition: Node, true_statement: Node, false_statement: Node): TernaryExpression {
         return {
-            node_type: NodeType.TERNARY_EXPRESSION,
+            type: NodeType.TERNARY_EXPRESSION,
             condition,
             true_statement,
             false_statement, next_node: null
@@ -185,21 +192,21 @@ export namespace Ast {
 
     export function createLiteralNode(value: number | string | boolean | null): LiteralNode {
         return {
-            node_type: NodeType.LITERAL,
+            type: NodeType.LITERAL,
             value, next_node: null
         };
     }
 
     export function createIdentifierNode(name: string): IdentifierNode {
         return {
-            node_type: NodeType.IDENTIFIER,
+            type: NodeType.IDENTIFIER,
             name: name, next_node: null
         };
     }
 
     export function createCallNode(name: Node, args: Node[]): CallNode {
         return {
-            node_type: NodeType.CALL,
+            type: NodeType.CALL,
             identifier: name,
             args, next_node: null
         };
@@ -207,44 +214,44 @@ export namespace Ast {
 
     export function createBreakStatement(): BreakStatement {
         return {
-            node_type: NodeType.BREAK_STATEMENT, next_node: null
+            type: NodeType.BREAK_STATEMENT, next_node: null
         };
     }
 
     export function createContinueStatement(): ContinueStatement {
         return {
-            node_type: NodeType.CONTINUE_STATEMENT, next_node: null
+            type: NodeType.CONTINUE_STATEMENT, next_node: null
         };
     }
 
     export function createReturnStatement(): ReturnStatement {
         return {
-            node_type: NodeType.RETURN_STATEMENT, next_node: null
+            type: NodeType.RETURN_STATEMENT, next_node: null
         };
     }
 
     export function createDeclarationStatement(identifier_name: string, value: Node | null, types: Set<Ast.ValueType> | null): DeclarationStatement {
         return {
-            node_type: NodeType.DECLARATION_STATEMENT,
+            type: NodeType.DECLARATION_STATEMENT,
             identifier_name,
             value,
             types, next_node: null
         };
     }
 
-    export function createAssignmentExpression(assignment_token: Token, identifier_node: Node, value: Node): AssignmentStatement {
+    export function createAssignmentExpression(assignment_token: Token, lvalue: IdentifierNode | PropertyAccessExpression, rvalue: Node): AssignmentExpression {
         return {
-            node_type: NodeType.ASSIGNMENT_EXPRESSION,
-            identifier_node: identifier_node,
+            type: NodeType.ASSIGNMENT_EXPRESSION,
+            lvalue: lvalue,
             operator: assignment_token,
-            value,
+            rvalue: rvalue,
             next_node: null
         };
     }
 
     export function createFunctionDefinition(identifier_name: string, params: Node[]): FunctionDefinitionStatement {
         return {
-            node_type: NodeType.FUNCTION_DEFINITION,
+            type: NodeType.FUNCTION_DEFINITION,
             identifier_name,
             params, next_node: null
         };
@@ -252,7 +259,7 @@ export namespace Ast {
 
     export function createForStatement(statement_1: Node, statement_2: Node, statement_3: Node): ForStatement {
         return {
-            node_type: NodeType.FOR_STATEMENT,
+            type: NodeType.FOR_STATEMENT,
             statement_1,
             statement_2,
             statement_3, next_node: null
@@ -261,54 +268,54 @@ export namespace Ast {
 
     export function createWhileStatement(expression_inside: Node): WhileStatement {
         return {
-            node_type: NodeType.WHILE_STATEMENT,
+            type: NodeType.WHILE_STATEMENT,
             expression_inside, next_node: null
         };
     }
 
     export function createIfStatement(expression_inside: Node): IfStatement {
         return {
-            node_type: NodeType.IF_STATEMENT,
+            type: NodeType.IF_STATEMENT,
             expression_inside, next_node: null
         };
     }
 
     export function createElseIfStatement(expression_inside: Node): ElseIfStatement {
         return {
-            node_type: NodeType.ELSE_IF_STATEMENT,
+            type: NodeType.ELSE_IF_STATEMENT,
             expression_inside, next_node: null
         };
     }
 
     export function createElseStatement(): ElseStatement {
         return {
-            node_type: NodeType.ELSE_STATEMENT, next_node: null
+            type: NodeType.ELSE_STATEMENT, next_node: null
         };
     }
 
     export function createThenStatement(): ThenStatement {
         return {
-            node_type: NodeType.THEN_STATEMENT, next_node: null
+            type: NodeType.THEN_STATEMENT, next_node: null
         };
     }
 
     export function createSwitchStatement(expression_inside: Node): SwitchStatement {
         return {
-            node_type: NodeType.SWITCH_STATEMENT,
+            type: NodeType.SWITCH_STATEMENT,
             expression_inside, next_node: null
         };
     }
 
     export function createSwitchCaseStatement(expression_inside: Node): SwitchCaseStatement {
         return {
-            node_type: NodeType.SWITCH_CASE_STATEMENT,
+            type: NodeType.SWITCH_CASE_STATEMENT,
             expression_inside, next_node: null
         };
     }
 
-    export function createPropertyAccessExpression(parent: Ast.Node, child: Ast.IdentifierNode): PropertyAccessExpression {
+    export function createPropertyAccessExpression(parent: IdentifierNode | PropertyAccessExpression, child: Ast.IdentifierNode): PropertyAccessExpression {
         return {
-            node_type: NodeType.PROPERTY_ACCESS_EXPRESSION,
+            type: NodeType.PROPERTY_ACCESS_EXPRESSION,
             parent_node: parent,
             child_node: child,
             next_node: null
@@ -317,7 +324,7 @@ export namespace Ast {
 
     export function createPostfixOperation(op_token: Token, left_node: Ast.Node): PostfixOperation {
         return {
-            node_type: NodeType.POSTFIX_OPERATION,
+            type: NodeType.POSTFIX_OPERATION,
             operator: op_token,
             identifier: left_node,
             next_node: null

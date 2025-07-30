@@ -1,4 +1,4 @@
-import { Ast } from "@/motion/ast/ast";
+import { Ast } from "@/motion/ast/tree";
 
 export namespace formatter {
 
@@ -39,7 +39,7 @@ export namespace formatter {
         }
 
         function serialize(node: Ast.Node): any {
-            const result: any = { type: formatNodeType(node.node_type) };
+            const result: any = { type: formatNodeType(node.type) };
 
             const entries = Object.entries(node);
             for (const [ key, value ] of entries) {
@@ -90,7 +90,7 @@ export namespace formatter {
             const branch = prefixStr ? `${ prefixStr }└──` : "";
 
             if (indentLevel === 0) {
-                lines.push(`${ branch }[${ Colors.FgGreen }${ formatNodeType(node.node_type) }${ Colors.Reset }]`);
+                lines.push(`${ branch }[${ Colors.FgGreen }${ formatNodeType(node.type) }${ Colors.Reset }]`);
             }
 
             const entries = Object.entries(node);

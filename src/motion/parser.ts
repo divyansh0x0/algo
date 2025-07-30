@@ -3,7 +3,7 @@
  */
 
 
-import { Ast } from "@/motion/ast/ast";
+import { Ast } from "@/motion/ast/tree";
 import { formatter } from "@/motion/formatter";
 import { Token, TokenType } from "@/motion/tokens/token";
 import NodeType = Ast.NodeType;
@@ -65,6 +65,9 @@ function getBindingPower(token_type: TokenType): [ number, number ] | null {
 
         case TokenType.LPAREN:
             return [ 90, 91 ];
+        case TokenType.AND:
+        case TokenType.OR:
+            return [ 80, 81 ];
         case TokenType.INCREMENT:
         case TokenType.DECREMENT:
             return [ 80, -1 ];
@@ -106,8 +109,8 @@ function isAssignmentOperator(type: TokenType): boolean {
     }
 }
 
-function isLValue(node_type: Ast.NodeType): boolean {
-    return node_type === NodeType.PROPERTY_ACCESS_EXPRESSION || node_type === NodeType.IDENTIFIER;
+function isLValue(node: Ast.Node): node is Ast.IdentifierNode | Ast.PropertyAccessExpression {
+    return node.type === NodeType.PROPERTY_ACCESS_EXPRESSION || node.type === NodeType.IDENTIFIER;
 }
 
 function isPostfixOperator(type: TokenType): boolean {
@@ -233,6 +236,7 @@ export class Parser {
         const token = this.peek();
         let node = null;
         switch (token.type) {
+
             case TokenType.STATEMENT_END:
             case TokenType.EOF:
                 this.consume();
@@ -318,6 +322,12 @@ export class Parser {
 
     private nud(token: Token): Ast.Node | null {
         switch (token.type) {
+            case TokenType.NOT: {
+                const right_node = this.consumeExpression(0);
+                if (right_node)
+                    return Ast.createUnaryExpression(token, right_node);
+                break;
+            }
             case TokenType.NUMBER:
                 return Ast.createLiteralNode(token.literal as number);
             case TokenType.IDENTIFIER:
@@ -326,11 +336,13 @@ export class Parser {
                 const expr = this.consumeExpression();
                 this.expect(TokenType.RPAREN, "Expected ) but found " + this.peek().lexeme);
                 return expr;
-            case TokenType.MINUS:
+            case TokenType.MINUS: {
                 const right_node = this.consumeExpression();
                 if (right_node)
                     return Ast.createUnaryExpression(token, right_node);
                 break;
+            }
+
             default:
                 this.error(`Unexpected token in nud: ${ token.lexeme }`, token);
                 break;
@@ -348,7 +360,7 @@ export class Parser {
 
 
         if (op_token.type === TokenType.LPAREN) {
-            if (!isLValue(left_node.node_type)) {
+            if (!isLValue(left_node)) {
                 this.error("Invalid function call. Only a valid LValue can have a function call");
                 return null;
             }
@@ -386,23 +398,25 @@ export class Parser {
         if (!right_node)
             return null;
 
-        if (isAssignmentOperator(op_token.type)) {
-            if (!isLValue(left_node.node_type)) {
-                this.error(`${ formatter.formatNodeType(left_node.node_type) } is an invalid assignment target`, op_token);
-                return null;
+        //Assignment
+        if (!isLValue(left_node)) {
+            this.error(`${ formatter.formatNodeType(left_node.type) } is an invalid assignment target`, op_token);
+            return null;
+        } else {
+            if (isAssignmentOperator(op_token.type)) {
+                return Ast.createAssignmentExpression(op_token, left_node, right_node);
             }
 
-            return Ast.createAssignmentExpression(op_token, left_node, right_node);
-        }
-
-        if (op_token.type === TokenType.DOT) {
-            if (right_node.node_type !== Ast.NodeType.IDENTIFIER) {
-                this.error("The right side of property access must be a valid identifier but was " + formatter.formatNodeType(left_node.node_type));
-                return null;
-            } else {
-                return Ast.createPropertyAccessExpression(left_node, right_node as Ast.IdentifierNode);
+            if (op_token.type === TokenType.DOT) {
+                if (right_node.type !== Ast.NodeType.IDENTIFIER) {
+                    this.error("The right side of property access must be a valid identifier but was " + formatter.formatNodeType(left_node.type));
+                    return null;
+                } else {
+                    return Ast.createPropertyAccessExpression(left_node, right_node as Ast.IdentifierNode);
+                }
             }
         }
+
 
         return Ast.createBinaryExpression(op_token, left_node, right_node);
     }
@@ -435,7 +449,7 @@ export class Parser {
                 if (!isExpressionTerminator(this.peek().type)) {
                     this.error("Postfix operators can only be followed by an expression terminator");
                 }
-                if (!isLValue(left_node.node_type)) {
+                if (!isLValue(left_node)) {
                     this.error("Postfix operator can only be applied to a LValue");
                     return null;
                 }
