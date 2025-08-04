@@ -1,0 +1,28 @@
+.yasl-repl-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    .yasl-repl-input {
+        background-color: rgba(0, 0, 0, 0.22);
+        border-radius: var(--yasl-repl-border-radius);
+        width: 100%;
+        height: max-content;
+        min-height: 3em;
+        padding: 1em;
+        outline: 1px solid transparent;
+        transition: outline-color 100ms linear;
+
+        &.focused {
+            outline: 1px solid #fff;
+        }
+    }
+
+    .yasl-repl-output {
+        width: 100%;
+        height: 100%;
+        border: 1px solid rgba(0, 0, 0, 0.99);
+    }
+}

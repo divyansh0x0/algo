@@ -1,0 +1,16 @@
+#yasl-repl {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem;
+    position: fixed;
+    top: 20%;
+    left: 10%;
+    z-index: 2;
+    background-color: var(--surface-bg-color);
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    height: 50vh;
+    width: 50vw;
+}

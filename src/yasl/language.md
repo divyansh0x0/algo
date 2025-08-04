@@ -9,21 +9,21 @@ EOL                             <- ";" | [\n\r]+
 Statement                       <- FunctionDeclarationStmt | ConditionStmt | IterationStmt | ClassDeclarationStmt | DeclarationStmt | ExpressionStmt | BlockStmt
 ExpressionStmt                  <- Expression
 
-FunctionDeclarationStmt         <- "fn" SimpleIdentifier "(" ParameterList? ")" (":" Type)? BlockStmt
+FunctionDeclarationStmt         <- "fn" Identifier "(" ParameterList? ")" (":" Type)? BlockStmt
 ParameterList                   <- Paramater ("," Parameter)*
-Parameter                       <- SimpleIdentifier (":" Type)?
+Parameter                       <- Identifier (":" Type)?
 DeclarationStmt                 <- "let" Identifier (":" Type)? "=" Assignable
 AssignmentStmt                  <- Identifier (":" Type)? "=" Assignable
-Type                            <- SimpleIdentifier
+Type                            <- Identifier
 Assignable                      <- Call | Expression
 Call                            <- FunctionCall | ObjectCreationCall
-FunctionCall                    <- SimpleIdentifier "(" ArgumentList? ")"
-ObjectCreationCall              <- "new" SimpleIdentifier "(" ArgumentList? ")"
-ArgumentList                    <- SimpleIdentifier ("," SimpleIdentifier)*
+FunctionCall                    <- Identifier "(" ArgumentList? ")"
+ObjectCreationCall              <- "new" Identifier "(" ArgumentList? ")"
+ArgumentList                    <- Identifier ("," Identifier)*
 
-SimpleIdentifier                <- [a-zA-Z_][a-zA-Z0-9_]*
-Identifier                      <- PropertyAccess | SimpleIdentifier
-PropertyAccess                  <- SimpleIdentifier "." SimpleIdentifier ("." SimpleIdentifier)*
+Identifier                <- [a-zA-Z_][a-zA-Z0-9_]*
+LValue                      <- PropertyAccess | Identifier
+PropertyAccess                  <- Identifier "." Identifier ("." Identifier)*
 
 Expression                      <- InlineCondition
 InlineCondition                 <- BooleanOr ("?" Expression ":" Expression)?
@@ -38,9 +38,9 @@ Term                            <- Factor (("*" | "/" | "%") Factor)*
 Factor                          <- Prefix ("**" Prefix)*
 Prefix                          <- ("-" | "~" | "!")? Postfix
 Postfix                         <- Primary ("++" | "--")?
-Primary                         <- Number | Identifier | "(" Expression ")" | AssignableExp | Call | InlineCondition
+Primary                         <- Number | LValue | "(" Expression ")" | AssignableExp | Call | InlineCondition
 
-AssignableExp                   <- "(" AssignmentStmt ")"
+AssignableExp                   <- "(" LValue (":" Type)? ":=" Expression ")"
 DeclarationExp                  <- "(" DeclarationStmt ")"
 
 ConditionStmt                   <- "if" "(" Expression ")" Statement
@@ -52,7 +52,7 @@ IterationStmt                   <- ("while" "(" Expression ")" Statement ) |
 
 BlockStmt                       <- "{" StatementList? "}"
 
-ClassDeclarationStmt            <- "class" SimpleIdentifier "{" ClassStatement*  "}" ("implements" SimpleIdentifier)?
+ClassDeclarationStmt            <- "class" Identifier "{" ClassStatement*  "}" ("implements" Identifier)?
 ClassStatement                  <-  FieldDeclarationStmt | ConstructorStmt  | MethodDeclarationStmt
 FieldDeclarationStmt            <- fieldModifier? DeclarationStmt ";"
 ConstructorStmt                 <- visibilityModifier? "(" ParameterList? ")" BlockStmt

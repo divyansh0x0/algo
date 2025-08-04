@@ -1,5 +1,6 @@
 "use strict";
 
+import { YASLRepl } from "@/editor/repl";
 import { Scene, SceneLogger } from "@/engine/scene";
 import { ThemeManager, ThemeType } from "@/engine/theme";
 import { Visualizer } from "@/engine/visualizer";
@@ -216,5 +217,21 @@ document.addEventListener("DOMContentLoaded", () => {
             visualizer.load(graphs[drop_down.value as keyof typeof graphs]);
             console.log("changing");
         });
+
+
+        attachInterpreter();
     }
 });
+
+function attachInterpreter() {
+    const yasl_input = document.getElementById("yasl-repl")!;
+    new YASLRepl(yasl_input);
+    // yasl_input.addEventListener("keyup",(e)=>{
+    //     if(e.key === "Enter" || e.key === "enter"){
+    //         const code = yasl_input.value;
+    //         yasl_input.value = "";
+    //         parseCode(code)
+    //     }
+    // })
+    // runtime.run()
+}

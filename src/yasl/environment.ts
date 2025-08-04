@@ -1,4 +1,4 @@
-import { Ast } from "@/motion/ast/tree";
+import { NativeValue, YASLNode } from "@/yasl/tree";
 
 export enum EnvironmentReturnCode {
     AlreadyDefined,
@@ -8,23 +8,24 @@ export enum EnvironmentReturnCode {
 
 export enum RValueType {
     Node,
+    Native,
     Environment
 }
 
 export interface RValue {
     type: RValueType;
-    value: Ast.Node | Environment;
+    value: NativeValue | YASLNode | Environment;
 }
 
 export class Environment {
-    private variable_map = new Map<string, RValue>();
+    private variable_map = new Map<string, RValue | null>();
 
     constructor() { }
 
-    define(name: string, value: Ast.Node) {
+    define(name: string, value: NativeValue) {
         if (this.variable_map.has(name))
             return EnvironmentReturnCode.AlreadyDefined;
-        this.variable_map.set(name, { type: RValueType.Node, value });
+        this.variable_map.set(name, { type: RValueType.Native, value });
         return EnvironmentReturnCode.Success;
     }
 
@@ -35,11 +36,11 @@ export class Environment {
         return EnvironmentReturnCode.Success;
     }
 
-    mutate(name: string, new_value: Ast.Node) {
+    mutate(name: string, new_value: NativeValue) {
         if (!this.variable_map.has(name))
             return EnvironmentReturnCode.NotDefined;
 
-        this.variable_map.set(name, { type: RValueType.Node, value: new_value });
+        this.variable_map.set(name, { type: RValueType.Native, value: new_value });
         return EnvironmentReturnCode.Success;
     }
 
@@ -54,6 +55,5 @@ export class Environment {
     get(name: string) {
         return this.variable_map.get(name) ?? null;
     }
-
 
 }

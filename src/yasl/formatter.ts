@@ -1,59 +1,59 @@
-import { Ast } from "@/motion/ast/tree";
+import { YASLNode, YASLNodeType } from "@/yasl/tree";
 
-export namespace formatter {
+enum Colors {
+    Reset = "\x1b[0m",
+    Bright = "\x1b[1m",
+    Dim = "\x1b[2m",
+    Underscore = "\x1b[4m",
+    Blink = "\x1b[5m",
+    Reverse = "\x1b[7m",
+    Hidden = "\x1b[8m",
+
+    FgBlack = "\x1b[30m",
+    FgRed = "\x1b[31m",
+    FgGreen = "\x1b[32m",
+    FgYellow = "\x1b[33m",
+    FgBlue = "\x1b[34m",
+    FgMagenta = "\x1b[35m",
+    FgCyan = "\x1b[36m",
+    FgWhite = "\x1b[37m",
+    FgGray = "\x1b[90m",
+
+    BgBlack = "\x1b[40m",
+    BgRed = "\x1b[41m",
+    BgGreen = "\x1b[42m",
+    BgYellow = "\x1b[43m",
+    BgBlue = "\x1b[44m",
+    BgMagenta = "\x1b[45m",
+    BgCyan = "\x1b[46m",
+    BgWhite = "\x1b[47m",
+    BgGray = "\x1b[100m",
+}
+
+export class formatter {
 
 
-    enum Colors {
-        Reset = "\x1b[0m",
-        Bright = "\x1b[1m",
-        Dim = "\x1b[2m",
-        Underscore = "\x1b[4m",
-        Blink = "\x1b[5m",
-        Reverse = "\x1b[7m",
-        Hidden = "\x1b[8m",
-
-        FgBlack = "\x1b[30m",
-        FgRed = "\x1b[31m",
-        FgGreen = "\x1b[32m",
-        FgYellow = "\x1b[33m",
-        FgBlue = "\x1b[34m",
-        FgMagenta = "\x1b[35m",
-        FgCyan = "\x1b[36m",
-        FgWhite = "\x1b[37m",
-        FgGray = "\x1b[90m",
-
-        BgBlack = "\x1b[40m",
-        BgRed = "\x1b[41m",
-        BgGreen = "\x1b[42m",
-        BgYellow = "\x1b[43m",
-        BgBlue = "\x1b[44m",
-        BgMagenta = "\x1b[45m",
-        BgCyan = "\x1b[46m",
-        BgWhite = "\x1b[47m",
-        BgGray = "\x1b[100m",
-    }
-
-    export function formatAstJSON(node: Ast.Node): string {
-        function isIterable(obj: any) {
+    static formatAstJSON(node: YASLNode): string {
+        function isIterable(obj: any): obj is Iterable<any> {
             return obj != null && typeof obj[Symbol.iterator] === "function";
         }
 
-        function serialize(node: Ast.Node): any {
-            const result: any = { type: formatNodeType(node.type) };
+        function serialize(node: YASLNode): any {
+            const result: any = { type: formatter.formatNodeType(node.type) };
 
             const entries = Object.entries(node);
             for (const [ key, value ] of entries) {
-                if (key === "node_type" || key === "next_node") continue;
+                if (key === "type" || key === "next_node") continue;
 
                 if (value && typeof value === "object") {
-                    if ("node_type" in value) {
-                        result[key] = serialize(value as Ast.Node);
+                    if ("type" in value) {
+                        result[key] = serialize(value as YASLNode);
                     } else if ("lexeme" in value) {
                         result[key] = value.lexeme;
                     } else if (isIterable(value)) {
                         result[key] = [];
                         for (const item of value) {
-                            if (item && typeof item === "object" && "node_type" in item) {
+                            if (item && typeof item === "object" && "type" in item) {
                                 result[key].push(serialize(item));
                             } else {
                                 result[key].push(item);
@@ -78,41 +78,41 @@ export namespace formatter {
     }
 
 
-    export function formatAst(node: Ast.Node, indentLevel = 0): string {
+    static formatAst(node: YASLNode, indentLevel = 0): string {
         const lines: string[] = [];
 
-        function isIterable(obj: any) {
+        function isIterable(obj: any): obj is Iterable<any> {
             return obj != null && typeof obj[Symbol.iterator] === "function";
         }
 
-        function render(node: Ast.Node, indentLevel: number, prefixStr = "") {
+        function render(node: YASLNode, indentLevel: number, prefixStr = "") {
             const indent = "  ".repeat(indentLevel);
             const branch = prefixStr ? `${ prefixStr }└──` : "";
 
             if (indentLevel === 0) {
-                lines.push(`${ branch }[${ Colors.FgGreen }${ formatNodeType(node.type) }${ Colors.Reset }]`);
+                lines.push(`${ branch }[${ Colors.FgGreen }${ formatter.formatNodeType(node.type) }${ Colors.Reset }]`);
             }
 
             const entries = Object.entries(node);
             for (const [ key, value ] of entries) {
-                if (key === "node_type" || key === "next_node") continue;
+                if (key === "type" || key === "next_node") continue;
 
                 const label = `${ Colors.FgBlue }${ key }${ Colors.Reset }`;
                 const newPrefix = prefixStr + "  ";
 
                 if (value && typeof value === "object") {
-                    if ("node_type" in value) {
+                    if ("type" in value) {
                         // Child node
-                        lines.push(`${ newPrefix }├── ${ label }: [${ Colors.FgMagenta }${ formatNodeType(value.node_type) }${ Colors.Reset }]`);
-                        render(value as Ast.Node, indentLevel + 1, newPrefix + "│ ");
+                        lines.push(`${ newPrefix }├── ${ label }: [${ Colors.FgMagenta }${ formatter.formatNodeType(value.type) }${ Colors.Reset }]`);
+                        render(value as YASLNode, indentLevel + 1, newPrefix + "│ ");
                     } else if ("lexeme" in value) {
                         lines.push(`${ newPrefix }├── ${ label }: ${ value.lexeme }`);
                     } else if (isIterable(value)) {
                         lines.push(`${ newPrefix }├── ${ label }: [`);
                         for (const item of value) {
-                            if (item && typeof item === "object" && "node_type" in item) {
-                                lines.push(`${ newPrefix }│   ├── [${ Colors.FgMagenta }${ formatNodeType(item.node_type) }${ Colors.Reset }]`);
-                                const rendered = formatAst(item, indentLevel + 2);
+                            if (item && typeof item === "object" && "type" in item) {
+                                lines.push(`${ newPrefix }│   ├── [${ Colors.FgMagenta }${ formatter.formatNodeType(item.type) }${ Colors.Reset }]`);
+                                const rendered = formatter.formatAst(item, indentLevel + 2);
                                 for (const l of rendered.split("\n")) {
                                     lines.push(`${ newPrefix }│   │ ${ l }`);
                                 }
@@ -140,56 +140,56 @@ export namespace formatter {
     }
 
 
-    export function formatNodeType(node_type: Ast.NodeType): string {
-        switch (node_type) {
-            case Ast.NodeType.IDENTIFIER:
+    static formatNodeType(type: YASLNodeType): string {
+        switch (type) {
+            case YASLNodeType.IDENTIFIER:
                 return "Identifier";
-            case Ast.NodeType.LITERAL:
+            case YASLNodeType.LITERAL:
                 return "Literal";
-            case Ast.NodeType.CALL:
+            case YASLNodeType.CALL:
                 return "Call";
-            case Ast.NodeType.BREAK_STATEMENT:
+            case YASLNodeType.BREAK_STATEMENT:
                 return "Break Statement";
-            case Ast.NodeType.CONTINUE_STATEMENT:
+            case YASLNodeType.CONTINUE_STATEMENT:
                 return "Continue Statement";
-            case Ast.NodeType.DECLARATION_STATEMENT:
+            case YASLNodeType.DECLARATION_STATEMENT:
                 return "Declaration Statement";
-            case Ast.NodeType.ASSIGNMENT_EXPRESSION:
+            case YASLNodeType.ASSIGNMENT:
                 return "Assignment Expression";
-            case Ast.NodeType.FUNCTION_DEFINITION:
+            case YASLNodeType.FUNCTION_DEFINITION:
                 return "Function Definition";
-            case Ast.NodeType.RETURN_STATEMENT:
+            case YASLNodeType.RETURN_STATEMENT:
                 return "Return Statement";
-            case Ast.NodeType.FOR_STATEMENT:
+            case YASLNodeType.FOR_STATEMENT:
                 return "For Statement";
-            case Ast.NodeType.WHILE_STATEMENT:
+            case YASLNodeType.WHILE_STATEMENT:
                 return "While Statement";
-            case Ast.NodeType.THEN_STATEMENT:
+            case YASLNodeType.THEN_STATEMENT:
                 return "Then Statement";
-            case Ast.NodeType.IF_STATEMENT:
+            case YASLNodeType.IF_STATEMENT:
                 return "If Statement";
-            case Ast.NodeType.ELSE_STATEMENT:
+            case YASLNodeType.ELSE_STATEMENT:
                 return "Else Statement";
-            case Ast.NodeType.ELSE_IF_STATEMENT:
+            case YASLNodeType.ELSE_IF_STATEMENT:
                 return "Else If Statement";
-            case Ast.NodeType.SWITCH_STATEMENT:
+            case YASLNodeType.SWITCH_STATEMENT:
                 return "Switch Statement";
-            case Ast.NodeType.SWITCH_CASE_STATEMENT:
+            case YASLNodeType.SWITCH_CASE_STATEMENT:
                 return "Switch Case Statement";
-            case Ast.NodeType.BINARY_EXPRESSION:
+            case YASLNodeType.BINARY_EXPRESSION:
                 return "Binary Expression";
-            case Ast.NodeType.UNARY_EXPRESSION:
+            case YASLNodeType.UNARY_EXPRESSION:
                 return "Unary Expression";
-            case Ast.NodeType.BLOCK_STATEMENT:
+            case YASLNodeType.BLOCK_STATEMENT:
                 return "Block Statement";
-            case Ast.NodeType.TERNARY_EXPRESSION:
+            case YASLNodeType.TERNARY_EXPRESSION:
                 return "Ternary Expression";
-            case  Ast.NodeType.PROPERTY_ACCESS_EXPRESSION:
+            case  YASLNodeType.PROPERTY_ACCESS:
                 return "Property Access";
-            case Ast.NodeType.POSTFIX_OPERATION:
+            case YASLNodeType.POSTFIX_OPERATION:
                 return "Postfix Operation";
             default:
-                return "Unknown Node Type (" + Ast.NodeType + ")";
+                return "Unknown YASLNode Type (" + YASLNodeType + ")";
         }
     }
 

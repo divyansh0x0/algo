@@ -1,10 +1,11 @@
 :root {
     --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
     --debug-color: #f00;
-    --border-color: rgba(0, 0, 0, 0.52);
+    --border-radius: 20px
 }
 
 [theme="light"] {
+    --border-color: rgba(0, 0, 0, 0.52);
     --overlay-color: rgba(0, 0, 0, 0.04);
     --primary-color: #0c0050;
     --primary-color-hover: #bb88fa;
@@ -56,6 +57,7 @@
 }
 
 [theme="dark"] {
+    --border-color: rgba(255, 255, 255, 0.18);
     --overlay-color: rgba(255, 255, 255, 0.04);
     --primary-color: #5b88fa;
     --primary-color-hover: #afc7ff;

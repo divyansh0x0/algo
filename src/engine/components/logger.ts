@@ -108,53 +108,19 @@ export class Logger {
             position: "fixed",
             top: "1em",
             left: "50%",
-            zIndex: "1000",
             resize: "both",
             scrollingBehavior: "none"
         });
 
-        this.container_el.addEventListener("mousedown", (e) => {
-            if ((e.clientY - this.container_el.offsetTop) > 50)
-                return;
-            this.mouse_down_event = e;
-            this.container_el.style.transform = "unset";
-
-        });
-
-        this.container_el.addEventListener("touchstart", (e) => {
-            const touch = e.touches[0];
-            if ((touch.clientY - this.container_el.offsetTop) > 50 || !touch)
-                return;
-            this.mouse_down_event = touch;
-            this.container_el.style.transform = "unset";
-
-        });
-        window.addEventListener("mousemove", (e) => {
-            if (!this.mouse_down_event)
-                return;
-
-            this.container_el.style.left = `${ this.container_el.offsetLeft + (e.clientX - this.mouse_down_event.clientX) }px`;
-            this.container_el.style.top = `${ this.container_el.offsetTop + (e.clientY - this.mouse_down_event.clientY) }px`;
-
-            this.mouse_down_event = e;
-        });
-        window.addEventListener("touchmove", (e) => {
-            const touch = e.touches[0];
-            if (!this.mouse_down_event || !touch)
-                return;
-
-            this.container_el.style.left = `${ this.container_el.offsetLeft + (touch.clientX - this.mouse_down_event.clientX) }px`;
-            this.container_el.style.top = `${ this.container_el.offsetTop + (touch.clientY - this.mouse_down_event.clientY) }px`;
-
-            this.mouse_down_event = touch;
-        });
-        this.container_el.addEventListener("mouseup", () => this.mouse_down_event = undefined);
-        this.container_el.addEventListener("touchend", () => this.mouse_down_event = undefined);
-
+        this.container_el.classList.add("draggable");
 
         document.body.append(this.container_el);
         this.container_el.append(name_el, this.reactive_logger_container);
 
+    }
+
+    public setVisible(is_visible: boolean) {
+        this.container_el.style.display = is_visible ? "flex" : "none";
     }
 
     public info(msg: string) {

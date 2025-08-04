@@ -1,4 +1,4 @@
-import { keywords, Token, TokenType } from "@/motion/ast/token";
+import { keywords, Token, TokenType } from "@/yasl/token";
 
 export interface LexerError {
     message: string;
@@ -31,6 +31,7 @@ export class Lexer {
             this.scanToken();
         }
         if (!this.is_analysis_complete) {
+            this.start_read_index = this.next_read_index;
             this.is_analysis_complete = true;
             this.addToken(TokenType.EOF);
         }
@@ -70,17 +71,23 @@ export class Lexer {
             case "}":
             case ".":
             case ",":
-            case ":":
             case "&":
             case "|":
             case "^":
             case "~":
                 this.addToken(c as TokenType);
                 break;
+            case ":":
+                if (this.peek() == "=") {
+                    this.consume();
+                    this.addToken(TokenType.INLINE_ASSIGN);
+                } else
+                    this.addToken(TokenType.COLON);
+                break;
             case "=":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.EQUAL_TO);
+                    this.addToken(TokenType.EQUAL_EQUAL);
                 } else {
                     this.addToken(TokenType.ASSIGN);
                 }
@@ -110,7 +117,7 @@ export class Lexer {
             case "!":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.NOT_EQUAL_TO);
+                    this.addToken(TokenType.NOT_EQUAL);
                 } else {
                     this.addToken(TokenType.NEGATE);
                 }
@@ -241,8 +248,9 @@ export class Lexer {
             type: type,
             lexeme: lexeme,
             literal: obj,
-            col: this.curr_col,
-            line: this.curr_line
+            line: this.curr_line,
+            start: this.start_read_index,
+            end: this.next_read_index
         });
     }
 
@@ -351,6 +359,8 @@ export class Lexer {
             } else
                 str += c;
         }
+        this.addToken(TokenType.STRING, str);
     }
+
 
 }
