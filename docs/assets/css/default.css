@@ -89,6 +89,9 @@ option {
     background: rgba(255, 255, 255, 0.45);
 }
 
+input {
+    outline: none;
+}
 
 /* Base input style */
 /*input[type="range"] {*/

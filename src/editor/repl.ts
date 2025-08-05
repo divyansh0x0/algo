@@ -35,10 +35,10 @@ export class YASLRepl {
         repl_container.append(this.repl_input_container, this.repl_output_container);
         parent.append(repl_container);
 
-
-        this.repl_input_container.onmousedown = (e) => {
-            e.preventDefault();
-            this.yasl_editor.focus();
-        };
+        //
+        // this.repl_input_container.onmousedown = (e) => {
+        //     e.preventDefault();
+        //     this.yasl_editor.focus(e.clientX,e.clientY);
+        // };
     }
 }

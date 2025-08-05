@@ -9,12 +9,12 @@
         background-color: rgba(0, 0, 0, 0.22);
         border-radius: var(--yasl-repl-border-radius);
         width: 100%;
-        height: max-content;
+        height: 100%;
         min-height: 3em;
-        padding: 1em;
+        padding: 0;
         outline: 1px solid transparent;
         transition: outline-color 100ms linear;
-
+        cursor: text;
         &.focused {
             outline: 1px solid #fff;
         }
