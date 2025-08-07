@@ -58,10 +58,6 @@ export class Lexer {
             case "\n":
                 this.addToken(TokenType.STATEMENT_END, null);
                 break;
-            case "\t":
-            case " ":
-            case "\r":
-                break;
 
             case "(":
             case ")":
@@ -184,6 +180,13 @@ export class Lexer {
                 this.consume_string(c);
                 break;
             default:
+                if (c.match(this.whitespace_regex)) {
+                    while (this.peek().match(this.whitespace_regex)) {
+                        this.consume();
+                    }
+                    this.addToken(TokenType.WHITESPACE);
+                    break;
+                }
                 this.error(`Invalid token "${ c }"`);
                 break;
         }
