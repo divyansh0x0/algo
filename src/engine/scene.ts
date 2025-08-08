@@ -133,6 +133,7 @@ export class Scene {
                 if (!node || !this.force_quad_tree)
                     return;
                 if (node.alpha < 0.5)
+
                     node.alpha = 0.5;
                 for (const quad_node of this.force_quad_tree.getNodesInCircularRange(node.pos, 300)) {
                     const other = this.nodes.get(quad_node.id);
