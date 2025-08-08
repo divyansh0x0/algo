@@ -1,13 +1,13 @@
 import { Animator, EasingFunctions, ValueAnimation } from "@/engine/animation";
-import { Drawable } from "@/engine/components/drawable";
-import { Edge } from "@/engine/components/edge";
-import { Logger } from "@/engine/components/logger";
-import { Node } from "@/engine/components/node";
-import { ThemeManager } from "@/engine/theme";
-import { Size, Vector } from "@/utils/geometry";
-import { Mouse } from "@/utils/mouse";
-import { AABB, ForceQuadTree, QuadTreeNode } from "@/utils/quadtree";
-import { Vmath } from "@/utils/vmath";
+import { Drawable }                                  from "@/engine/components/drawable";
+import { Edge }                                      from "@/engine/components/edge";
+import { Logger }                                    from "@/engine/components/logger";
+import { Node }                                      from "@/engine/components/node";
+import { ThemeManager }                              from "@/engine/theme";
+import { Size, Vector }                              from "@/utils/geometry";
+import { Mouse }                                     from "@/utils/mouse";
+import { AABB, ForceQuadTree, QuadTreeNode }         from "@/utils/quadtree";
+import { Vmath }                                     from "@/utils/vmath";
 
 const ZERO_VEC = Object.freeze({ x: 0, y: 0 });
 const PAUSE_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M14 19V5h4v14zm-8 0V5h4v14z\"/></svg>";
@@ -119,7 +119,7 @@ export class Scene {
         this.show_fps = show_fps;
         this.is_running = false;
         this.debug_box_el = document.getElementById("debug-box") as HTMLInputElement;
-
+        this.debug_box_el.checked = false;
         this.mouse_info = new Mouse(this.ctx.canvas);
 
         this.camera.onupdate = () => {
@@ -167,8 +167,6 @@ export class Scene {
 
         this.ctx.canvas.addEventListener("mousedown", (e) => this.handleMousePressed(e));
         this.ctx.canvas.addEventListener("touchstart", (e) => {
-
-
             this.initial_touches = e.touches;
             //treat single touch as mouse touch
             if (e.touches.length === 1)
@@ -179,10 +177,12 @@ export class Scene {
             }
 
         }, { passive: false });
+
         this.ctx.canvas.addEventListener("wheel", (e) => {
             if (e.shiftKey)
                 this.zoomAt(e.clientX * devicePixelRatio, e.clientY * devicePixelRatio, e.deltaY < 0);
         }, { passive: false });
+
         window.addEventListener("mouseup", () => this.handleMouseUp());
         window.addEventListener("touchend", () => {
             this.handleMouseUp();
@@ -349,21 +349,16 @@ export class Scene {
         const edges = this.edges;
         const nodes = this.nodes;
         for (const [ , edge ] of edges) {
-
             if (!this.viewport.containsPoint(edge.start_node.pos) && !this.viewport.containsPoint(edge.end_node.pos))
                 continue;
             edge.render();
-
         }
 
 
         for (const [ , node ] of nodes) {
             if (!this.viewport.containsPoint(node.pos))
                 continue;
-
-
             node?.render();
-
         }
 
 
@@ -385,12 +380,7 @@ export class Scene {
             b = this.viewport;
             this.ctx.strokeStyle = "#00f";
             this.ctx.strokeRect(b.center.x - b.half_dimension.width, b.center.y - b.half_dimension.height, b.half_dimension.width * 2, b.half_dimension.height * 2);
-            // if(!this.mark)
-            //     this.mark = true;
-
             this.ctx.closePath();
-
-
         }
         this.ctx.restore();
     }

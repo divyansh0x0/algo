@@ -13,6 +13,7 @@
 }
 
 :root {
+    --yasl-editor-selection-color: rgba(70, 136, 255, 0.42);
     --yasl-identifier-color: #7bfbdd;
     --yasl-symbol-color: #e81111;
     --yasl-operator-color: #d996ff;
@@ -27,16 +28,19 @@
 
 .yasl-editor {
     caret-color: transparent !important;
-    width: 100%;
-    height: 100%;
+    width: fit-content;
+    min-width: 100%;
+    min-height: 100%;
+    height: fit-content;
     padding: 0;
     display: flex;
     flex-direction: column;
     outline: none;
     font-family: "JetBrains Mono", monospace;
     font-size: var(--yasl-editor-font-size);
-    overflow: auto;
+    overflow: hidden;
     pointer-events: none;
+    user-select: none;
 
     .yasl-ide-loader {
         width: 100%;
@@ -81,8 +85,12 @@
         }
     }
 
+    .yasl-ide-selection-el {
+        background-color: var(--yasl-editor-selection-color);
+        position: absolute;
+    }
     .yasl-editor-row {
-        width: max-content;
+        width: 100%;
         height: min-content;
         outline: none;
 
@@ -90,11 +98,11 @@
         min-height: var(--yasl-editor-font-size);
         min-width: 100%;
         padding: 0;
+        white-space: pre;
 
         &:focus {
             background: rgba(0, 0, 0, 0.42);
         }
-
         .identifier {
             color: var(--yasl-identifier-color);
 
@@ -102,7 +110,6 @@
 
         .whitespace {
             color: var(--yasl-whitespace-color);
-            white-space: pre;
         }
 
         .keyword {

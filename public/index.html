@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>Title</title>
+    <title>Algo</title>
 
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
@@ -82,7 +82,7 @@
         </svg>
     </button>
 </div>
-<div class="" id="yasl-repl">
+<div class="draggable" id="yasl-repl">
 </div>
 </body>
 
@@ -119,6 +119,7 @@
             const item_under_drag = document.querySelector(".draggable.dragging");
             if (!(item_under_drag instanceof HTMLElement))
                 return;
+
             const attr = item_under_drag.getAttribute("dragging");
             if (attr) {
                 const [x, y] = attr.split(":");

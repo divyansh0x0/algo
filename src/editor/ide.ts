@@ -45,13 +45,13 @@ class CaretManager {
 
     private readonly primary_caret: YASLCaret;
 
-    private _char_width                                              = 0;
+    private _char_width = 0;
 
     get char_width(): number {
         return this._char_width;
     }
 
-    private _line_height                                             = 0;
+    private _line_height = 0;
 
     get line_height(): number {
         return this._line_height;
@@ -131,13 +131,14 @@ class YASLCaret {
 
     private readonly caret = document.createElement("div");
 
-    private char_width  = 10;
+    private char_width = 10;
 
-    private _column          = 0;
+    private _column = 0;
 
     get column(): number {
         return this._column;
     }
+
     private line_height = 10;
     private text_before_caret = "";
 
@@ -196,55 +197,22 @@ class YASLCaret {
 
 }
 
+function isInBounds(x: number, y: number, rect: DOMRect): any {
+    return x > rect.x
+        && x < rect.x + rect.width
+        && y > rect.y
+        && y < rect.y + rect.height;
+}
+
 export class EditorRow {
     private insertion_col                 = 0;
     private selection_range: Range | null = null;
 
     constructor(private ide: IDE, private row_el: HTMLElement) {
         this.row_el.classList.add("yasl-editor-row");
-        this.row_el.tabIndex = 0;
-
-        this.row_el.onfocus     = (e) => {
-            ide.setActiveRow(this);
-        };
-        this.row_el.onmousedown = (e) => {
-            this.ide.setActiveRow(this);
-            if (e.detail === 1) {
-                const rect = this.row_el.getBoundingClientRect();
-                if (!rect)
-                    return;
-                const col = Math.floor((e.clientX - rect.x) / this.ide.caret_manager.char_width);
-                this.ide.caret_manager.setColumn(col);
-
-
-                const sel = window.getSelection();
-                if (sel && this.selection_range) {
-                    // Ensure the range still belongs to the current selection
-                    for (let i = 0; i < sel.rangeCount; i++) {
-                        if (sel.getRangeAt(i) === this.selection_range) {
-                            sel.removeRange(this.selection_range);
-                            break;
-                        }
-                    }
-                    this.selection_range = null;
-                }
-                this.focus();
-            } else if (e.detail === 2) {
-                this.selectWord(e.clientX, e.clientY);
-            } else {
-                this.selectRow();
-            }
-            e.preventDefault();
-        };
-
-        this.row_el.onkeydown = (e) => {
-            this.handleKeyPress(e.key);
-            e.preventDefault();
-            e.stopImmediatePropagation();
-        };
     }
 
-    private _tokens: YASL.Token[]         = [];
+    private _tokens: YASL.Token[] = [];
 
     get tokens(): Token[] {
         return this._tokens;
@@ -262,76 +230,20 @@ export class EditorRow {
         return this._raw;
     }
 
-    handleKeyPress(key: string) {
-        switch (key) {
-            case Editor.KeyCodes.Backspace:
-                this.backspaceChar();
-                break;
-            case Editor.KeyCodes.Delete:
-                this.deleteChar();
-                break;
-            case Editor.KeyCodes.Home:
-                this.goToStart();
-                break;
-            case Editor.KeyCodes.End:
-                this.goToEnd();
-                break;
-            case KeyCodes.Enter:
-                this.ide.insertRowAfterCurrent();
-                break;
-
-            case KeyCodes.ARROW_LEFT:
-                this.ide.caret_manager.moveCol(-1);
-                break;
-
-            case KeyCodes.ARROW_RIGHT:
-                this.ide.caret_manager.moveCol(1);
-                break;
-            case KeyCodes.ARROW_DOWN:
-                this.ide.moveDown();
-                break;
-            case KeyCodes.ARROW_UP:
-                this.ide.moveUp();
-                break;
-            case KeyCodes.Tab:
-                if (this.ide.tab_spaces_count > 0)
-                    this.appendChar(" ".repeat(this.ide.tab_spaces_count));
-                else
-                    this.appendChar("\t");
-                break;
-            default:
-                if (Editor.isPrintableKey(key)) {
-                    this.appendChar(key);
-                } else {
-                    console.log("unknown key handing over to IDE:", key);
-                }
-                break;
-        }
-    }
 
     render() {
         const raw_text    = this.raw;
         const tokens      = new YASL.Lexer(raw_text).getTokens();
         let rendered_text = "";
-        let last_end_index = 0;
         if (tokens.length > 0) {
             for (const token of tokens) {
                 if (token.type === YASL.TokenType.EOF)
                     break;
-                // if (last_end_index !== token.start) {
-                //     rendered_text += `<span class='whitespace'>${ raw_text.slice(last_end_index, token.start)
-                // }</span>`; }
-
                 rendered_text += `<span class='${ YASL.StringifyTokenType(token.type) }'>${ raw_text.slice(token.start, token.end) }</span>`;
-                last_end_index = token.end;
             }
         } else {
             rendered_text = raw_text;
         }
-        // const rect = getContentRect(this.input_text);
-
-        // this.caret.style.left =  rect.x.toString() + "px";
-
         this.row_el.innerHTML = rendered_text;
         this._tokens      = tokens;
     }
@@ -346,7 +258,7 @@ export class EditorRow {
         this.ide.caret_manager.setColumn(this.raw.length - trailing_whitespace_length);
     }
 
-    private appendChar(char: string): void {
+    appendChar(char: string): void {
         if (this.insertion_col === this.raw.length) {
             this._raw += char;
         } else if (this.insertion_col < this.raw.length) {
@@ -364,12 +276,12 @@ export class EditorRow {
         return this.row_el.offsetHeight;
     }
 
-    focus(): void {
-        this.row_el.focus();
+    activate(): void {
+        this.row_el.classList.add("active");
     }
 
     deactivate() {
-        // this.row_el.classList.remove("active");
+        this.row_el.classList.remove("active");
     }
 
 
@@ -385,7 +297,7 @@ export class EditorRow {
         this.insertion_col = column;
     }
 
-    private backspaceChar(): void {
+    backspaceChar(): void {
         if (this._raw.length == 0) {
             this.ide.deleteActiveRow();
             return;
@@ -410,7 +322,7 @@ export class EditorRow {
 
     }
 
-    private deleteChar(): void {
+    deleteChar(): void {
         if (this.selection_range) {
             this.clearSelection();
         } else if (this._raw.length > 0 && this.insertion_col < this.raw.length) {
@@ -421,34 +333,34 @@ export class EditorRow {
         this.render();
     }
 
-    private selectWord(x: number, y: number): void {
+    selectWord(x: number, y: number): void {
         if (this.selection_range)
             window.getSelection()?.removeRange(this.selection_range);
+        this.row_el.getBoundingClientRect();
         for (const child of this.row_el.children) {
             const rect = child.getBoundingClientRect();
-            const padY = 0;
-            if (x > rect.x && x < rect.x + rect.width
-                && y > rect.y - padY && y < rect.y + rect.height + padY) {
-                const range = document.createRange();
-                range.selectNodeContents(child);
-                const selection = window.getSelection();
-                selection?.removeAllRanges();
-                selection?.addRange(range);
-                this.selection_range = range;
-                this.ide.caret_manager.moveColToWordEnd();
+            if (isInBounds(x, y, rect)) {
+                const start_x = rect.x;
+                const end_x   = rect.x + rect.width;
+
+                const anchor_col = this.ide.getColumnFromPoint(start_x);
+                const head_col   = this.ide.getColumnFromPoint(end_x);
+
+                this.ide.selection.setAnchor(anchor_col, this.ide.active_row_index);
+                this.ide.selection.moveHead(head_col, this.ide.active_row_index);
                 break;
             }
         }
     }
 
-    private selectRow(): void {
-        const range = document.createRange();
-        range.selectNodeContents(this.row_el);
-        const selection = window.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-        this.selection_range = range;
-        this.ide.caret_manager.setColumn(-1);
+    selectRow(): void {
+        this.ide.selection.setAnchor(0, this.ide.active_row_index);
+        this.ide.selection.moveHead(this.raw.length, this.ide.active_row_index);
+    }
+
+    setText(row_str: string): void {
+        this._raw = row_str;
+        this.render();
     }
 
     private clearSelection(): void {
@@ -466,76 +378,294 @@ export class EditorRow {
     }
 }
 
+interface IDEPosition {
+    line: number,
+    col: number,
+}
+
+class IDESelection {
+    private readonly anchor: IDEPosition = {
+        line: 0,
+        col : 0
+    };
+    private readonly head: IDEPosition   = {
+        line: 0,
+        col : 0
+    };
+
+
+    private anchor_el = document.createElement("div");
+    private middle_el = document.createElement("div");
+    private head_el   = document.createElement("div");
+
+    constructor(parent: HTMLElement, private ide: IDE) {
+        parent.append(this.anchor_el, this.middle_el, this.head_el);
+
+        this.anchor_el.classList.add("yasl-ide-selection-el");
+        this.middle_el.classList.add("yasl-ide-selection-el");
+        this.head_el.classList.add("yasl-ide-selection-el");
+    }
+
+    moveHead(col: number, row: number): void {
+        this.head.line = row;
+        this.head.col  = col;
+
+        this.render();
+    }
+
+    setAnchor(col: number, row: number): void {
+        this.clear();
+        const max_col    = this.ide.getMaxColumn(row);
+        this.anchor.col  = Math.min(col, max_col);
+        this.anchor.line = row;
+    }
+
+    clear(): void {
+        this.head.col  = 0;
+        this.head.line = 0;
+
+        this.anchor.col  = 0;
+        this.anchor.line = 0;
+
+        this.anchor_el.style = "";
+        this.middle_el.style = "";
+        this.head_el.style   = "";
+    }
+
+    private render() {
+        if (this.head.col === this.anchor.col && this.head.line === this.anchor.line) {
+            this.anchor_el.style = "";
+            this.middle_el.style = "";
+            this.head_el.style   = "";
+
+            return;
+        }
+        const char_width  = this.ide.caret_manager.char_width;
+        const line_height = this.ide.caret_manager.line_height;
+        const line_width  = this.ide.rect.width;
+
+
+        this.anchor_el.style.height = line_height + "px";
+        this.anchor_el.style.top    = this.anchor.line * line_height + "px";
+
+        if (this.head.line === this.anchor.line) {
+            let min_col: number;
+            let max_col: number;
+            if (this.head.col > this.anchor.col) {
+                min_col = this.anchor.col;
+                max_col = this.head.col;
+            } else {
+                min_col = this.head.col;
+                max_col = this.anchor.col;
+            }
+            const col_diff = max_col - min_col;
+
+            this.anchor_el.style.left  = min_col * char_width + "px";
+            this.anchor_el.style.width = col_diff * char_width + "px";
+
+
+            this.ide.active_row_index = this.head.line;
+            this.ide.caret_manager.setColumn(this.head.col);
+            return;
+        }
+
+        let min_line: number;
+        if (this.anchor.line < this.head.line) {
+            this.anchor_el.style.width = line_width + "px";
+            this.anchor_el.style.left  = this.anchor.col * char_width + "px";
+            min_line                   = this.anchor.line;
+        } else {
+            this.anchor_el.style.width = this.anchor.col * char_width + "px";
+            this.anchor_el.style.left  = "0";
+            min_line                   = this.head.line;
+        }
+
+        const line_gap = Math.abs(this.head.line - this.anchor.line) - 1;
+        if (line_gap !== 0) {
+            this.middle_el.style.left   = "0";
+            this.middle_el.style.top    = (min_line + 1) * line_height + "px";
+            this.middle_el.style.width  = line_width + "px";
+            this.middle_el.style.height = line_gap * line_height + "px";
+        } else {
+            this.middle_el.style = "";
+        }
+
+
+        this.head_el.style.top    = this.head.line * line_height + "px";
+        this.head_el.style.left   = "0";
+        this.head_el.style.width  = this.head.col * char_width + "px";
+        this.head_el.style.height = line_height + "px";
+
+    }
+}
+
 export class IDE {
-    public readonly caret_manager;
+    public readonly caret_manager: CaretManager;
+    public readonly tab_spaces_count = 4;
+    public readonly rect                      = new DOMRect();
     private readonly editor_rows: EditorRow[] = [];
-    public readonly tab_spaces_count      = 4;
-    private readonly editor_el            = document.createElement("div");
-    private row_height: number            = 10;
+    private readonly editor_el                = document.createElement("div");
+    selection                                 = new IDESelection(this.editor_el, this);
+    private is_mouse_down                     = false;
+    private row_height: number                = 10;
+    private char_width: number                = 10;
 
     constructor(parent: HTMLElement) {
         parent.append(this.editor_el);
-        // this.editor_el.tabIndex = 0;
+        this.editor_el.tabIndex = 0;
         this.editor_el.classList.add("yasl-editor");
 
         const loader = document.createElement("div");
         loader.classList.add("yasl-ide-loader");
         loader.innerText = "loading";
         this.editor_el.appendChild(loader);
-        this.appendRow();
-        this.caret_manager = new CaretManager(this.editor_el, this.editor_rows[this.active_row_index]);
+
         this.editor_el.onmousedown = (e) => {
-            this.editor_rows[this.active_row_index]?.focus();
+            switch (e.detail) {
+                case 1:
+                    const col = this.getColumnFromPoint(e.clientX);
+                    const row = this.getRowFromPoint(e.clientY);
+
+                    this.active_row_index = row;
+                    this.caret_manager.setColumn(col);
+                    this.selection.setAnchor(col, row);
+                    this.is_mouse_down = true;
+                    break;
+                case 2:
+                    this.editor_rows[this.active_row_index]?.selectWord(e.clientX, e.clientY);
+                    break;
+                default:
+                    this.editor_rows[this.active_row_index]?.selectRow();
+                    break;
+            }
+
+
+            this.editor_el.focus();
             e.preventDefault();
         };
+
         this.initialize().then(() => {
             this.editor_el.classList.add("ready");
         });
+
+        this.editor_el.onkeydown = (e) => {
+            this.handleKeyPress(e.key);
+        };
+
+        window.addEventListener("mouseup", () => {
+            this.is_mouse_down = false;
+        });
+
+        window.addEventListener("mousemove", (e) => {
+            if (!this.is_mouse_down) return;
+            // Selection logic placeholder
+
+            const col = this.getColumnFromPoint(e.clientX);
+            const row = this.getRowFromPoint(e.clientY);
+            this.selection.moveHead(col, row);
+            this.active_row_index = row;
+            this.caret_manager.setColumn(col);
+        });
+
+
+        this.caret_manager = new CaretManager(this.editor_el, this.editor_rows[this.active_row_index]);
     }
 
-    private _active_row_index = 0;
+    private _active_row_index                 = 0;
 
     get active_row_index(): number {
         return this._active_row_index;
     }
 
     set active_row_index(new_row_index: number) {
+        const old_editor_row = this.editor_rows[this.active_row_index];
+
         const new_index = Vmath.clamp(new_row_index, 0, this.editor_rows.length - 1);
         const new_editor_row = this.editor_rows[new_index];
-        new_editor_row.focus();
 
+        old_editor_row.deactivate();
+        new_editor_row.activate();
         this.caret_manager.setRow(new_editor_row);
         this._active_row_index = new_index;
+    }
+
+    handleKeyPress(key: string) {
+        const active_row = this.editor_rows[this.active_row_index];
+        switch (key) {
+            case Editor.KeyCodes.Backspace:
+                active_row.backspaceChar();
+                break;
+            case Editor.KeyCodes.Delete:
+                active_row.deleteChar();
+                break;
+            case Editor.KeyCodes.Home:
+                active_row.goToStart();
+                break;
+            case Editor.KeyCodes.End:
+                active_row.goToEnd();
+                break;
+            case KeyCodes.Enter:
+                this.insertRowAfterCurrent();
+                this.moveDown();
+                break;
+
+            case KeyCodes.ARROW_LEFT:
+                // if(this.selection.)
+                this.caret_manager.moveCol(-1);
+                break;
+
+            case KeyCodes.ARROW_RIGHT:
+                this.caret_manager.moveCol(1);
+                break;
+            case KeyCodes.ARROW_DOWN:
+                this.moveDown();
+                break;
+            case KeyCodes.ARROW_UP:
+                this.moveUp();
+                break;
+            case KeyCodes.Tab:
+                if (this.tab_spaces_count > 0)
+                    active_row.appendChar(" ".repeat(this.tab_spaces_count));
+                else
+                    active_row.appendChar("\t");
+                break;
+            default:
+                if (Editor.isPrintableKey(key)) {
+                    active_row.appendChar(key);
+                } else {
+                    console.log("unknown key handing over to IDE:", key);
+                }
+                break;
+        }
+    }
+
+    updateIdeRect() {
+        const rect       = this.editor_el.getBoundingClientRect();
+        this.rect.height = rect.height;
+        this.rect.width  = rect.width;
+        this.rect.x      = rect.x;
+        this.rect.y      = rect.y;
+        console.log("Updated to ", this.rect);
     }
 
     insertRowAfter(index: number): void {
         const old_row = this.editor_rows[index].getDomNode();
         const row_el = document.createElement("div");
         const new_row = new EditorRow(this, row_el);
+
         new_row.setHeight(this.row_height);
         this.editor_rows.splice(index + 1, 0, new_row);
-
         old_row.insertAdjacentElement("afterend", row_el);
 
-        this.active_row_index = index + 1;
+        this.updateIdeRect();
     }
 
     insertRowAfterCurrent(): void {
         this.insertRowAfter(this.active_row_index);
     }
 
-    setActiveRow(row: EditorRow): void {
-        this.active_row_index = this.editor_rows.indexOf(row);
-    }
-
     moveUp(): void {
         this.active_row_index--;
-    }
-
-    private appendRow(): void {
-        const row_el = document.createElement("div");
-        this.editor_rows.push(new EditorRow(this, row_el));
-        this.editor_el.appendChild(row_el);
     }
 
     moveDown(): void {
@@ -543,30 +673,95 @@ export class IDE {
     }
 
     deleteActiveRow(): void {
-        if (this.active_row_index == 0)
-            return; //cant delete the 0th row
+        if (this.active_row_index === 0) return; // can't delete the 0th row
 
         const curr_row = this.editor_rows[this.active_row_index];
         this.editor_rows.splice(this.active_row_index, 1);
         this.editor_el.removeChild(curr_row.getDomNode());
+
         this.active_row_index--;
         const new_active_row = this.editor_rows[this.active_row_index];
         this.caret_manager.setColumn(new_active_row.raw.length);
+        this.updateIdeRect();
+    }
+
+    getMaxColumn(row: number): number {
+        if (row >= this.editor_rows.length)
+            return 0;
+        const editor_row = this.editor_rows[row];
+        return editor_row.raw.length;
+    }
+
+    getTotalRows(): number {
+        return this.editor_rows.length - 1;
+    }
+
+    getColumnFromPoint(x: number): number {
+        return Vmath.clamp(Math.round((x - this.rect.x) / this.char_width), 0, this.getMaxColumn(this.active_row_index));
+
+    }
+
+    getRowFromPoint(y: number): number {
+        return Vmath.clamp(Math.round((y - this.rect.y) / this.row_height), 0, this.getTotalRows());
+    }
+
+    pasteString(str: string) {
+        let row_str   = "";
+        let row_index = 0;
+        for (const char of str) {
+            if (char === "\n") {
+                if (row_index >= this.editor_rows.length) {
+                    this.insertRowAfter(this.editor_rows.length - 1);
+                    this.moveDown();
+                }
+
+                const row = this.editor_rows[row_index];
+                row.setText(row_str);
+                console.log("wrote", row_str, "to", row_index);
+                row_str = "";
+                row_index++;
+                continue;
+            }
+            row_str += char;
+        }
+        // if the string did not end with \n then we have a remaining string
+        if (row_str.length > 0) {
+            this.insertRowAfterCurrent();
+            this.moveDown();
+            const row = this.editor_rows[row_index];
+            row.setText(row_str);
+            row_str = "";
+        }
+        this.editor_rows[this.active_row_index].goToEnd();
     }
 
     private async initialize(): Promise<void> {
         await document.fonts.ready;
+
         const computed = window.getComputedStyle(this.editor_el);
         const fontStr  = `${ computed.fontSize } ${ computed.fontFamily }`;
         await document.fonts.load(fontStr);
-        // Wait one frame to ensure font is rendered before measuring
+
         await new Promise(requestAnimationFrame);
-        const char_box = getMonospaceCharBox(this.editor_el);
+
+        const char_box  = getMonospaceCharBox(this.editor_el);
         const new_height = char_box.height;
+
         for (const row of this.editor_rows) {
             row.setHeight(new_height);
         }
+
         this.caret_manager.setFontMetrics(char_box.width, char_box.height);
         this.row_height = new_height;
+        this.char_width = char_box.width;
+
+
+        const row_el = document.createElement("div");
+        const row    = new EditorRow(this, row_el);
+        row.setHeight(this.row_height);
+        this.editor_rows.push(row);
+        this.editor_el.appendChild(row_el);
+        this.updateIdeRect();
+        this.pasteString("'hellooooooooooooo'\n'worlllllllllldd!',\n'yasl'");
     }
 }
