@@ -123,7 +123,7 @@ class CaretManager {
         return this.primary_caret.column === 0;
     }
 
-    private posChanged() {
+    posChanged() {
         if (this.is_typing_timer_id)
             clearTimeout(this.is_typing_timer_id);
         this.primary_caret.typing = true;
@@ -254,6 +254,8 @@ export class EditorRow {
         }
         this.row_el.innerHTML = rendered_text;
         this._tokens = tokens;
+
+
     }
 
     goToStart(): void {
@@ -541,11 +543,11 @@ export class IDE {
 
     private readonly gutter_el = document.createElement("div");
     private readonly editor_el = document.createElement("div");
-    public selection = new IDESelection(this.editor_el, this);
+    public selection                 = new IDESelection(this.editor_el, this);
     private is_mouse_down      = false;
     private row_height: number = 10;
     private char_width: number = 10;
-    private _active_row_index = 0;
+    private _active_row_index        = 0;
 
     constructor(parent: HTMLElement, private gutter_enabled = true) {
         const editor_wrapper = document.createElement("div");
@@ -620,6 +622,10 @@ export class IDE {
         });
         resize_observer.observe(this.editor_el);
 
+        this.editor_el.onblur = () => {
+            this.editor_rows[this.active_row_index]?.deactivate();
+        };
+
     }
 
     get active_row_index(): number {
@@ -652,9 +658,11 @@ export class IDE {
             child_count--;
         }
     }
+
     handleKeyPress(key: string) {
         const active_row = this.editor_rows[this.active_row_index];
         console.log("deleting selection", this.selection.isSelected(), this.selection);
+        this.caret_manager.posChanged();
         switch (key) {
             case Editor.KeyCodes.Backspace:
                 this.deleteChar(-1);
@@ -837,6 +845,7 @@ switch(y){
         );
 
         this.updateGutter();
+        this.editor_rows[this.active_row_index]?.deactivate();
     }
 
     private deleteSelection(): void {

@@ -97,6 +97,7 @@
     }
 
     .caret {
+        display: none;
         position: absolute;
         top: 0;
         left: 0;
@@ -104,6 +105,8 @@
         width: 3px;
         height: 1em;
         background: var(--yasl-caret-color);
+        will-change: opacity, top, left;
+        transition: top 50ms linear, left 50ms linear;
         @include blinking();
 
         &.typing {
