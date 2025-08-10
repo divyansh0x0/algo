@@ -11,4 +11,19 @@ export class StringUtils {
         return str.length - 1 - i;
 
     }
+
+    static isWhitespace(raw: string): boolean {
+        for (let i = 0; i < raw.length; i++) {
+            switch (raw[i]) {
+                case " ":
+                case "\t":
+                case "\n":
+                case "\r":
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
 }

@@ -1,5 +1,6 @@
 export enum TokenType {
     // Comparison
+    COMMENT,
     WHITESPACE = " ",
     STATEMENT_END = ";",
     EQUAL_EQUAL = "==",
@@ -128,6 +129,8 @@ export function StringifyTokenType(token_type: TokenType): string {
 
         case TokenType.WHITESPACE:
             return "whitespace";
+        case TokenType.COMMENT:
+            return "comment";
         // Keywords
         case TokenType.NULL:
         case TokenType.TRUE:

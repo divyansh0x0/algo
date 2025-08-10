@@ -13,17 +13,48 @@
 }
 
 :root {
+    --yasl-editor-bg: rgba(255, 255, 255, 0.03);
+    --yasl-row-active-bg: rgba(255, 255, 255, 0.03);
+    --yasl-text-color: #a6a6a6;
+
     --yasl-editor-selection-color: rgba(70, 136, 255, 0.42);
+
     --yasl-identifier-color: #7bfbdd;
-    --yasl-symbol-color: #e81111;
-    --yasl-operator-color: #d996ff;
+    --yasl-symbol-color: #dccaca;
+    --yasl-operator-color: var(--yasl-text-color);
+    --yasl-comment-color: #616161;
     --yasl-keyword-color: #e4ab85;
     --yasl-whitespace-color: #fff;
     --yasl-string-color: #a8ff8d;
+
     --yasl-repl-border-radius: 10px;
     --yasl-editor-font-size: 1rem;
     --yasl-caret-color: #fff;
     --yasl-loader-bg: rgb(53, 53, 53);
+    --yasl-editor-line-height: 2;
+
+}
+
+.yasl-editor-wrapper {
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    user-select: none;
+    background: var(--yasl-editor-bg);
+
+    * {
+        line-height: var(--yasl-editor-line-height);
+        box-sizing: border-box;
+        font-family: "JetBrains Mono", monospace;
+        font-size: var(--yasl-editor-font-size);
+        user-select: none;
+    }
+}
+
+.yasl-editor-gutter {
+    width: fit-content;
+    padding-right: 1.5em;
+    padding-left: 0.5em;
 }
 
 .yasl-editor {
@@ -32,15 +63,14 @@
     min-width: 100%;
     min-height: 100%;
     height: fit-content;
-    padding: 0;
     display: flex;
     flex-direction: column;
     outline: none;
     font-family: "JetBrains Mono", monospace;
-    font-size: var(--yasl-editor-font-size);
-    overflow: hidden;
-    pointer-events: none;
-    user-select: none;
+    overflow: scroll;
+    cursor: text;
+    line-height: var(--yasl-editor-line-height);
+
 
     .yasl-ide-loader {
         width: 100%;
@@ -60,11 +90,7 @@
             visibility: hidden;
         }
     }
-    * {
-        box-sizing: border-box;
-        font-family: "JetBrains Mono", monospace;
-        font-size: var(--yasl-editor-font-size);
-    }
+
 
     &:focus .caret {
         display: block;
@@ -89,20 +115,22 @@
         background-color: var(--yasl-editor-selection-color);
         position: absolute;
     }
+
     .yasl-editor-row {
         width: 100%;
         height: min-content;
         outline: none;
 
-        background: rgba(0, 0, 0, 0.22);
         min-height: var(--yasl-editor-font-size);
-        min-width: 100%;
+        min-width: max-content;
         padding: 0;
         white-space: pre;
+        align-content: center;
 
-        &:focus {
-            background: rgba(0, 0, 0, 0.42);
+        &.active {
+            background: var(--yasl-row-active-bg);
         }
+
         .identifier {
             color: var(--yasl-identifier-color);
 
@@ -128,13 +156,14 @@
             color: var(--yasl-string-color);
         }
 
+        .comment {
+            color: var(--yasl-comment-color);
+        }
+
         .symbol {
             color: var(--yasl-symbol-color);
         }
     }
-
-
-
 
 
 }

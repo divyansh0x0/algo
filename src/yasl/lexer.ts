@@ -165,6 +165,7 @@ export class Lexer {
                     case "/":// skipping a comment
                         this.consume();
                         while (!this.isEOF() && this.peek() !== "\n") this.consume();
+                        this.addToken(TokenType.COMMENT);
                         break;
                     case "=":
                         this.consume();

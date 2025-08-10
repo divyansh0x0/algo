@@ -67,7 +67,7 @@ class CaretManager {
         const new_col = Vmath.clamp(this.primary_caret.column + delta, 0, max_col);
         this.primary_caret.setColumn(new_col);
         this.primary_row.setColumn(new_col);
-        this.restartTypingTimer();
+        this.posChanged();
     }
 
     setColumn(col: number) {
@@ -79,7 +79,7 @@ class CaretManager {
             new_col = Vmath.clamp(max_col - col + 1, 0, max_col);
         this.primary_caret.setColumn(new_col);
         this.primary_row.setColumn(new_col);
-        this.restartTypingTimer();
+        this.posChanged();
     }
 
     setRow(new_row: EditorRow): void {
@@ -90,7 +90,7 @@ class CaretManager {
         this.primary_row.setColumn(new_col);
         this.primary_caret.setColumn(new_col);
         this.primary_caret.setRow(this.primary_row.getDomNode());
-        this.restartTypingTimer();
+        this.posChanged();
     }
 
     setFontMetrics(char_width: number, line_height: number) {
@@ -115,13 +115,22 @@ class CaretManager {
         }
     }
 
-    private restartTypingTimer() {
+    isAtEnd(): boolean {
+        return this.primary_caret.column === this.primary_row.raw.length;
+    }
+
+    isAtStart(): boolean {
+        return this.primary_caret.column === 0;
+    }
+
+    private posChanged() {
         if (this.is_typing_timer_id)
             clearTimeout(this.is_typing_timer_id);
         this.primary_caret.typing = true;
         this.is_typing_timer_id   = setTimeout(() => {
             this.primary_caret.typing = false;
         }, 1000);
+
     }
 }
 
@@ -205,8 +214,7 @@ function isInBounds(x: number, y: number, rect: DOMRect): any {
 }
 
 export class EditorRow {
-    private insertion_col                 = 0;
-    private selection_range: Range | null = null;
+    private insertion_col            = 0;
 
     constructor(private ide: IDE, private row_el: HTMLElement) {
         this.row_el.classList.add("yasl-editor-row");
@@ -245,7 +253,7 @@ export class EditorRow {
             rendered_text = raw_text;
         }
         this.row_el.innerHTML = rendered_text;
-        this._tokens      = tokens;
+        this._tokens = tokens;
     }
 
     goToStart(): void {
@@ -258,13 +266,12 @@ export class EditorRow {
         this.ide.caret_manager.setColumn(this.raw.length - trailing_whitespace_length);
     }
 
-    appendChar(char: string): void {
+    appendStr(str: string): void {
         if (this.insertion_col === this.raw.length) {
-            this._raw += char;
+            this._raw += str;
         } else if (this.insertion_col < this.raw.length) {
-            this._raw = this.raw.slice(0, this.insertion_col) + char + this.raw.slice(this.insertion_col);
+            this._raw = this.raw.slice(0, this.insertion_col) + str + this.raw.slice(this.insertion_col);
         }
-        this.ide.caret_manager.moveCol(char.length);
         this.render();
     }
 
@@ -298,44 +305,49 @@ export class EditorRow {
     }
 
     backspaceChar(): void {
-        if (this._raw.length == 0) {
-            this.ide.deleteActiveRow();
+        if (this.insertion_col === 0) {
             return;
         }
-        if (this.insertion_col == 0) {
-            return;
-        }
-        if (this.selection_range) {
-            this.clearSelection();
+        const start_str = this.raw.slice(0, this.insertion_col);
+        // delete pure leading whitespace
+        if (start_str.match(/^\s*$/)) {
+            this._raw = this.raw.slice(this.insertion_col, this.raw.length);
+            this.ide.caret_manager.setColumn(0);
         } else {
-            const start_str = this.raw.slice(0, this.insertion_col);
-            // delete pure leading whitespace
-            if (start_str.match(/^\s*$/)) {
-                this._raw = this.raw.slice(this.insertion_col, this.raw.length);
-                this.ide.caret_manager.setColumn(0);
-            } else {
-                this._raw = this.raw.slice(0, this.insertion_col - 1) + this.raw.slice(this.insertion_col, this.raw.length);
-                this.ide.caret_manager.moveCol(-1);
-            }
+            this._raw = this.raw.slice(0, this.insertion_col - 1) + this.raw.slice(this.insertion_col, this.raw.length);
+            this.ide.caret_manager.moveCol(-1);
         }
+
+        console.log("backspace", this.raw);
         this.render();
 
+    }
+
+    removeStr(start: number, end: number = -1) {
+        if (start === 0 && (end === this.raw.length || end === -1)) {
+            this._raw = "";
+        }
+        if (start >= 0 && end >= 0 && start !== end) {
+            const left  = this.raw.slice(0, start);
+            const right = this.raw.slice(end, this.raw.length);
+            this._raw   = left + right;
+        } else if (start > 0 && end < 0) {
+            const corrected_end = this.raw.length + end + 1;
+            const left          = this.raw.slice(0, start);
+            const right         = this.raw.slice(corrected_end, this.raw.length);
+            this._raw           = left + right;
+        }
+        this.render();
     }
 
     deleteChar(): void {
-        if (this.selection_range) {
-            this.clearSelection();
-        } else if (this._raw.length > 0 && this.insertion_col < this.raw.length) {
-            this._raw = this._raw.slice(0, this.insertion_col) + this.raw.slice(this.insertion_col + 1, this.raw.length);
-            // this.ide.caret_manager.moveCol();
-        } else
-            return;
-        this.render();
+        if (this._raw.length > 0 && this.insertion_col < this.raw.length) {
+            this._raw = this.raw.slice(0, this.insertion_col) + this.raw.slice(this.insertion_col + 1, this.raw.length);
+            this.render();
+        }
     }
 
     selectWord(x: number, y: number): void {
-        if (this.selection_range)
-            window.getSelection()?.removeRange(this.selection_range);
         this.row_el.getBoundingClientRect();
         for (const child of this.row_el.children) {
             const rect = child.getBoundingClientRect();
@@ -363,18 +375,8 @@ export class EditorRow {
         this.render();
     }
 
-    private clearSelection(): void {
-        if (!this.selection_range)
-            return;
-        const selection_length = this.selection_range.toString().length;
-
-        const selection_start_pos = this.insertion_col - selection_length;
-        const selection_end_pos   = this.insertion_col;
-
-        this._raw = this.raw.slice(0, selection_start_pos) + this.raw.slice(selection_end_pos, this.raw.length);
-        this.ide.caret_manager.moveCol(-selection_length);
-        this.selection_range = null;
-
+    canBeDeleted(): boolean {
+        return this.raw.length === 0 || StringUtils.isWhitespace(this.raw);
     }
 }
 
@@ -432,6 +434,31 @@ class IDESelection {
         this.head_el.style   = "";
     }
 
+    isSelected(): boolean {
+        const style_value = this.anchor_el.getAttribute("style");
+        if (typeof style_value === "string") {
+            return style_value.length > 0;
+        } else {
+            return false;
+        }
+    }
+
+    getStart() {
+        if (this.anchor.line === this.head.line) {
+            return this.anchor.col < this.head.col ? this.anchor : this.head;
+        } else {
+            return this.anchor.line < this.head.line ? this.anchor : this.head;
+        }
+    }
+
+    getEnd() {
+        if (this.anchor.line === this.head.line) {
+            return this.anchor.col < this.head.col ? this.head : this.anchor;
+        } else {
+            return this.anchor.line < this.head.line ? this.head : this.anchor;
+        }
+    }
+
     private render() {
         if (this.head.col === this.anchor.col && this.head.line === this.anchor.line) {
             this.anchor_el.style = "";
@@ -463,20 +490,29 @@ class IDESelection {
             this.anchor_el.style.left  = min_col * char_width + "px";
             this.anchor_el.style.width = col_diff * char_width + "px";
 
+            this.middle_el.style = "";
+            this.head_el.style   = "";
 
             this.ide.active_row_index = this.head.line;
             this.ide.caret_manager.setColumn(this.head.col);
+
             return;
         }
 
         let min_line: number;
+        //up to down selection
         if (this.anchor.line < this.head.line) {
-            this.anchor_el.style.width = line_width + "px";
+            this.anchor_el.style.width = (line_width - this.anchor.col * char_width) + "px";
             this.anchor_el.style.left  = this.anchor.col * char_width + "px";
+            this.head_el.style.left    = "0";
+            this.head_el.style.width   = this.head.col * char_width + "px";
             min_line                   = this.anchor.line;
         } else {
+            //down to up selection
             this.anchor_el.style.width = this.anchor.col * char_width + "px";
             this.anchor_el.style.left  = "0";
+            this.head_el.style.left  = this.head.col * char_width + "px";
+            this.head_el.style.width = (line_width - this.head.col * char_width) + "px";
             min_line                   = this.head.line;
         }
 
@@ -492,8 +528,6 @@ class IDESelection {
 
 
         this.head_el.style.top    = this.head.line * line_height + "px";
-        this.head_el.style.left   = "0";
-        this.head_el.style.width  = this.head.col * char_width + "px";
         this.head_el.style.height = line_height + "px";
 
     }
@@ -504,16 +538,24 @@ export class IDE {
     public readonly tab_spaces_count = 4;
     public readonly rect                      = new DOMRect();
     private readonly editor_rows: EditorRow[] = [];
-    private readonly editor_el                = document.createElement("div");
-    selection                                 = new IDESelection(this.editor_el, this);
-    private is_mouse_down                     = false;
-    private row_height: number                = 10;
-    private char_width: number                = 10;
 
-    constructor(parent: HTMLElement) {
-        parent.append(this.editor_el);
-        this.editor_el.tabIndex = 0;
+    private readonly gutter_el = document.createElement("div");
+    private readonly editor_el = document.createElement("div");
+    public selection = new IDESelection(this.editor_el, this);
+    private is_mouse_down      = false;
+    private row_height: number = 10;
+    private char_width: number = 10;
+    private _active_row_index = 0;
+
+    constructor(parent: HTMLElement, private gutter_enabled = true) {
+        const editor_wrapper = document.createElement("div");
+        editor_wrapper.append(this.gutter_el, this.editor_el);
+        editor_wrapper.classList.add("yasl-editor-wrapper");
+        parent.append(editor_wrapper);
+
+        this.editor_el.tabIndex = 1;
         this.editor_el.classList.add("yasl-editor");
+        this.gutter_el.classList.add("yasl-editor-gutter");
 
         const loader = document.createElement("div");
         loader.classList.add("yasl-ide-loader");
@@ -523,10 +565,9 @@ export class IDE {
         this.editor_el.onmousedown = (e) => {
             switch (e.detail) {
                 case 1:
-                    const col = this.getColumnFromPoint(e.clientX);
                     const row = this.getRowFromPoint(e.clientY);
-
                     this.active_row_index = row;
+                    const col = this.getColumnFromPoint(e.clientX);
                     this.caret_manager.setColumn(col);
                     this.selection.setAnchor(col, row);
                     this.is_mouse_down = true;
@@ -550,6 +591,8 @@ export class IDE {
 
         this.editor_el.onkeydown = (e) => {
             this.handleKeyPress(e.key);
+            e.preventDefault();
+            e.stopImmediatePropagation();
         };
 
         window.addEventListener("mouseup", () => {
@@ -569,9 +612,15 @@ export class IDE {
 
 
         this.caret_manager = new CaretManager(this.editor_el, this.editor_rows[this.active_row_index]);
-    }
 
-    private _active_row_index                 = 0;
+        window.addEventListener("resize", () => this.updateIdeRect());
+
+        const resize_observer = new ResizeObserver(() => {
+            this.updateIdeRect();
+        });
+        resize_observer.observe(this.editor_el);
+
+    }
 
     get active_row_index(): number {
         return this._active_row_index;
@@ -589,14 +638,29 @@ export class IDE {
         this._active_row_index = new_index;
     }
 
+    updateGutter() {
+        let child_count = this.gutter_el.childElementCount;
+
+        while (child_count < this.editor_rows.length) {
+            const child = document.createElement("div");
+            child_count++;
+            child.innerText = child_count.toString();
+            this.gutter_el.append(child);
+        }
+        while (child_count > this.editor_rows.length) {
+            this.gutter_el.lastElementChild?.remove();
+            child_count--;
+        }
+    }
     handleKeyPress(key: string) {
         const active_row = this.editor_rows[this.active_row_index];
+        console.log("deleting selection", this.selection.isSelected(), this.selection);
         switch (key) {
             case Editor.KeyCodes.Backspace:
-                active_row.backspaceChar();
+                this.deleteChar(-1);
                 break;
             case Editor.KeyCodes.Delete:
-                active_row.deleteChar();
+                this.deleteChar(1);
                 break;
             case Editor.KeyCodes.Home:
                 active_row.goToStart();
@@ -610,12 +674,11 @@ export class IDE {
                 break;
 
             case KeyCodes.ARROW_LEFT:
-                // if(this.selection.)
-                this.caret_manager.moveCol(-1);
+                this.moveCol(-1);
                 break;
 
             case KeyCodes.ARROW_RIGHT:
-                this.caret_manager.moveCol(1);
+                this.moveCol(1);
                 break;
             case KeyCodes.ARROW_DOWN:
                 this.moveDown();
@@ -625,13 +688,13 @@ export class IDE {
                 break;
             case KeyCodes.Tab:
                 if (this.tab_spaces_count > 0)
-                    active_row.appendChar(" ".repeat(this.tab_spaces_count));
+                    active_row.appendStr(" ".repeat(this.tab_spaces_count));
                 else
-                    active_row.appendChar("\t");
+                    active_row.appendStr("\t");
                 break;
             default:
                 if (Editor.isPrintableKey(key)) {
-                    active_row.appendChar(key);
+                    this.appendChar(key);
                 } else {
                     console.log("unknown key handing over to IDE:", key);
                 }
@@ -640,12 +703,13 @@ export class IDE {
     }
 
     updateIdeRect() {
+        if (!this.editor_el)
+            return;
         const rect       = this.editor_el.getBoundingClientRect();
         this.rect.height = rect.height;
         this.rect.width  = rect.width;
         this.rect.x      = rect.x;
         this.rect.y      = rect.y;
-        console.log("Updated to ", this.rect);
     }
 
     insertRowAfter(index: number): void {
@@ -658,6 +722,7 @@ export class IDE {
         old_row.insertAdjacentElement("afterend", row_el);
 
         this.updateIdeRect();
+        this.updateGutter();
     }
 
     insertRowAfterCurrent(): void {
@@ -672,19 +737,6 @@ export class IDE {
         this.active_row_index++;
     }
 
-    deleteActiveRow(): void {
-        if (this.active_row_index === 0) return; // can't delete the 0th row
-
-        const curr_row = this.editor_rows[this.active_row_index];
-        this.editor_rows.splice(this.active_row_index, 1);
-        this.editor_el.removeChild(curr_row.getDomNode());
-
-        this.active_row_index--;
-        const new_active_row = this.editor_rows[this.active_row_index];
-        this.caret_manager.setColumn(new_active_row.raw.length);
-        this.updateIdeRect();
-    }
-
     getMaxColumn(row: number): number {
         if (row >= this.editor_rows.length)
             return 0;
@@ -692,7 +744,7 @@ export class IDE {
         return editor_row.raw.length;
     }
 
-    getTotalRows(): number {
+    getTotalRowIndices(): number {
         return this.editor_rows.length - 1;
     }
 
@@ -702,7 +754,7 @@ export class IDE {
     }
 
     getRowFromPoint(y: number): number {
-        return Vmath.clamp(Math.round((y - this.rect.y) / this.row_height), 0, this.getTotalRows());
+        return Vmath.clamp(Math.round((y - this.rect.y) / this.row_height), 0, this.getTotalRowIndices());
     }
 
     pasteString(str: string) {
@@ -744,7 +796,7 @@ export class IDE {
 
         await new Promise(requestAnimationFrame);
 
-        const char_box  = getMonospaceCharBox(this.editor_el);
+        const char_box = getMonospaceCharBox(this.editor_el);
         const new_height = char_box.height;
 
         for (const row of this.editor_rows) {
@@ -762,6 +814,152 @@ export class IDE {
         this.editor_rows.push(row);
         this.editor_el.appendChild(row_el);
         this.updateIdeRect();
-        this.pasteString("'hellooooooooooooo'\n'worlllllllllldd!',\n'yasl'");
+        this.pasteString(
+            `//Test for text highlight
+let x = 1000;
+let y = "hello world"
+print(x,y)
+
+if(x > 100){
+    print("x above hundred")
+}
+switch(y){
+    case 1:
+        while((let x:=2)){
+            someFunction(x)
+            x++;
+        }
+        break
+    default:
+        break
+}
+            `
+        );
+
+        this.updateGutter();
+    }
+
+    private deleteSelection(): void {
+        if (!this.selection.isSelected())
+            return;
+        const start_pos = this.selection.getStart();
+        const end_pos   = this.selection.getEnd();
+
+        const start_line = start_pos.line;
+        const start_col  = start_pos.col;
+
+        const end_line = end_pos.line;
+        const end_col  = end_pos.col;
+        //
+        if (start_line === end_line) {
+            const row = this.editor_rows[start_line];
+            row?.removeStr(start_col, end_col);
+            this.selection.clear();
+            this.caret_manager.setColumn(start_col);
+            return;
+        }
+
+
+        const start_row = this.editor_rows[start_line];
+        const end_row   = this.editor_rows[end_line];
+
+        start_row.removeStr(start_col, -1);
+        end_row.removeStr(0, end_col);
+
+        let last_row_to_delete = end_line - 1;
+        if (end_row.raw.length === 0) {
+            end_row.getDomNode().remove();
+            last_row_to_delete = end_line;
+        }
+        for (let i = start_line + 1; i <= last_row_to_delete; i++) {
+            this.editor_rows[i]?.getDomNode().remove();
+        }
+        this.active_row_index = start_line;
+
+        const rows_to_delete = last_row_to_delete - start_line;
+        this.deleteRows(start_line + 1, rows_to_delete);
+
+        this.selection.clear();
+    }
+
+    private deleteRow(row_index: number) {
+        this.deleteRows(row_index, 1);
+    }
+
+    private deleteRows(start_row_index: number, num_rows: number): void {
+        const end_index = start_row_index + num_rows - 1;
+        for (let i = start_row_index; i <= end_index; i++) {
+            const row = this.editor_rows[i];
+            if (row) {
+                row.getDomNode().remove();
+            }
+        }
+        // correct the active row index if its gonna be deleted
+        if (this.active_row_index >= start_row_index && this.active_row_index <= end_index) {
+            this.active_row_index = Math.max(0, start_row_index - 1);
+            this.caret_manager.setColumn(-1);
+        }
+        this.editor_rows.splice(start_row_index, num_rows);
+        this.updateGutter();
+    }
+
+    private moveCol(delta: -1 | 1): void {
+        if (this.selection.isSelected()) {
+            const final_pos       = delta < 0 ? this.selection.getStart() : this.selection.getEnd();
+            this.active_row_index = final_pos.line;
+            this.caret_manager.setColumn(final_pos.col);
+        } else {
+            this.caret_manager.moveCol(delta);
+        }
+        this.selection.clear();
+    }
+
+    private appendChar(key: string): void {
+        const active_row = this.editor_rows[this.active_row_index];
+        this.deleteSelection();
+        active_row.appendStr(key);
+        this.caret_manager.moveCol(key.length);
+    }
+
+    private deleteChar(dir: -1 | 1): void {
+        if (this.selection.isSelected()) {
+            this.deleteSelection();
+            return;
+        }
+        const active_row = this.editor_rows[this.active_row_index];
+        switch (dir) {
+            case -1:
+                active_row.backspaceChar();
+                if (this.caret_manager.isAtStart() && !this.isFirstRowActive()) {
+                    const prev_row = this.editor_rows[this.active_row_index - 1];
+                    this.active_row_index -= 1;
+                    this.caret_manager.setColumn(-1);
+                    prev_row.appendStr(active_row.raw);
+                    this.deleteRow(this.active_row_index + 1);
+                }
+                break;
+            case 1:
+                if (this.caret_manager.isAtEnd() && !this.isLastRowActive()) {
+                    const next_row = this.editor_rows[this.active_row_index + 1];
+                    active_row.appendStr(next_row.raw);
+                    this.deleteRow(this.active_row_index + 1);
+
+                }
+                active_row.deleteChar();
+                break;
+            default:
+                alert("Invalid direction for delete char in ide");
+                break;
+        }
+
+    }
+
+    private isFirstRowActive(): boolean {
+        return this._active_row_index === 0;
+    }
+
+    private isLastRowActive(): boolean {
+        return this._active_row_index === this.editor_rows.length - 1;
     }
 }
+
