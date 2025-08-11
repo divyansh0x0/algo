@@ -1,5 +1,4 @@
 import { Environment, EnvironmentReturnCode } from "@/yasl/environment";
-import { TokenType } from "@/yasl/token";
 import {
     BinaryExpression,
     CallNode,
@@ -15,8 +14,9 @@ import {
     YASLNode,
     YASLNodeType,
     YASLNodeTypeChecker,
-    YASLValue
-} from "@/yasl/tree";
+    YASLValueType
+}                                             from "@/yasl/tree";
+import { TokenType }                          from "@/yasl/YASLToken";
 
 interface StatementResult {
     line: number,
@@ -105,11 +105,11 @@ export class Interpreter {
 
     parseLiteral(node: LiteralNode) {
         switch (node.valueType) {
-            case YASLValue.number:
+            case YASLValueType.number:
                 return node.value as number;
-            case YASLValue.string:
+            case YASLValueType.string:
                 return node.value as string;
-            case YASLValue.boolean:
+            case YASLValueType.boolean:
                 return node.value as boolean;
             default:
                 this.error("Not implemented", node);
@@ -152,45 +152,45 @@ export class Interpreter {
                 if (typeof right === "number" && typeof left === "number")
                     value = left - right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             case TokenType.PLUS:
                 if (typeof right === "number" && typeof left === "number")
                     value = left + right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             case TokenType.MULTIPLY:
                 if (typeof right === "number" && typeof left === "number")
                     value = left * right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             case TokenType.DIVIDE:
                 if (typeof right === "number" && typeof left === "number")
                     value = left / right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             case TokenType.MODULO:
                 if (typeof right === "number" && typeof left === "number")
                     value = left % right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
 
             case TokenType.AND:
                 if (typeof right === "boolean" && typeof left === "boolean")
                     value = left && right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
 
             case TokenType.OR:
                 if (typeof right === "boolean" && typeof left === "boolean")
                     value = left && right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             default:
                 this.error("Invalid unary operator", node);
@@ -206,20 +206,20 @@ export class Interpreter {
                 if (typeof right === "boolean" || typeof right === "number")
                     value = !right;
                 else
-                    this.valueError(YASLValue.boolean, node);
+                    this.valueError(YASLValueType.boolean, node);
 
                 break;
             case TokenType.MINUS:
                 if (typeof right === "number")
                     value = -1 * right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             case TokenType.BIT_NOT:
                 if (typeof right === "number")
                     value = ~right;
                 else
-                    this.valueError(YASLValue.number, node);
+                    this.valueError(YASLValueType.number, node);
                 break;
             default:
                 this.error("Invalid unary operator", node);
@@ -265,7 +265,7 @@ export class Interpreter {
         throw Error(invalidValue);
     }
 
-    private valueError(required_value_type: YASLValue, received_node: YASLNode) {
+    private valueError(required_value_type: YASLValueType, received_node: YASLNode) {
         throw Error(required_value_type);
     }
 

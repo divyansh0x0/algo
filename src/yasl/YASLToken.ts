@@ -1,87 +1,88 @@
 export enum TokenType {
     // Comparison
-    COMMENT,
-    WHITESPACE = " ",
-    STATEMENT_END = ";",
-    EQUAL_EQUAL = "==",
-    NOT_EQUAL = "!=",
-    LESS_THAN = "<",
-    GREATER_THAN = ">",
+    ERROR              = "error",
+    COMMENT            = "comment",
+    WHITESPACE         = "whitespace",
+    STATEMENT_END      = ";",
+    EQUAL_EQUAL        = "==",
+    NOT_EQUAL          = "!=",
+    LESS_THAN          = "<",
+    GREATER_THAN       = ">",
     LESS_THAN_EQUAL_TO = "<=",
     GREATER_THAN_EQUAL_TO = ">=",
 
     // Assignment
-    ASSIGN = "=",
-    INLINE_ASSIGN = ":=",
-    PLUS_ASSIGN = "+=",
-    MINUS_ASSIGN = "-=",
-    MULTIPLY_ASSIGN = "*=",
-    DIVIDE_ASSIGN = "/=",
-    MOD_ASSIGN = "%=",
-    POW_ASSIGN = "**=",
+    ASSIGN             = "=",
+    INLINE_ASSIGN      = ":=",
+    PLUS_ASSIGN        = "+=",
+    MINUS_ASSIGN       = "-=",
+    MULTIPLY_ASSIGN    = "*=",
+    DIVIDE_ASSIGN      = "/=",
+    MOD_ASSIGN         = "%=",
+    POW_ASSIGN         = "**=",
 
     // Arithmetic
-    PLUS = "+",
-    MINUS = "-",
-    MULTIPLY = "*",
-    DIVIDE = "/",
-    MODULO = "%",
-    POWER = "**",
+    PLUS               = "+",
+    MINUS              = "-",
+    MULTIPLY           = "*",
+    DIVIDE             = "/",
+    MODULO             = "%",
+    POWER              = "**",
 
     // Logical
-    AND = "and",
-    OR = "or",
-    NOT = "not",
+    AND                = "and",
+    OR                 = "or",
+    NOT                = "not",
     // BITWISE
-    BIT_AND = "&",
-    BIT_OR = "|",
-    BIT_NOT = "~",
-    BIT_XOR = "^",
-    BIT_SHIFT_LEFT = "<<",
-    BIT_SHIFT_RIGHT = ">>",
+    BIT_AND            = "&",
+    BIT_OR             = "|",
+    BIT_NOT            = "~",
+    BIT_XOR            = "^",
+    BIT_SHIFT_LEFT     = "<<",
+    BIT_SHIFT_RIGHT    = ">>",
     // Unary
-    INCREMENT = "++",
-    DECREMENT = "--",
-    NEGATE = "!",
+    INCREMENT          = "++",
+    DECREMENT          = "--",
+    NEGATE             = "!",
 
     // Literals
-    NUMBER = "number",
-    STRING = "string",
-    NULL = "null",
+    NUMBER             = "number",
+    STRING             = "string",
+    NULL               = "null",
 
     // Keywords
-    LET = "let",
-    IF = "if",
-    ELSE = "else",
-    SWITCH = "switch",
-    CASE = "case",
-    DEFAULT = "default",
-    FOR = "for",
-    WHILE = "while",
-    THEN = "then",
-    DO = "do",
-    BREAK = "break",
-    CONTINUE = "continue",
-    IN = "in",
-    INSTANCEOF = "instanceof",
-    FUNCTION = "fn",
-    RETURN = "return",
-    TRUE = "true",
-    FALSE = "false",
+    LET                = "let",
+    IF                 = "if",
+    ELSE               = "else",
+    SWITCH             = "switch",
+    CASE               = "case",
+    DEFAULT            = "default",
+    FOR                = "for",
+    WHILE              = "while",
+    THEN               = "then",
+    DO                 = "do",
+    BREAK              = "break",
+    CONTINUE           = "continue",
+    IN                 = "in",
+    INSTANCEOF         = "instanceof",
+    FUNCTION           = "fn",
+    RETURN             = "return",
+    TRUE               = "true",
+    FALSE              = "false",
 
     // Symbols
-    LPAREN = "(",
-    RPAREN = ")",
-    LBRACKET = "[",
-    RBRACKET = "]",
-    LBRACE = "{",
-    RBRACE = "}",
-    COMMA = ",",
-    DOT = ".",
-    COLON = ":",
+    LPAREN             = "(",
+    RPAREN             = ")",
+    LBRACKET           = "[",
+    RBRACKET           = "]",
+    LBRACE             = "{",
+    RBRACE             = "}",
+    COMMA              = ",",
+    DOT                = ".",
+    COLON              = ":",
 
-    IDENTIFIER = "identifier",
-    EOF = "\0",
+    IDENTIFIER         = "identifier",
+    EOF                = "\0",
 }
 
 export function StringifyTokenType(token_type: TokenType): string {
@@ -174,8 +175,12 @@ export function StringifyTokenType(token_type: TokenType): string {
         case TokenType.EOF:
             return "eof";
 
+        // Unknown tokens
+        case TokenType.ERROR:
+            return "error";
+
         default:
-            return "unknown";
+            throw "Not implemented token type stringification" + token_type;
     }
 }
 
@@ -223,11 +228,11 @@ export const keywords = Object.freeze(new Map<string, TokenType>(
     ]
 ));
 
-export interface Token {
+export interface YASLToken {
     type: TokenType;
     lexeme: string;
     literal: Object | string | number | boolean | null;
-    line: number;
+    // line: number;
     start: number;
     end: number;
 }

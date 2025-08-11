@@ -26,6 +26,7 @@
     --yasl-keyword-color: #e4ab85;
     --yasl-whitespace-color: #fff;
     --yasl-string-color: #a8ff8d;
+    --yasl-error-color: #ef4848;
 
     --yasl-repl-border-radius: 10px;
     --yasl-editor-font-size: 1rem;
@@ -59,10 +60,8 @@
 
 .yasl-editor {
     caret-color: transparent !important;
-    width: fit-content;
-    min-width: 100%;
-    min-height: 100%;
-    height: fit-content;
+    width: 100%;
+    min-height: fit-content;
     display: flex;
     flex-direction: column;
     outline: none;
@@ -119,55 +118,66 @@
         position: absolute;
     }
 
-    .yasl-editor-row {
-        width: 100%;
-        height: min-content;
-        outline: none;
+    .yasl-editor-rows-wrapper {
+        min-width: fit-content;
+        height: fit-content;
 
-        min-height: var(--yasl-editor-font-size);
-        min-width: max-content;
-        padding: 0;
-        white-space: pre;
-        align-content: center;
+        .yasl-editor-row {
+            position: relative;
+            min-width: 100%;
+            width: max-content;
+            height: min-content;
+            outline: none;
 
-        &.active {
-            background: var(--yasl-row-active-bg);
+            min-height: var(--yasl-editor-font-size);
+            padding: 0;
+            white-space: pre;
+            align-content: center;
+
+            &.active {
+                background: var(--yasl-row-active-bg);
+            }
+
+            .identifier {
+                color: var(--yasl-identifier-color);
+
+            }
+
+            .whitespace {
+                opacity: 0.1;
+                color: var(--yasl-whitespace-color);
+            }
+
+            .keyword {
+                color: var(--yasl-keyword-color);
+            }
+
+            .operator {
+                color: var(--yasl-operator-color);
+            }
+
+            .string {
+                color: var(--yasl-string-color);
+            }
+
+            .number {
+                color: var(--yasl-string-color);
+            }
+
+            .comment {
+                color: var(--yasl-comment-color);
+            }
+
+            .symbol {
+                color: var(--yasl-symbol-color);
+            }
+
+            .error {
+                color: var(--yasl-error-color);
+            }
         }
 
-        .identifier {
-            color: var(--yasl-identifier-color);
-
-        }
-
-        .whitespace {
-            color: var(--yasl-whitespace-color);
-        }
-
-        .keyword {
-            color: var(--yasl-keyword-color);
-        }
-
-        .operator {
-            color: var(--yasl-operator-color);
-        }
-
-        .string {
-            color: var(--yasl-string-color);
-        }
-
-        .number {
-            color: var(--yasl-string-color);
-        }
-
-        .comment {
-            color: var(--yasl-comment-color);
-        }
-
-        .symbol {
-            color: var(--yasl-symbol-color);
-        }
     }
-
 
 }
 

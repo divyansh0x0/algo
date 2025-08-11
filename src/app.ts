@@ -225,7 +225,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function attachInterpreter() {
     const editor_area = document.getElementById("code-area")!;
-    new IDE(editor_area);
+    const ide               = new IDE(editor_area);
+    const code_runner_btn   = document.getElementById("code-runner-btn")!;
+    code_runner_btn.onclick = () => {
+        ide.run();
+    };
     // yasl_input.addEventListener("keyup",(e)=>{
     //     if(e.key === "Enter" || e.key === "enter"){
     //         const code = yasl_input.value;

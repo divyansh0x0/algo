@@ -1,9 +1,9 @@
-import * as Editor     from "@/editor/index";
-import { KeyCodes }    from "@/editor/index";
-import { StringUtils } from "@/utils/stringutils";
-import { Vmath }       from "@/utils/vmath";
-import * as YASL       from "@/yasl";
-import { Token }       from "@/yasl";
+import * as Editor                             from "@/editor/index";
+import { KeyCodes }                            from "@/editor/index";
+import { StringUtils }                         from "@/utils/stringutils";
+import { Vmath }                               from "@/utils/vmath";
+import * as YASL                               from "@/yasl";
+import { Lexer, Parser, TokenType, YASLToken } from "@/yasl";
 
 
 function getMonospaceCharBox(el: HTMLElement) {
@@ -57,7 +57,7 @@ class CaretManager {
         return this._line_height;
     }
 
-    constructor(parent: HTMLElement, private primary_row: EditorRow) {
+    constructor(parent: HTMLElement, private primary_row: IDERow) {
         this.primary_caret = new YASLCaret(parent);
 
     }
@@ -82,7 +82,7 @@ class CaretManager {
         this.posChanged();
     }
 
-    setRow(new_row: EditorRow): void {
+    setRow(new_row: IDERow): void {
         this.primary_row = new_row;
 
         const max_col = this.primary_row.raw.length;
@@ -213,47 +213,46 @@ function isInBounds(x: number, y: number, rect: DOMRect): any {
         && y < rect.y + rect.height;
 }
 
-export class EditorRow {
-    private insertion_col            = 0;
+export class IDERow {
+    private insertion_col = 0;
+    private _raw: string  = "";
 
     constructor(private ide: IDE, private row_el: HTMLElement) {
         this.row_el.classList.add("yasl-editor-row");
     }
 
-    private _tokens: YASL.Token[] = [];
+    private _tokens: YASL.YASLToken[]      = [];
 
-    get tokens(): Token[] {
-        return this._tokens;
-    }
-
-    private set tokens(value: Token[]) {
-        this._tokens = value;
-    }
-
-    private _raw: string = "";
-
-    // private readonly editor_content_el = document.createElement("div");
+    get tokens(): YASLToken[] {return this._tokens;}
 
     get raw(): string {
         return this._raw;
     }
 
 
+    private set tokens(value: YASLToken[]) {this._tokens = value;}
+
+    private set raw(str: string) {
+        this._raw   = str;
+        const lexer = new Lexer(this._raw + "\n", true);
+        this.tokens = lexer.getTokens();
+    };
+
     render() {
         const raw_text    = this.raw;
-        const tokens      = new YASL.Lexer(raw_text).getTokens();
         let rendered_text = "";
-        if (tokens.length > 0) {
-            for (const token of tokens) {
+        if (this.tokens.length > 0) {
+            for (const token of this.tokens) {
                 if (token.type === YASL.TokenType.EOF)
                     break;
-                rendered_text += `<span class='${ YASL.StringifyTokenType(token.type) }'>${ raw_text.slice(token.start, token.end) }</span>`;
+                const text = token.type === TokenType.WHITESPACE ? "·" : raw_text.slice(token.start, token.end);
+                rendered_text += `<span class='${ YASL.StringifyTokenType(token.type) }'>${ text }</span>`;
             }
         } else {
             rendered_text = raw_text;
         }
         this.row_el.innerHTML = rendered_text;
-        this._tokens = tokens;
+        this._tokens = this.tokens;
 
 
     }
@@ -269,16 +268,17 @@ export class EditorRow {
     }
 
     appendStr(str: string): void {
+
         if (this.insertion_col === this.raw.length) {
-            this._raw += str;
+            this.raw += str;
         } else if (this.insertion_col < this.raw.length) {
-            this._raw = this.raw.slice(0, this.insertion_col) + str + this.raw.slice(this.insertion_col);
+            this.raw = this.raw.slice(0, this.insertion_col) + str + this.raw.slice(this.insertion_col);
         }
         this.render();
     }
 
     clear(): void {
-        this._raw = "";
+        this.raw = "";
     }
 
     getRowHeight(): number {
@@ -313,10 +313,10 @@ export class EditorRow {
         const start_str = this.raw.slice(0, this.insertion_col);
         // delete pure leading whitespace
         if (start_str.match(/^\s*$/)) {
-            this._raw = this.raw.slice(this.insertion_col, this.raw.length);
+            this.raw = this.raw.slice(this.insertion_col, this.raw.length);
             this.ide.caret_manager.setColumn(0);
         } else {
-            this._raw = this.raw.slice(0, this.insertion_col - 1) + this.raw.slice(this.insertion_col, this.raw.length);
+            this.raw = this.raw.slice(0, this.insertion_col - 1) + this.raw.slice(this.insertion_col, this.raw.length);
             this.ide.caret_manager.moveCol(-1);
         }
 
@@ -327,24 +327,24 @@ export class EditorRow {
 
     removeStr(start: number, end: number = -1) {
         if (start === 0 && (end === this.raw.length || end === -1)) {
-            this._raw = "";
+            this.raw = "";
         }
         if (start >= 0 && end >= 0 && start !== end) {
             const left  = this.raw.slice(0, start);
             const right = this.raw.slice(end, this.raw.length);
-            this._raw   = left + right;
+            this.raw = left + right;
         } else if (start > 0 && end < 0) {
             const corrected_end = this.raw.length + end + 1;
             const left          = this.raw.slice(0, start);
             const right         = this.raw.slice(corrected_end, this.raw.length);
-            this._raw           = left + right;
+            this.raw = left + right;
         }
         this.render();
     }
 
     deleteChar(): void {
         if (this._raw.length > 0 && this.insertion_col < this.raw.length) {
-            this._raw = this.raw.slice(0, this.insertion_col) + this.raw.slice(this.insertion_col + 1, this.raw.length);
+            this.raw = this.raw.slice(0, this.insertion_col) + this.raw.slice(this.insertion_col + 1, this.raw.length);
             this.render();
         }
     }
@@ -373,12 +373,8 @@ export class EditorRow {
     }
 
     setText(row_str: string): void {
-        this._raw = row_str;
+        this.raw = row_str;
         this.render();
-    }
-
-    canBeDeleted(): boolean {
-        return this.raw.length === 0 || StringUtils.isWhitespace(this.raw);
     }
 }
 
@@ -471,7 +467,7 @@ class IDESelection {
         }
         const char_width  = this.ide.caret_manager.char_width;
         const line_height = this.ide.caret_manager.line_height;
-        const line_width  = this.ide.rect.width;
+        const line_width = this.ide.row_wrapper_rect.width;
 
 
         this.anchor_el.style.height = line_height + "px";
@@ -501,6 +497,7 @@ class IDESelection {
             return;
         }
 
+        // top and head lines of selection
         let min_line: number;
         //up to down selection
         if (this.anchor.line < this.head.line) {
@@ -518,6 +515,8 @@ class IDESelection {
             min_line                   = this.head.line;
         }
 
+
+        // middle lines of selection
         const line_gap = Math.abs(this.head.line - this.anchor.line) - 1;
         if (line_gap !== 0) {
             this.middle_el.style.left   = "0";
@@ -537,17 +536,17 @@ class IDESelection {
 
 export class IDE {
     public readonly caret_manager: CaretManager;
-    public readonly tab_spaces_count = 4;
-    public readonly rect                      = new DOMRect();
-    private readonly editor_rows: EditorRow[] = [];
-
-    private readonly gutter_el = document.createElement("div");
-    private readonly editor_el = document.createElement("div");
-    public selection                 = new IDESelection(this.editor_el, this);
-    private is_mouse_down      = false;
-    private row_height: number = 10;
-    private char_width: number = 10;
-    private _active_row_index        = 0;
+    public readonly tab_spaces_count       = 4;
+    public readonly row_wrapper_rect = new DOMRect();
+    private readonly editor_rows: IDERow[] = [];
+    private readonly gutter_el   = document.createElement("div");
+    private readonly editor_el   = document.createElement("div");
+    public selection             = new IDESelection(this.editor_el, this);
+    private readonly row_wrapper = document.createElement("div");
+    private is_mouse_down        = false;
+    private row_height: number   = 10;
+    private char_width: number   = 10;
+    private _active_row_index    = 0;
 
     constructor(parent: HTMLElement, private gutter_enabled = true) {
         const editor_wrapper = document.createElement("div");
@@ -558,13 +557,14 @@ export class IDE {
         this.editor_el.tabIndex = 1;
         this.editor_el.classList.add("yasl-editor");
         this.gutter_el.classList.add("yasl-editor-gutter");
-
+        this.row_wrapper.classList.add("yasl-editor-rows-wrapper");
         const loader = document.createElement("div");
         loader.classList.add("yasl-ide-loader");
         loader.innerText = "loading";
-        this.editor_el.appendChild(loader);
+        this.editor_el.append(loader, this.row_wrapper);
 
         this.editor_el.onmousedown = (e) => {
+            this.updateIdeRect();
             switch (e.detail) {
                 case 1:
                     const row = this.getRowFromPoint(e.clientY);
@@ -620,7 +620,7 @@ export class IDE {
         const resize_observer = new ResizeObserver(() => {
             this.updateIdeRect();
         });
-        resize_observer.observe(this.editor_el);
+        resize_observer.observe(this.row_wrapper);
 
         this.editor_el.onblur = () => {
             this.editor_rows[this.active_row_index]?.deactivate();
@@ -713,17 +713,18 @@ export class IDE {
     updateIdeRect() {
         if (!this.editor_el)
             return;
-        const rect       = this.editor_el.getBoundingClientRect();
-        this.rect.height = rect.height;
-        this.rect.width  = rect.width;
-        this.rect.x      = rect.x;
-        this.rect.y      = rect.y;
+        const rect: DOMRect          = this.row_wrapper.getBoundingClientRect();
+        this.row_wrapper_rect.height = rect.height;
+        this.row_wrapper_rect.width  = rect.width;
+        this.row_wrapper_rect.x      = rect.x;
+        this.row_wrapper_rect.y      = rect.y;
+
     }
 
     insertRowAfter(index: number): void {
         const old_row = this.editor_rows[index].getDomNode();
-        const row_el = document.createElement("div");
-        const new_row = new EditorRow(this, row_el);
+        const row_el  = document.createElement("div");
+        const new_row = new IDERow(this, row_el);
 
         new_row.setHeight(this.row_height);
         this.editor_rows.splice(index + 1, 0, new_row);
@@ -757,12 +758,12 @@ export class IDE {
     }
 
     getColumnFromPoint(x: number): number {
-        return Vmath.clamp(Math.round((x - this.rect.x) / this.char_width), 0, this.getMaxColumn(this.active_row_index));
+        return Vmath.clamp(Math.round((x - this.row_wrapper_rect.x) / this.char_width), 0, this.getMaxColumn(this.active_row_index));
 
     }
 
     getRowFromPoint(y: number): number {
-        return Vmath.clamp(Math.round((y - this.rect.y) / this.row_height), 0, this.getTotalRowIndices());
+        return Vmath.clamp(Math.round((y - this.row_wrapper_rect.y) / this.row_height), 0, this.getTotalRowIndices());
     }
 
     pasteString(str: string) {
@@ -777,7 +778,6 @@ export class IDE {
 
                 const row = this.editor_rows[row_index];
                 row.setText(row_str);
-                console.log("wrote", row_str, "to", row_index);
                 row_str = "";
                 row_index++;
                 continue;
@@ -795,57 +795,19 @@ export class IDE {
         this.editor_rows[this.active_row_index].goToEnd();
     }
 
-    private async initialize(): Promise<void> {
-        await document.fonts.ready;
-
-        const computed = window.getComputedStyle(this.editor_el);
-        const fontStr  = `${ computed.fontSize } ${ computed.fontFamily }`;
-        await document.fonts.load(fontStr);
-
-        await new Promise(requestAnimationFrame);
-
-        const char_box = getMonospaceCharBox(this.editor_el);
-        const new_height = char_box.height;
-
-        for (const row of this.editor_rows) {
-            row.setHeight(new_height);
+    run() {
+        let text = "";
+        for (let i = 0; i < this.editor_rows.length; i++) {
+            const row = this.editor_rows[i];
+            text += row.raw + "\n";
         }
 
-        this.caret_manager.setFontMetrics(char_box.width, char_box.height);
-        this.row_height = new_height;
-        this.char_width = char_box.width;
+        const lexer  = new Lexer(text);
+        const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
 
+        console.log(text);
+        console.log(parser.getProgram());
 
-        const row_el = document.createElement("div");
-        const row    = new EditorRow(this, row_el);
-        row.setHeight(this.row_height);
-        this.editor_rows.push(row);
-        this.editor_el.appendChild(row_el);
-        this.updateIdeRect();
-        this.pasteString(
-            `//Test for text highlight
-let x = 1000;
-let y = "hello world"
-print(x,y)
-
-if(x > 100){
-    print("x above hundred")
-}
-switch(y){
-    case 1:
-        while((let x:=2)){
-            someFunction(x)
-            x++;
-        }
-        break
-    default:
-        break
-}
-            `
-        );
-
-        this.updateGutter();
-        this.editor_rows[this.active_row_index]?.deactivate();
     }
 
     private deleteSelection(): void {
@@ -965,6 +927,59 @@ switch(y){
 
     private isFirstRowActive(): boolean {
         return this._active_row_index === 0;
+    }
+
+    private async initialize(): Promise<void> {
+        await document.fonts.ready;
+
+        const computed = window.getComputedStyle(this.editor_el);
+        const fontStr  = `${ computed.fontSize } ${ computed.fontFamily }`;
+        await document.fonts.load(fontStr);
+
+        await new Promise(requestAnimationFrame);
+
+        const char_box = getMonospaceCharBox(this.editor_el);
+        const new_height = char_box.height;
+
+        for (const row of this.editor_rows) {
+            row.setHeight(new_height);
+        }
+
+        this.caret_manager.setFontMetrics(char_box.width, char_box.height);
+        this.row_height = new_height;
+        this.char_width = char_box.width;
+
+
+        const row_el = document.createElement("div");
+        const row      = new IDERow(this, row_el);
+        row.setHeight(this.row_height);
+        this.editor_rows.push(row);
+        this.row_wrapper.appendChild(row_el);
+        this.updateIdeRect();
+        this.pasteString(
+            `//Test for text highlight
+let x = 1000;
+let y = "hello world"
+print(x,y)
+
+if(x > 100){
+    print("x above hundred")
+}
+switch(y){
+    case 1:
+        while((let x:=2)){
+            someFunction(x)
+            x++;
+        }
+        break
+    default:
+        break
+}
+            `
+        );
+
+        this.updateGutter();
+        this.editor_rows[this.active_row_index]?.deactivate();
     }
 
     private isLastRowActive(): boolean {

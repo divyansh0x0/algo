@@ -3,40 +3,43 @@
  */
 
 
-import { formatter } from "@/yasl/formatter";
-import { BinaryOperatorToken, Token, TokenType, UnaryOperatorToken } from "@/yasl/token";
+import { formatter }                                                     from "@/yasl/formatter";
 import {
     IdentifierNode,
     YASLExpression,
     YASLNode,
+    YASLNodeFactory,
     YASLNodeType,
     YASLNodeTypeChecker,
     YASLProgram,
-    YASLValue
-} from "@/yasl/tree";
+    YASLValueType
+}                                                                        from "@/yasl/tree";
+import { BinaryOperatorToken, TokenType, UnaryOperatorToken, YASLToken } from "@/yasl/YASLToken";
 
 export interface ParserError {
     message: string;
-    token: Token;
+    token: YASLToken;
     highlight: string;
-    line: number,
-    col: number,
+    start_col: number;
+    end_col: number;
+    start_line: number;
+    end_line: number;
 }
 
-function parseTypeToken(token: Token): YASLValue | null {
+function parseTypeToken(token: YASLToken): YASLValueType | null {
     switch (token.lexeme) {
         case "string":
         case "int":
         case "Set":
         case "Queue":
         case "Function":
-            return token.lexeme as YASLValue;
+            return token.lexeme as YASLValueType;
         default:
             return null;
     }
 }
 
-function isOperator(token: Token) {
+function isOperator(token: YASLToken) {
     if (!token)
         return false;
     switch (token.type) {
@@ -104,7 +107,6 @@ function isAssignmentOperator(type: TokenType): boolean {
 }
 
 
-
 function isPostfixOperator(type: TokenType): boolean {
     switch (type) {
         case TokenType.INCREMENT:
@@ -132,13 +134,35 @@ function isExpressionTerminator(type: TokenType): boolean {
     }
 }
 
+function binarySearch(target: number, arr: number[]): number {
+    let low  = 0;
+    let high = arr.length - 1;
+
+    while (low <= high) {
+        const mid = (low + high) >>> 1; // unsigned right shift = fast floor divide by 2
+        if (arr[mid] === target) return mid;
+        if (arr[mid] < target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return -1; // not found
+}
+
+function indexToLineCol(offset: number, line_map: number[]): [ number, number ] {
+    let line = binarySearch(offset, line_map);
+    let col  = offset - line_map[line];
+    return [ line, col ];
+}
 export class Parser {
-    errors = Array<ParserError>();
     private next_index = 0;
-    private program = new YASLProgram();
     private parenthesis_count = 0;
 
-    constructor(private tokens: Token[]) {
+    private program      = new YASLProgram();
+    private node_factory = new YASLNodeFactory();
+
+    private errors = Array<ParserError>();
+
+    constructor(private tokens: YASLToken[], private line_map: number[]) {
+
     }
 
     getProgram(): YASLProgram {
@@ -161,27 +185,27 @@ export class Parser {
             case TokenType.IDENTIFIER:
                 const lvalue = this.consumeExpression();
                 if (!lvalue) {
-                    this.error("Invalid statement", token);
+                    this.errorToken("Invalid statement", token);
                     break;
                 }
 
                 const next_token = this.peek();
                 if (next_token.type === TokenType.INLINE_ASSIGN) {
-                    this.error("Inline assignment used as normal assignment, use '=' for assignments in a statement");
+                    this.errorToken("Inline assignment used as normal assignment, use '=' for assignments in a statement");
                     break;
                 }
                 if (isAssignmentOperator(next_token.type)) {
                     this.consume();
                     if (!YASLNodeTypeChecker.isLValue(lvalue)) {
-                        this.error("Invalid LValue");
+                        this.errorToken("Invalid LValue");
                         break;
                     }
                     const rvalue = this.consumeExpression();
                     if (!rvalue) {
-                        this.error("Invalid RValue");
+                        this.errorToken("Invalid RValue");
                         break;
                     }
-                    this.program.addStatement(YASLProgram.getAssignmentExpression(next_token, lvalue, rvalue));
+                    this.program.addStatement(this.node_factory.getAssignmentExpression(next_token, lvalue, rvalue));
 
                 } else {
                     this.program.addStatement(lvalue);
@@ -205,25 +229,25 @@ export class Parser {
         }
     }
 
-    private error(msg: string, token: Token | null = null) {
+    private errorToken(msg: string, token: YASLToken | null = null) {
+
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
+        const [ line1, col1 ] = indexToLineCol(error_token.start, this.line_map);
+        const [ line2, col2 ] = indexToLineCol(error_token.end, this.line_map);
+
         this.errors.push({
-            message: msg,
-            token: error_token,
-            line: error_token.line,
-            col: error_token.start,
-            highlight: this.getHighlight(this.next_index - 1)
+            message   : msg,
+            token     : error_token,
+            highlight : "",
+            start_col : col1,
+            end_col   : col2,
+            start_line: line1,
+            end_line  : line2
         });
         this.synchronize();
     }
 
-    private getHighlight(token_index: number): string {
-
-
-        return "";
-    }
-
-    private consume(): Token {
+    private consume(): YASLToken {
 
         const token = this.tokens[this.next_index];
         this.next_index++;
@@ -250,7 +274,7 @@ export class Parser {
         if (this.peek().type === token_type) {
             return this.consume();
         } else {
-            this.error(msg);
+            this.errorToken(msg);
             return null;
         }
 
@@ -276,7 +300,7 @@ export class Parser {
                 node = this.consumeExpression();
                 break;
             default:
-                this.error(`Invalid token`, token);
+                this.errorToken(`Invalid token`, token);
                 break;
         }
 
@@ -292,7 +316,7 @@ export class Parser {
         const identifier = this.expect(TokenType.IDENTIFIER, "Expected an identifier");
         if (!identifier) return;
         // checking for type
-        let types: Set<YASLValue> | null = null;
+        let types: Set<YASLValueType> | null = null;
         if (this.match(TokenType.COLON)) {
             this.consume(); // consume the colon and get type
 
@@ -301,18 +325,18 @@ export class Parser {
         }
 
         if (this.match(TokenType.STATEMENT_END)) {
-            this.program.addStatement(YASLProgram.getDeclarationStatement(identifier.lexeme, null, types));
+            this.program.addStatement(this.node_factory.getDeclarationStatement(identifier.lexeme, null, types, identifier.start, identifier.end));
             return;
         }
 
         this.expect(TokenType.ASSIGN, "Invalid token");
         const value_node = this.consumeExpression();
-        const node = YASLProgram.getDeclarationStatement(identifier.lexeme, value_node, types);
+        const node                           = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.end_index : identifier.end);
         this.program.addStatement(node);
     }
 
     private consumeValueType() {
-        let allowed_types = new Set<YASLValue>();
+        let allowed_types = new Set<YASLValueType>();
         while (true) {
             const token = this.peek();
             const value_type = parseTypeToken(token);
@@ -328,27 +352,27 @@ export class Parser {
         return allowed_types;
     }
 
-    private nud(token: Token): YASLExpression | null {
+    private nud(token: YASLToken): YASLExpression | null {
         switch (token.type) {
             case TokenType.MINUS:
             case TokenType.NOT: {
                 const right_node = this.consumeExpression(0);
                 if (right_node && YASLNodeTypeChecker.isExpression(right_node))
-                    return YASLProgram.getUnaryExpression(token.type as UnaryOperatorToken, right_node);
+                    return this.node_factory.getUnaryExpression(token.type as UnaryOperatorToken, right_node, token.start, right_node.end_index);
                 break;
             }
             case TokenType.NUMBER:
-                return YASLProgram.getLiteralNode(token.literal as number, YASLValue.number);
+                return this.node_factory.getLiteralNode(token.literal as number, YASLValueType.number, token.start, token.end);
             case TokenType.IDENTIFIER:
-                return YASLProgram.getIdentifierNode(token.lexeme);
+                return this.node_factory.getIdentifierNode(token);
             case TokenType.LPAREN:
                 const expr = this.consumeExpression();
                 this.expect(TokenType.RPAREN, "Expected ) but found " + this.peek().lexeme);
                 return expr;
             case TokenType.STRING:
-                return YASLProgram.getLiteralNode(token.literal as string, YASLValue.string);
+                return this.node_factory.getLiteralNode(token.literal as string, YASLValueType.string, token.start, token.end);
             default:
-                this.error(`Unexpected token in nud: ${ token.lexeme }`, token);
+                this.errorToken(`Unexpected token in nud: ${ token.lexeme }`, token);
                 break;
         }
         return null;
@@ -359,13 +383,13 @@ export class Parser {
      * @param left_node
      * @param bp
      */
-    private led(op_token: Token, left_node: YASLNode, bp: [ number, number ]): YASLExpression | null {
+    private led(op_token: YASLToken, left_node: YASLNode, bp: [ number, number ]): YASLExpression | null {
         const [ , right_bp ] = bp;
 
 
         if (op_token.type === TokenType.LPAREN) {
             if (!YASLNodeTypeChecker.isLValue(left_node)) {
-                this.error("Invalid function call. Only a valid LValue can have a function call");
+                this.errorToken("Invalid function call. Only a valid LValue can have a function call");
                 return null;
             }
             const args: YASLNode[] = [];
@@ -385,7 +409,7 @@ export class Parser {
                         this.parenthesis_count--;
                         break;
                     } else {
-                        this.error("Expected ) at the end of function call", token);
+                        this.errorToken("Expected ) at the end of function call", token);
                         break;
                     }
                 }
@@ -393,7 +417,7 @@ export class Parser {
                 //left parenthesis was immediately followed by right parenthesis
                 this.consume();
             }
-            return YASLProgram.getCallNode(left_node, args);
+            return this.node_factory.getCallNode(left_node, args);
         }
 
         //For binary operators only
@@ -405,26 +429,26 @@ export class Parser {
         //Assignment
         if (op_token.type === TokenType.INLINE_ASSIGN) {
             if (!YASLNodeTypeChecker.isLValue(left_node)) {
-                this.error(`${ formatter.formatAstJSON(left_node) } is an invalid LValue`, op_token);
+                this.errorToken(`${ formatter.formatAstJSON(left_node) } is an invalid LValue`, op_token);
                 return null;
             }
-            return YASLProgram.getAssignmentExpression(op_token, left_node, right_node);
+            return this.node_factory.getAssignmentExpression(op_token, left_node, right_node);
 
             // If the op is a dot then i
 
         }
         if (op_token.type === TokenType.DOT) {
             if (right_node.type === YASLNodeType.IDENTIFIER && YASLNodeTypeChecker.isLValue(left_node)) {
-                return YASLProgram.getPropertyAccessExpression(left_node, right_node as IdentifierNode);
+                return this.node_factory.getPropertyAccessExpression(left_node, right_node as IdentifierNode);
             }
-            this.error("The right side of property access must be a valid identifier but was " + formatter.formatNodeType(left_node.type));
+            this.errorToken("The right side of property access must be a valid identifier but was " + formatter.formatNodeType(left_node.type));
             return null;
         }
 
         if (YASLNodeTypeChecker.isExpression(left_node) && YASLNodeTypeChecker.isExpression(right_node))
-            return YASLProgram.getBinaryExpression(op_token.type as BinaryOperatorToken, left_node, right_node);
+            return this.node_factory.getBinaryExpression(op_token.type as BinaryOperatorToken, left_node, right_node);
         else {
-            this.error("Invalid expression", op_token);
+            this.errorToken("Invalid expression", op_token);
         }
         return null;
     }
@@ -448,7 +472,7 @@ export class Parser {
 
             const bp = getBindingPower(op_token.type);
             if (!bp) break;
-            const [ left_binding_power, right_binding_power ] = bp;
+            const [ left_binding_power ] = bp;
 
             if (left_binding_power < min_binding_power) break;
 
@@ -456,13 +480,13 @@ export class Parser {
             this.consume();//consume the operator
             if (isPostfixOperator(op_token.type)) {
                 if (!isExpressionTerminator(this.peek().type)) {
-                    this.error("Postfix operators can only be followed by an expression terminator");
+                    this.errorToken("Postfix operators can only be followed by an expression terminator");
                 }
                 if (!YASLNodeTypeChecker.isLValue(left_node)) {
-                    this.error("Postfix operator can only be applied to a LValue");
+                    this.errorToken("Postfix operator can only be applied to a LValue");
                     return null;
                 }
-                return YASLProgram.getPostfixOperation(op_token, left_node);
+                return this.node_factory.getPostfixOperation(op_token, left_node);
             }
 
 

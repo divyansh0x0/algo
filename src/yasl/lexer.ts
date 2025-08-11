@@ -1,31 +1,26 @@
-import { keywords, Token, TokenType } from "@/yasl/token";
+import { keywords, TokenType, YASLToken } from "@/yasl/YASLToken";
 
 export interface LexerError {
     message: string;
     line: number;
     column: number;
-    highlight: string;
+    source: string;
 }
 
 export class Lexer {
-    private tokens_list = Array<Token>();
-    private curr_line = 0;
-    private curr_col = 0;
-    private start_read_index = 0;
-    private next_read_index = 0;
-    private end_of_literal_regex = /[\s\n(){},.:;+/*%&|^<=>!\-\[\]]/;
-    private whitespace_regex = /\s/;
+    private LineMap: number[] = [];
+    private tokens_list       = Array<YASLToken>();
+    private curr_line         = 0;
+    private curr_col          = 0;
+    private curr_read_index   = 0;
+    private start_read_index  = 0;
+    private next_read_index   = 0;
+    private whitespace_regex  = /\s/;
     private is_analysis_complete = false;
 
-    constructor(private text: string) {}
+    constructor(private text: string, private tokenise_whitespaces = false) {}
 
-    private _errors = Array<LexerError>();
-
-    get errors() {
-        return this._errors;
-    }
-
-    getTokens(): Token[] {
+    getTokens(): YASLToken[] {
         while (!this.isEOF()) {
             this.start_read_index = this.next_read_index;
             this.scanToken();
@@ -36,10 +31,6 @@ export class Lexer {
             this.addToken(TokenType.EOF);
         }
         return this.tokens_list;
-    }
-
-    getLastToken() {
-        return this.tokens_list[this.tokens_list.length - 1];
     }
 
     scanToken() {
@@ -57,6 +48,7 @@ export class Lexer {
             case ";":
             case "\n":
                 this.addToken(TokenType.STATEMENT_END, null);
+                this.LineMap.push(this.curr_read_index);
                 break;
 
             case "(":
@@ -164,7 +156,12 @@ export class Lexer {
                 switch (this.peek()) {
                     case "/":// skipping a comment
                         this.consume();
-                        while (!this.isEOF() && this.peek() !== "\n") this.consume();
+                        while (!this.isEOF()) {
+                            if (this.peek() !== "\n")
+                                this.consume();
+                            else break;
+                        }
+
                         this.addToken(TokenType.COMMENT);
                         break;
                     case "=":
@@ -180,15 +177,14 @@ export class Lexer {
             case "\'":
                 this.consume_string(c);
                 break;
-            default:
-                if (c.match(this.whitespace_regex)) {
-                    while (this.peek().match(this.whitespace_regex)) {
-                        this.consume();
-                    }
+
+            case " ":
+            case "\t":
+                if (this.tokenise_whitespaces)
                     this.addToken(TokenType.WHITESPACE);
-                    break;
-                }
-                this.error(`Invalid token "${ c }"`);
+                break;
+            default:
+                this.reportError("Invalid token", c);
                 break;
         }
 
@@ -196,41 +192,30 @@ export class Lexer {
     }
 
     isEOF() {
-        return this.text.length - 1 < this.next_read_index;
+        return this.next_read_index >= this.text.length;
     }
 
-    private error(msg: string) {
-        this._errors.push(
-            {
-                column: this.curr_col,
-                highlight: this.getCurrentColumnHighlighted(),
-                line: this.curr_line,
-                message: msg
-            });
-    }
-
-    private getCurrentColumnHighlighted(): string {
-        let curr_index = this.next_read_index - 1;
-        let line_start = this.text.lastIndexOf("\n", curr_index) + 1;
-        let line_end = this.text.indexOf("\n", curr_index);
-        if (line_end === -1) line_end = this.text.length;
-
-        const original_line = this.text.slice(line_start, line_end);
-        const col_pos = this.next_read_index - 1 - line_start;
-
-
-        const display_line = original_line.trim();
-        const trimmed_amount = original_line.length - original_line.trimStart().length;
-        const adjusted_col_pos = col_pos - trimmed_amount;
-
-        const position_highlight_str = " ".repeat(adjusted_col_pos) + "^";
-        return display_line + "\n" + position_highlight_str;
+    getLineMap(): number[] {
+        return this.LineMap;
     }
 
     private peek() {
         return this.isEOF() ? "\0" : this.text[this.next_read_index];
     }
 
+    private reportError(msg: string, token_value: string | null = null) {
+
+
+        const error: LexerError = {
+            column : this.curr_col,
+            line   : this.curr_line,
+            message: msg,
+            source : token_value ? token_value : this.text.slice(this.start_read_index, this.next_read_index)
+        };
+
+        this.addToken(TokenType.ERROR, error);
+
+    }
 
     private consume(): string {
         if (this.isEOF())
@@ -242,6 +227,7 @@ export class Lexer {
             this.curr_col = 0;
         }
         this.next_read_index++;
+        this.curr_read_index++;
         this.curr_col++;
         return c;
     }
@@ -249,80 +235,90 @@ export class Lexer {
     private addToken(type: TokenType, obj: Object | null = null) {
         const lexeme = this.text.slice(this.start_read_index, this.next_read_index);
         this.tokens_list.push({
-            type: type,
+            type  : type,
             lexeme: lexeme,
             literal: obj,
-            line: this.curr_line,
-            start: this.start_read_index,
-            end: this.next_read_index
+            start : this.start_read_index,
+            end   : this.next_read_index
         });
     }
 
     private consume_identifier(start_letter: string): void {
-        const regex = /[a-zA-Z0-9_]/;
         let identifier = start_letter;
         while (!this.isEOF()) {
             const c = this.peek();
-            // if (c.match(this.end_of_literal_regex))
-            //     break;
-            if (c.match(regex)) {
+            if ((c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || (c >= "0" && c <= "9") || c == "_") {
                 identifier += c;
             } else {
-                // this.error(`"${ c }" is an invalid character used for identifier`);
-                // this.consume();
                 break;
             }
             this.consume();
         }
         if (keywords.has(identifier)) {
-            if (identifier === "true")
-                this.addToken(TokenType.TRUE, true);
-            else if (identifier === "false")
-                this.addToken(TokenType.FALSE, false);
-            else if (identifier === "null")
-                this.addToken(TokenType.NULL, null);
-            else
-                this.addToken(identifier as TokenType, identifier);
+
+            switch (identifier) {
+                case "true":
+                    this.addToken(TokenType.TRUE, true);
+                    break;
+                case "false":
+                    this.addToken(TokenType.FALSE, false);
+                    break;
+                case "null":
+                    this.addToken(TokenType.NULL, null);
+                    break;
+                default:
+                    this.addToken(identifier as TokenType, identifier);
+                    break;
+            }
 
         } else
             this.addToken(TokenType.IDENTIFIER, identifier);
 
     }
 
-
     private consume_number(start_number: string): void {
-        const regex = /[0-9_]/;
-        let has_decimal = false;
-        let num_str = start_number;
-        let c = start_number;
+        let has_decimal        = false;
+        let num_str            = start_number;
+        let prev_char          = "";
+        let invalid_underscore = false;
         while (!this.isEOF()) {
-            c = this.peek();
+            const c = this.peek();
 
-            // if (c.match(this.end_of_literal_regex))
-            //     if ((c === "." && has_decimal) || c !== ".")
-            //         break;
-            if (c.match(regex)) {
-                if (c !== "_")
-                    num_str += c;
-            } else if (c == ".") {
-                if (!has_decimal) {
-                    has_decimal = true;
-                    num_str += c;
-                } else {
-                    this.error("Invalid decimal after a decimal number");
-                    break;
+            if (/[0-9]/.test(c)) {
+                this.consume();
+                num_str += c;
+                prev_char = c;
+            } else if (c === "_") {
+                if (prev_char === "_" || prev_char === ".") {
+                    invalid_underscore = true;
                 }
+                this.consume();
+                prev_char = c;
+
+            } else if (c === "." && !has_decimal) {
+                if (prev_char === "_" || this.peek() === "_") { // underscore around decimal are invalid
+                    invalid_underscore = true;
+                }
+                this.consume();
+                has_decimal = true;
+                num_str += ".";
+                prev_char   = c;
             } else {
-                // if (c.match(/[a-zA-Z]/))
-                //     this.error("Identifiers cannot begin with a number");
-                // else
-                //     this.error(`Invalid character used for a number: "${ c }"`);
                 break;
             }
-            this.consume();
         }
+        if (prev_char === "_") // underscore at the end of a number is in valid
+            invalid_underscore = true;
 
-        this.addToken(TokenType.NUMBER, parseInt(num_str));
+        if (invalid_underscore) {
+            this.reportError("Invalid underscore placement in number");
+        } else {
+            const value = has_decimal ? parseFloat(num_str) : parseInt(num_str);
+            if (!Number.isFinite(value) || Number.isNaN(value))
+                this.reportError("Numeric overflow", num_str);
+            else
+                this.addToken(TokenType.NUMBER, value);
+        }
     }
 
     private consume_string(start_symbol: "\"" | "\'"): void {
@@ -332,39 +328,60 @@ export class Lexer {
             if (c === start_symbol)
                 break;
             if (c == "\n") {
-                this.error(`Invalid newline in single line string after ${ str }`);
+                this.reportError(`Invalid newline in single line string`, str);
                 return;
             }
             if (c == "\0") {
-                this.error(`Reached end of file after ${ str }`);
+                this.reportError(`Reached end of file after`, str);
                 return;
             }
 
             if (c === "\\") {
                 const next = this.consume();
                 switch (next) {
+                    case "\"":
+                        str += "\"";
+                        break;
+                    case "\'":
+                        str += "'";
+                        break;
                     case "n":
                         str += "\n"; //appends newline
                         break;
                     case "t":
                         str += "\t"; //appends tab
                         break;
-                    case "\r":
+                    case "r":
                         str += "\r"; // appends carriage return
                         break;
                     case "\\":
                         str += "\\"; // appends a backslash \
                         break;
-                    case "'":
-                        str += "'"; //appends '
-                        break;
-
                 }
             } else
                 str += c;
         }
         this.addToken(TokenType.STRING, str);
     }
-
-
 }
+
+const lexer = new Lexer(`//Test for text highlight
+let x = 1000;
+let y = "hello world"
+print(x,y)
+
+if(x > 100){
+    print("x above hundred")
+}
+switch(y){
+    case 1:
+        while((let x:=2)){
+            someFunction(x)
+            x++;
+        }
+        break
+    default:
+        break
+}
+            `, true);
+console.log(lexer.getTokens());
