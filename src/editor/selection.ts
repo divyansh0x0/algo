@@ -58,6 +58,9 @@ export class IDESelection {
     }
 
     isSelected(): boolean {
+        if (this.single_selected_row >= 0) {
+            return true;
+        }
         const style_value = this.anchor_el.getAttribute("style");
         if (typeof style_value === "string") {
             return style_value.length > 0;
@@ -172,5 +175,9 @@ export class IDESelection {
         this.head_el.style.top    = this.head.line * line_height + "px";
         this.head_el.style.height = line_height + "px";
 
+    }
+
+    isOneRowSelected(): boolean {
+        return this.single_selected_row >= 0;
     }
 }

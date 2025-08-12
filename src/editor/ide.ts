@@ -251,19 +251,19 @@ export class IDERow {
 }
 
 export class IDE {
-    public readonly row_wrapper_rect = new DOMRect();
-    private readonly editor_rows: IDERow[] = [];
+    public readonly row_wrapper_rect         = new DOMRect();
+    public tab_width: number                 = 4;
     public readonly caret_manager: CaretManager;
-    public tab_width: number          = 4;
-    private readonly gutter_el       = document.createElement("div");
-    private readonly editor_el       = document.createElement("div");
+    private readonly editor_rows: IDERow[]   = [];
+    private readonly gutter_el               = document.createElement("div");
+    private readonly editor_el               = document.createElement("div");
     public readonly selection: IDESelection  = new IDESelection(this.editor_el, this);
-    private readonly row_wrapper     = document.createElement("div");
-    private readonly key_manager: KeyManager = new KeyManager(this.editor_el, this.bindKeyboardEvents);
-    private is_mouse_down: boolean    = false;
-    private row_height: number        = 10;
-    private char_width: number        = 10;
-    private _active_row_index: number = 0;
+    private readonly row_wrapper             = document.createElement("div");
+    private readonly key_manager: KeyManager = new KeyManager(this.editor_el, (key) => this.bindKeyboardEvents(key));
+    private is_mouse_down: boolean           = false;
+    private row_height: number               = 10;
+    private char_width: number               = 10;
+    private _active_row_index: number        = 0;
 
     constructor(parent: HTMLElement) {
         this.createDomStructure(parent);
@@ -294,51 +294,18 @@ export class IDE {
         parent.append(editor_wrapper);
     }
 
-    private bindMouseEvents() {
-        this.editor_el.onmousedown = (e) => {
-            this.updateIdeRect();
-            switch (e.detail) {
-                case 1: {
-                    const row = this.getRowFromPoint(e.clientY);
-                    const col = this.getColumnFromPoint(e.clientX);
+    set active_row_index(new_row_index: number) {
+        if (new_row_index === undefined || new_row_index === null)
+            return;
+        const old_editor_row = this.editor_rows[this.active_row_index];
 
-                    this.active_row_index = row;
+        const new_index = Vmath.clamp(new_row_index, 0, this.editor_rows.length - 1);
+        const new_editor_row = this.editor_rows[new_index];
 
-                    this.caret_manager.setColumn(col);
-                    this.selection.setAnchor(col, row);
-                    this.is_mouse_down = true;
-                    break;
-                }
-                case 2:
-                    this.editor_rows[this.active_row_index]?.selectWord(e.clientX, e.clientY);
-                    break;
-                default: {
-                    const col = this.getColumnFromPoint(e.clientX);
-                    this.caret_manager.setColumn(col);
-                    this.selection.selectRow(this.active_row_index);
-                    break;
-                }
-
-            }
-
-
-            this.editor_el.focus();
-            e.preventDefault();
-        };
-        window.addEventListener("mouseup", () => {
-            this.is_mouse_down = false;
-        });
-
-        window.addEventListener("mousemove", (e) => {
-            if (!this.is_mouse_down) return;
-            // Selection logic placeholder
-
-            const col = this.getColumnFromPoint(e.clientX);
-            const row = this.getRowFromPoint(e.clientY);
-            this.selection.moveHead(col, row);
-            this.active_row_index = row;
-            this.caret_manager.setColumn(col);
-        });
+        old_editor_row.deactivate();
+        new_editor_row.activate();
+        this.caret_manager.setRow(new_editor_row);
+        this._active_row_index = new_index;
     }
 
     private bindResizeEvents() {
@@ -393,16 +360,52 @@ export class IDE {
         return this._active_row_index;
     }
 
-    set active_row_index(new_row_index: number) {
-        const old_editor_row = this.editor_rows[this.active_row_index];
+    private bindMouseEvents() {
+        this.editor_el.onmousedown = (e) => {
+            this.updateIdeRect();
+            switch (e.detail) {
+                case 1: {
+                    const row = this.getRowFromPoint(e.clientY);
+                    this.active_row_index = row;
 
-        const new_index = Vmath.clamp(new_row_index, 0, this.editor_rows.length - 1);
-        const new_editor_row = this.editor_rows[new_index];
 
-        old_editor_row.deactivate();
-        new_editor_row.activate();
-        this.caret_manager.setRow(new_editor_row);
-        this._active_row_index = new_index;
+                    const col = this.getColumnFromPoint(e.clientX);
+                    this.caret_manager.setColumn(col);
+                    this.selection.setAnchor(col, row);
+                    this.is_mouse_down = true;
+                    console.log(this.active_row_index);
+                    break;
+                }
+                case 2:
+                    this.editor_rows[this.active_row_index]?.selectWord(e.clientX, e.clientY);
+                    break;
+                default: {
+                    const col = this.getColumnFromPoint(e.clientX);
+                    this.caret_manager.setColumn(col);
+                    this.selection.selectRow(this.active_row_index);
+                    break;
+                }
+
+            }
+
+
+            this.editor_el.focus();
+            e.preventDefault();
+        };
+        window.addEventListener("mouseup", () => {
+            this.is_mouse_down = false;
+        });
+
+        window.addEventListener("mousemove", (e) => {
+            if (!this.is_mouse_down) return;
+            // Selection logic placeholder
+
+            const col = this.getColumnFromPoint(e.clientX);
+            const row = this.getRowFromPoint(e.clientY);
+            this.selection.moveHead(col, row);
+            this.active_row_index = row;
+            this.caret_manager.setColumn(col);
+        });
     }
 
     updateGutter() {
@@ -640,8 +643,8 @@ export class IDE {
         return this._active_row_index === 0;
     }
 
-
-    private bindKeyboardEvents(key: KeyCodes) {
+    private bindKeyboardEvents(key: KeyCodes | string) {
+        console.log(this);
         const active_row = this.editor_rows[this.active_row_index];
         switch (key) {
             case KeyCodes.Backspace:
@@ -680,6 +683,9 @@ export class IDE {
                 else
                     active_row.appendStr("\t");
                 break;
+            case KeyCodes.COPY:
+                this.copyText();
+                break;
             default:
                 if (Editor.isPrintableKey(key)) {
                     this.appendChar(key);
@@ -693,6 +699,40 @@ export class IDE {
 
     private isLastRowActive(): boolean {
         return this._active_row_index === this.editor_rows.length - 1;
+    }
+
+    private copyText(): void {
+        let copied_text = "";
+        if (this.selection.isSelected() && !this.selection.isOneRowSelected()) {
+            const start     = this.selection.getStart();
+            const end       = this.selection.getEnd();
+            const start_row = this.editor_rows[start.line];
+            if (start.line === end.line) {
+                copied_text = start_row.raw.slice(start.col, end.col);
+            } else {
+                console.log(start_row.raw);
+                copied_text = start_row.raw.slice(start.col, start_row.raw.length);
+
+                for (let i = start.line + 1; i < end.line; i++) {
+                    const row = this.editor_rows[i];
+                    copied_text += "\n" + row.raw;
+                }
+                const end_row = this.editor_rows[end.line];
+                copied_text += "\n" + end_row.raw.slice(0, end.col);
+            }
+
+
+        } else {
+            const active_row = this.editor_rows[this.active_row_index];
+            copied_text      = active_row.raw;
+        }
+
+
+        const clipboard = navigator.clipboard;
+        if (clipboard && copied_text.length > 0) {
+            clipboard.writeText(copied_text).then(() => console.log("Copied\n", copied_text));
+        }
+
     }
 }
 
