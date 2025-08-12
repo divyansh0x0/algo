@@ -27,6 +27,7 @@
     --yasl-whitespace-color: #fff;
     --yasl-string-color: #a8ff8d;
     --yasl-error-color: #ef4848;
+    --yasl-ide-indent-color: rgba(255, 255, 255, 0.23);
 
     --yasl-repl-border-radius: 10px;
     --yasl-editor-font-size: 1rem;
@@ -39,6 +40,7 @@
 .yasl-editor-wrapper {
     width: 100%;
     overflow: hidden;
+    gap: 2px;
     display: flex;
     user-select: none;
     background: var(--yasl-editor-bg);
@@ -56,6 +58,7 @@
     width: fit-content;
     padding-right: 1.5em;
     padding-left: 0.5em;
+    border-right: 1px solid var(--yasl-ide-indent-color);
 }
 
 .yasl-editor {
@@ -101,7 +104,10 @@
         top: 0;
         left: 0;
 
-        width: 3px;
+        // monoco does this
+        width: 2px;
+        padding-left: 1px;
+
         height: 1em;
         background: var(--yasl-caret-color);
         will-change: opacity, top, left;
@@ -116,6 +122,7 @@
     .yasl-ide-selection-el {
         background-color: var(--yasl-editor-selection-color);
         position: absolute;
+        will-change: width, top, left;
     }
 
     .yasl-editor-rows-wrapper {
@@ -144,7 +151,6 @@
             }
 
             .whitespace {
-                opacity: 0.1;
                 color: var(--yasl-whitespace-color);
             }
 

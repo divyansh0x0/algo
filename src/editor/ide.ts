@@ -1,10 +1,32 @@
-import * as Editor                             from "@/editor/index";
-import { KeyCodes }                            from "@/editor/index";
-import { StringUtils }                         from "@/utils/stringutils";
-import { Vmath }                               from "@/utils/vmath";
-import * as YASL                               from "@/yasl";
-import { Lexer, Parser, TokenType, YASLToken } from "@/yasl";
+import * as Editor                  from "@/editor";
+import { CaretManager }             from "@/editor/caret";
+import { KeyCodes, KeyManager }     from "@/editor/key-manager";
+import { IDESelection }             from "@/editor/selection";
+import { StringUtils }              from "@/utils/stringutils";
+import { Vmath }                    from "@/utils/vmath";
+import * as YASL                    from "@/yasl";
+import { Lexer, Parser, YASLToken } from "@/yasl";
+import "./yasl-editor.scss";
 
+const TEST_CODE = `//Test for text highlight
+let x = 1000;
+let y = "hello world"
+print(x,y)
+
+if(x > 100){
+    print("x above hundred")
+}
+switch(y){
+    case 1:
+        while((let x:=2)){
+            someFunction(x)
+            x++;
+        }
+        break
+    default:
+        break
+}
+`;
 
 function getMonospaceCharBox(el: HTMLElement) {
     // Set of chars to test ascenders/descenders/full caps
@@ -39,172 +61,6 @@ function getMonospaceCharBox(el: HTMLElement) {
     };
 }
 
-class CaretManager {
-    private readonly spawned_carets: YASLCaret[]                     = [];
-    private is_typing_timer_id: ReturnType<typeof setTimeout> | null = null;
-
-    private readonly primary_caret: YASLCaret;
-
-    private _char_width = 0;
-
-    get char_width(): number {
-        return this._char_width;
-    }
-
-    private _line_height = 0;
-
-    get line_height(): number {
-        return this._line_height;
-    }
-
-    constructor(parent: HTMLElement, private primary_row: IDERow) {
-        this.primary_caret = new YASLCaret(parent);
-
-    }
-
-    moveCol(delta: number): void {
-        const max_col = this.primary_row.raw.length;
-        const new_col = Vmath.clamp(this.primary_caret.column + delta, 0, max_col);
-        this.primary_caret.setColumn(new_col);
-        this.primary_row.setColumn(new_col);
-        this.posChanged();
-    }
-
-    setColumn(col: number) {
-        const max_col = this.primary_row.raw.length;
-        let new_col: number;
-        if (col >= 0)
-            new_col = Vmath.clamp(col, 0, max_col);
-        else
-            new_col = Vmath.clamp(max_col - col + 1, 0, max_col);
-        this.primary_caret.setColumn(new_col);
-        this.primary_row.setColumn(new_col);
-        this.posChanged();
-    }
-
-    setRow(new_row: IDERow): void {
-        this.primary_row = new_row;
-
-        const max_col = this.primary_row.raw.length;
-        const new_col = Vmath.clamp(this.primary_caret.column, 0, max_col);
-        this.primary_row.setColumn(new_col);
-        this.primary_caret.setColumn(new_col);
-        this.primary_caret.setRow(this.primary_row.getDomNode());
-        this.posChanged();
-    }
-
-    setFontMetrics(char_width: number, line_height: number) {
-        this.primary_caret.setCharWidth(char_width);
-        this.primary_caret.setLineHeight(line_height);
-        console.log("IDE Font metrics updated from", this._char_width, "to", char_width);
-        this._char_width  = char_width;
-        this._line_height = line_height;
-        this.primary_caret.updateCaretPosition();
-    }
-
-    moveColToWordEnd(): void {
-        const tokens = this.primary_row.tokens;
-        const col    = this.primary_caret.column;
-
-        for (const token of tokens) {
-            // left to right lexical parsing means we do not need to check if col > token.start
-            if (col < token.end) {
-                this.setColumn(token.end);
-                break;
-            }
-        }
-    }
-
-    isAtEnd(): boolean {
-        return this.primary_caret.column === this.primary_row.raw.length;
-    }
-
-    isAtStart(): boolean {
-        return this.primary_caret.column === 0;
-    }
-
-    posChanged() {
-        if (this.is_typing_timer_id)
-            clearTimeout(this.is_typing_timer_id);
-        this.primary_caret.typing = true;
-        this.is_typing_timer_id   = setTimeout(() => {
-            this.primary_caret.typing = false;
-        }, 1000);
-
-    }
-}
-
-class YASLCaret {
-
-    private row_el: HTMLElement | null = null;
-
-    private readonly caret = document.createElement("div");
-
-    private char_width = 10;
-
-    private _column = 0;
-
-    get column(): number {
-        return this._column;
-    }
-
-    private line_height = 10;
-    private text_before_caret = "";
-
-    constructor(private parent: HTMLElement) {
-        this.caret.classList.add("caret");
-        parent.append(this.caret);
-        parent.style.position = "relative";
-    }
-
-    setRow(new_row: HTMLElement) {
-        this.row_el = new_row;
-        this.updateCaretPosition();
-    }
-
-    setColumn(new_col: number) {
-        this._column = new_col;
-        this.updateCaretPosition();
-    }
-
-    updateCaretPosition() {
-        if (this.row_el) {
-            this.caret.style.top = (this.row_el.offsetTop).toString() + "px";
-            this.caret.style.left = (this._column * this.char_width).toString() + "px";
-        }
-    }
-
-
-    moveBy(value: number): void {
-        this._column = Math.max(this._column + value, 0);
-
-        this.updateCaretPosition();
-    }
-
-    setLineHeight(line_height: number): void {
-        this.line_height = line_height;
-        this.caret.style.height = this.line_height + "px";
-    }
-
-    setCharWidth(char_width: number): void {
-        this.char_width = char_width;
-    }
-
-    private _typing: boolean = false;
-
-    get typing(): boolean {
-        return this._typing;
-    }
-
-    set typing(value: boolean) {
-        this._typing = value;
-        if (value) {
-            this.caret.classList.add("typing");
-        } else
-            this.caret.classList.remove("typing");
-    }
-
-}
 
 function isInBounds(x: number, y: number, rect: DOMRect): any {
     return x > rect.x
@@ -221,7 +77,7 @@ export class IDERow {
         this.row_el.classList.add("yasl-editor-row");
     }
 
-    private _tokens: YASL.YASLToken[]      = [];
+    private _tokens: YASL.YASLToken[] = [];
 
     get tokens(): YASLToken[] {return this._tokens;}
 
@@ -245,16 +101,34 @@ export class IDERow {
             for (const token of this.tokens) {
                 if (token.type === YASL.TokenType.EOF)
                     break;
-                const text = token.type === TokenType.WHITESPACE ? "·" : raw_text.slice(token.start, token.end);
+                const text = raw_text.slice(token.start, token.end);
                 rendered_text += `<span class='${ YASL.StringifyTokenType(token.type) }'>${ text }</span>`;
             }
         } else {
             rendered_text = raw_text;
         }
+        let x        = 1000;
         this.row_el.innerHTML = rendered_text;
         this._tokens = this.tokens;
 
+        // calculating indents
+        const leading_whitespace_count = StringUtils.countLeadingWhitespaces(this.raw);
+        if (leading_whitespace_count === this.raw.length)
+            return;
+        const total_indent = leading_whitespace_count / this.ide.tab_width;
+        const indent_width = this.ide.caret_manager.char_width * this.ide.tab_width;
 
+        let gradient_str = "";
+
+        const indent_decoration_width = 2;
+        console.log(this.raw, total_indent);
+        for (let i = 1; i < total_indent; i++) {
+            const start_x = i * indent_width;
+            const mid_x   = start_x + indent_decoration_width;
+            const end_x   = mid_x;
+            gradient_str += `, transparent ${ start_x }px ,var(--yasl-ide-indent-color) ${ mid_x }px, transparent ${ end_x }px`;
+        }
+        this.row_el.style.background = `linear-gradient(90deg ${ gradient_str } )`;
     }
 
     goToStart(): void {
@@ -368,8 +242,6 @@ export class IDERow {
     }
 
     selectRow(): void {
-        this.ide.selection.setAnchor(0, this.ide.active_row_index);
-        this.ide.selection.moveHead(this.raw.length, this.ide.active_row_index);
     }
 
     setText(row_str: string): void {
@@ -378,181 +250,36 @@ export class IDERow {
     }
 }
 
-interface IDEPosition {
-    line: number,
-    col: number,
-}
-
-class IDESelection {
-    private readonly anchor: IDEPosition = {
-        line: 0,
-        col : 0
-    };
-    private readonly head: IDEPosition   = {
-        line: 0,
-        col : 0
-    };
-
-
-    private anchor_el = document.createElement("div");
-    private middle_el = document.createElement("div");
-    private head_el   = document.createElement("div");
-
-    constructor(parent: HTMLElement, private ide: IDE) {
-        parent.append(this.anchor_el, this.middle_el, this.head_el);
-
-        this.anchor_el.classList.add("yasl-ide-selection-el");
-        this.middle_el.classList.add("yasl-ide-selection-el");
-        this.head_el.classList.add("yasl-ide-selection-el");
-    }
-
-    moveHead(col: number, row: number): void {
-        this.head.line = row;
-        this.head.col  = col;
-
-        this.render();
-    }
-
-    setAnchor(col: number, row: number): void {
-        this.clear();
-        const max_col    = this.ide.getMaxColumn(row);
-        this.anchor.col  = Math.min(col, max_col);
-        this.anchor.line = row;
-    }
-
-    clear(): void {
-        this.head.col  = 0;
-        this.head.line = 0;
-
-        this.anchor.col  = 0;
-        this.anchor.line = 0;
-
-        this.anchor_el.style = "";
-        this.middle_el.style = "";
-        this.head_el.style   = "";
-    }
-
-    isSelected(): boolean {
-        const style_value = this.anchor_el.getAttribute("style");
-        if (typeof style_value === "string") {
-            return style_value.length > 0;
-        } else {
-            return false;
-        }
-    }
-
-    getStart() {
-        if (this.anchor.line === this.head.line) {
-            return this.anchor.col < this.head.col ? this.anchor : this.head;
-        } else {
-            return this.anchor.line < this.head.line ? this.anchor : this.head;
-        }
-    }
-
-    getEnd() {
-        if (this.anchor.line === this.head.line) {
-            return this.anchor.col < this.head.col ? this.head : this.anchor;
-        } else {
-            return this.anchor.line < this.head.line ? this.head : this.anchor;
-        }
-    }
-
-    private render() {
-        if (this.head.col === this.anchor.col && this.head.line === this.anchor.line) {
-            this.anchor_el.style = "";
-            this.middle_el.style = "";
-            this.head_el.style   = "";
-
-            return;
-        }
-        const char_width  = this.ide.caret_manager.char_width;
-        const line_height = this.ide.caret_manager.line_height;
-        const line_width = this.ide.row_wrapper_rect.width;
-
-
-        this.anchor_el.style.height = line_height + "px";
-        this.anchor_el.style.top    = this.anchor.line * line_height + "px";
-
-        if (this.head.line === this.anchor.line) {
-            let min_col: number;
-            let max_col: number;
-            if (this.head.col > this.anchor.col) {
-                min_col = this.anchor.col;
-                max_col = this.head.col;
-            } else {
-                min_col = this.head.col;
-                max_col = this.anchor.col;
-            }
-            const col_diff = max_col - min_col;
-
-            this.anchor_el.style.left  = min_col * char_width + "px";
-            this.anchor_el.style.width = col_diff * char_width + "px";
-
-            this.middle_el.style = "";
-            this.head_el.style   = "";
-
-            this.ide.active_row_index = this.head.line;
-            this.ide.caret_manager.setColumn(this.head.col);
-
-            return;
-        }
-
-        // top and head lines of selection
-        let min_line: number;
-        //up to down selection
-        if (this.anchor.line < this.head.line) {
-            this.anchor_el.style.width = (line_width - this.anchor.col * char_width) + "px";
-            this.anchor_el.style.left  = this.anchor.col * char_width + "px";
-            this.head_el.style.left    = "0";
-            this.head_el.style.width   = this.head.col * char_width + "px";
-            min_line                   = this.anchor.line;
-        } else {
-            //down to up selection
-            this.anchor_el.style.width = this.anchor.col * char_width + "px";
-            this.anchor_el.style.left  = "0";
-            this.head_el.style.left  = this.head.col * char_width + "px";
-            this.head_el.style.width = (line_width - this.head.col * char_width) + "px";
-            min_line                   = this.head.line;
-        }
-
-
-        // middle lines of selection
-        const line_gap = Math.abs(this.head.line - this.anchor.line) - 1;
-        if (line_gap !== 0) {
-            this.middle_el.style.left   = "0";
-            this.middle_el.style.top    = (min_line + 1) * line_height + "px";
-            this.middle_el.style.width  = line_width + "px";
-            this.middle_el.style.height = line_gap * line_height + "px";
-        } else {
-            this.middle_el.style = "";
-        }
-
-
-        this.head_el.style.top    = this.head.line * line_height + "px";
-        this.head_el.style.height = line_height + "px";
-
-    }
-}
-
 export class IDE {
-    public readonly caret_manager: CaretManager;
-    public readonly tab_spaces_count       = 4;
     public readonly row_wrapper_rect = new DOMRect();
     private readonly editor_rows: IDERow[] = [];
-    private readonly gutter_el   = document.createElement("div");
-    private readonly editor_el   = document.createElement("div");
-    public selection             = new IDESelection(this.editor_el, this);
-    private readonly row_wrapper = document.createElement("div");
-    private is_mouse_down        = false;
-    private row_height: number   = 10;
-    private char_width: number   = 10;
-    private _active_row_index    = 0;
+    public readonly caret_manager: CaretManager;
+    public tab_width: number          = 4;
+    private readonly gutter_el       = document.createElement("div");
+    private readonly editor_el       = document.createElement("div");
+    public readonly selection: IDESelection  = new IDESelection(this.editor_el, this);
+    private readonly row_wrapper     = document.createElement("div");
+    private readonly key_manager: KeyManager = new KeyManager(this.editor_el, this.bindKeyboardEvents);
+    private is_mouse_down: boolean    = false;
+    private row_height: number        = 10;
+    private char_width: number        = 10;
+    private _active_row_index: number = 0;
 
-    constructor(parent: HTMLElement, private gutter_enabled = true) {
+    constructor(parent: HTMLElement) {
+        this.createDomStructure(parent);
+        this.bindMouseEvents();
+        this.bindResizeEvents();
+        this.bindBlurEvent();
+        this.initialize().then(() => {
+            this.editor_el.classList.add("ready");
+        });
+        this.caret_manager = new CaretManager(this.editor_el, this.editor_rows[this.active_row_index]);
+    }
+
+    private createDomStructure(parent: HTMLElement) {
         const editor_wrapper = document.createElement("div");
         editor_wrapper.append(this.gutter_el, this.editor_el);
         editor_wrapper.classList.add("yasl-editor-wrapper");
-        parent.append(editor_wrapper);
 
         this.editor_el.tabIndex = 1;
         this.editor_el.classList.add("yasl-editor");
@@ -563,40 +290,41 @@ export class IDE {
         loader.innerText = "loading";
         this.editor_el.append(loader, this.row_wrapper);
 
+
+        parent.append(editor_wrapper);
+    }
+
+    private bindMouseEvents() {
         this.editor_el.onmousedown = (e) => {
             this.updateIdeRect();
             switch (e.detail) {
-                case 1:
+                case 1: {
                     const row = this.getRowFromPoint(e.clientY);
-                    this.active_row_index = row;
                     const col = this.getColumnFromPoint(e.clientX);
+
+                    this.active_row_index = row;
+
                     this.caret_manager.setColumn(col);
                     this.selection.setAnchor(col, row);
                     this.is_mouse_down = true;
                     break;
+                }
                 case 2:
                     this.editor_rows[this.active_row_index]?.selectWord(e.clientX, e.clientY);
                     break;
-                default:
-                    this.editor_rows[this.active_row_index]?.selectRow();
+                default: {
+                    const col = this.getColumnFromPoint(e.clientX);
+                    this.caret_manager.setColumn(col);
+                    this.selection.selectRow(this.active_row_index);
                     break;
+                }
+
             }
 
 
             this.editor_el.focus();
             e.preventDefault();
         };
-
-        this.initialize().then(() => {
-            this.editor_el.classList.add("ready");
-        });
-
-        this.editor_el.onkeydown = (e) => {
-            this.handleKeyPress(e.key);
-            e.preventDefault();
-            e.stopImmediatePropagation();
-        };
-
         window.addEventListener("mouseup", () => {
             this.is_mouse_down = false;
         });
@@ -611,21 +339,54 @@ export class IDE {
             this.active_row_index = row;
             this.caret_manager.setColumn(col);
         });
+    }
 
-
-        this.caret_manager = new CaretManager(this.editor_el, this.editor_rows[this.active_row_index]);
-
+    private bindResizeEvents() {
         window.addEventListener("resize", () => this.updateIdeRect());
 
         const resize_observer = new ResizeObserver(() => {
             this.updateIdeRect();
         });
         resize_observer.observe(this.row_wrapper);
+    }
 
+    private bindBlurEvent() {
         this.editor_el.onblur = () => {
             this.editor_rows[this.active_row_index]?.deactivate();
         };
+    }
 
+    private async initialize(): Promise<void> {
+        await document.fonts.ready;
+
+        const computed = window.getComputedStyle(this.editor_el);
+        const fontStr  = `${ computed.fontSize } ${ computed.fontFamily }`;
+        await document.fonts.load(fontStr);
+
+        await new Promise(requestAnimationFrame);
+
+        const char_box   = getMonospaceCharBox(this.editor_el);
+        const new_height = char_box.height;
+
+        for (const row of this.editor_rows) {
+            row.setHeight(new_height);
+        }
+
+        this.caret_manager.setFontMetrics(char_box.width, char_box.height);
+        this.row_height = new_height;
+        this.char_width = char_box.width;
+
+
+        const row_el = document.createElement("div");
+        const row    = new IDERow(this, row_el);
+        row.setHeight(this.row_height);
+        this.editor_rows.push(row);
+        this.row_wrapper.appendChild(row_el);
+        this.updateIdeRect();
+        this.pasteString(TEST_CODE);
+
+        this.updateGutter();
+        this.editor_rows[this.active_row_index]?.deactivate();
     }
 
     get active_row_index(): number {
@@ -659,56 +420,6 @@ export class IDE {
         }
     }
 
-    handleKeyPress(key: string) {
-        const active_row = this.editor_rows[this.active_row_index];
-        console.log("deleting selection", this.selection.isSelected(), this.selection);
-        this.caret_manager.posChanged();
-        switch (key) {
-            case Editor.KeyCodes.Backspace:
-                this.deleteChar(-1);
-                break;
-            case Editor.KeyCodes.Delete:
-                this.deleteChar(1);
-                break;
-            case Editor.KeyCodes.Home:
-                active_row.goToStart();
-                break;
-            case Editor.KeyCodes.End:
-                active_row.goToEnd();
-                break;
-            case KeyCodes.Enter:
-                this.insertRowAfterCurrent();
-                this.moveDown();
-                break;
-
-            case KeyCodes.ARROW_LEFT:
-                this.moveCol(-1);
-                break;
-
-            case KeyCodes.ARROW_RIGHT:
-                this.moveCol(1);
-                break;
-            case KeyCodes.ARROW_DOWN:
-                this.moveDown();
-                break;
-            case KeyCodes.ARROW_UP:
-                this.moveUp();
-                break;
-            case KeyCodes.Tab:
-                if (this.tab_spaces_count > 0)
-                    active_row.appendStr(" ".repeat(this.tab_spaces_count));
-                else
-                    active_row.appendStr("\t");
-                break;
-            default:
-                if (Editor.isPrintableKey(key)) {
-                    this.appendChar(key);
-                } else {
-                    console.log("unknown key handing over to IDE:", key);
-                }
-                break;
-        }
-    }
 
     updateIdeRect() {
         if (!this.editor_el)
@@ -929,61 +640,73 @@ export class IDE {
         return this._active_row_index === 0;
     }
 
-    private async initialize(): Promise<void> {
-        await document.fonts.ready;
 
-        const computed = window.getComputedStyle(this.editor_el);
-        const fontStr  = `${ computed.fontSize } ${ computed.fontFamily }`;
-        await document.fonts.load(fontStr);
+    private bindKeyboardEvents(key: KeyCodes) {
+        const active_row = this.editor_rows[this.active_row_index];
+        switch (key) {
+            case KeyCodes.Backspace:
+                this.deleteChar(-1);
+                break;
+            case KeyCodes.Delete:
+                this.deleteChar(1);
+                break;
+            case KeyCodes.Home:
+                active_row.goToStart();
+                break;
+            case KeyCodes.End:
+                active_row.goToEnd();
+                break;
+            case KeyCodes.Enter:
+                this.insertRowAfterCurrent();
+                this.moveDown();
+                break;
 
-        await new Promise(requestAnimationFrame);
+            case KeyCodes.ARROW_LEFT:
+                this.moveCol(-1);
+                break;
 
-        const char_box = getMonospaceCharBox(this.editor_el);
-        const new_height = char_box.height;
-
-        for (const row of this.editor_rows) {
-            row.setHeight(new_height);
+            case KeyCodes.ARROW_RIGHT:
+                this.moveCol(1);
+                break;
+            case KeyCodes.ARROW_DOWN:
+                this.moveDown();
+                break;
+            case KeyCodes.ARROW_UP:
+                this.moveUp();
+                break;
+            case KeyCodes.Tab:
+                if (this.tab_width > 0)
+                    active_row.appendStr(" ".repeat(this.tab_width));
+                else
+                    active_row.appendStr("\t");
+                break;
+            default:
+                if (Editor.isPrintableKey(key)) {
+                    this.appendChar(key);
+                } else {
+                    console.log("unknown key handing over to IDE:", key);
+                }
+                break;
         }
-
-        this.caret_manager.setFontMetrics(char_box.width, char_box.height);
-        this.row_height = new_height;
-        this.char_width = char_box.width;
-
-
-        const row_el = document.createElement("div");
-        const row      = new IDERow(this, row_el);
-        row.setHeight(this.row_height);
-        this.editor_rows.push(row);
-        this.row_wrapper.appendChild(row_el);
-        this.updateIdeRect();
-        this.pasteString(
-            `//Test for text highlight
-let x = 1000;
-let y = "hello world"
-print(x,y)
-
-if(x > 100){
-    print("x above hundred")
-}
-switch(y){
-    case 1:
-        while((let x:=2)){
-            someFunction(x)
-            x++;
-        }
-        break
-    default:
-        break
-}
-            `
-        );
-
-        this.updateGutter();
-        this.editor_rows[this.active_row_index]?.deactivate();
     }
+
 
     private isLastRowActive(): boolean {
         return this._active_row_index === this.editor_rows.length - 1;
     }
 }
 
+// handleKeyPress(key: string, ctrl_key_pressed:boolean, shift_key_pressed:boolean) {
+//     console.log("deleting selection", this.selection.isSelected(), this.selection);
+//     this.caret_manager.posChanged();
+//
+//     if(ctrl_key_pressed){
+//
+//         switch (key.toLowerCase()){
+//             case Editor.KeyCodes.COPY:
+//                 this.copyToClipboard();
+//         }
+//     }
+//
+//
+// }

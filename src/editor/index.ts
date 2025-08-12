@@ -1,23 +1,5 @@
 import "./yasl-editor.scss";
 
-export enum KeyCodes {
-    Alt         = "Alt",
-    CapsLock    = "CapsLock",
-    Ctrl        = "Control",
-    Backspace   = "Backspace",
-    Delete      = "Delete",
-    Undefined   = "Unidentified",
-    Shift       = "Shift",
-    Enter       = "Enter",
-    Tab         = "Tab",
-    Space       = " ",
-    ARROW_DOWN  = "ArrowDown",
-    ARROW_UP    = "ArrowUp",
-    ARROW_LEFT  = "ArrowLeft",
-    ARROW_RIGHT = "ArrowRight",
-    Home        = "Home",
-    End         = "End",
-}
 
 export function isPrintableKey(key: string) {
     // Exclude special keys like "Shift", "Enter", etc.
