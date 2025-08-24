@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    ThemeManager.setThemeType(ThemeType.AUTO);
+    ThemeManager.setThemeType(ThemeType.DARK);
 
     if (canvas_container && slider && window.innerWidth > Settings.MIN_SCREEN_WIDTH)
         canvas_container.style.width = `${ slider.getBoundingClientRect().x }px`;

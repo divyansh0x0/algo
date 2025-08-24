@@ -2,8 +2,8 @@
     "compilerOptions": {
         /* Visit https://aka.ms/tsconfig to read more about this file */
 
-        "target": "ES2015",
-        "module": "ES2015",
+        "target": "ES2020",
+        "module": "ES2020",
         "rootDir": "./src/",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,

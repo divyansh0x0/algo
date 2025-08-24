@@ -97,14 +97,16 @@ export class CaretManager {
 }
 
 export class YASLCaret {
-
-    private row_el: HTMLElement | null = null;
-
     private readonly caret = document.createElement("div");
 
     private char_width = 10;
     private line_height       = 10;
     private text_before_caret = "";
+    private _column                    = 0;
+    private _typing: boolean           = false;
+    private row_el: HTMLElement | null = null;
+
+    private _row                       = 0;
 
     constructor(private parent: HTMLElement) {
         this.caret.classList.add("caret");
@@ -112,13 +114,13 @@ export class YASLCaret {
         parent.style.position = "relative";
     }
 
-    private _column = 0;
-
+    get row(): number {
+        return this._row;
+    }
     get column(): number {
         return this._column;
     }
 
-    private _typing: boolean = false;
 
     get typing(): boolean {
         return this._typing;
