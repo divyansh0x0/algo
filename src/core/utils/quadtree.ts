@@ -1,5 +1,5 @@
 //Axis Aligned Bounding Box
-import { Size, Vector } from "@/utils/geometry";
+import {Size, Vector} from "@/core/utils/geometry";
 
 const FLOAT_ERROR = 0.01;
 
@@ -70,7 +70,7 @@ export class AABB {
     }
 
     toString() {
-        return `${ this.center } ${ this.half_dimension }`;
+        return `${this.center} ${this.half_dimension}`;
     }
 
     copy(): AABB {
@@ -79,7 +79,8 @@ export class AABB {
 }
 
 export class QuadTreeNode {
-    constructor(public id: string, public point: Vector, public mass: number = 10) {}
+    constructor(public id: string, public point: Vector, public mass: number = 10) {
+    }
 
 }
 

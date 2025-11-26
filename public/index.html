@@ -18,6 +18,7 @@
     <link href="assets/css/index.css" rel="stylesheet">
     <link href="assets/css/responsive.css" rel="stylesheet">
     <link href="assets/css/yasl-interpreter.css" rel="stylesheet">
+    <link href="assets/css/toolbar.css" rel="stylesheet">
 
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
     <meta content="#ff0000" name="theme-color"/>
@@ -36,7 +37,7 @@
 <div class="visualizer-container" id="visualizer-container">
     <div class="canvas-container" id="canvas-container">
         <canvas class="resizable" id="main-canvas"></canvas>
-        <div class="util-btns-container">
+        <div id="toolbar">
 
             <button id="fullscreen-btn">
                 <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
@@ -46,12 +47,15 @@
                 </svg>
             </button>
             <button id="start-btn"></button>
+            <div class="tool-container"></div>
+
         </div>
 
     </div>
     <div id="slider"></div>
     <div id="data-container">
         <h1 id="heading">Algo</h1>
+        <algo-slider></algo-slider>
         <div id="settings">
             <div class="row">
                 <label for="accuracy-slider">Accuracy</label>
@@ -86,8 +90,6 @@
         </svg>
     </button>
 </div>
-<!--<div class="" id="yasl-repl">-->
-<!--</div>-->
 </body>
 
 <script>

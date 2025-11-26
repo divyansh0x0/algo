@@ -1,6 +1,6 @@
-import { IDE } from "@/editor/ide";
-import { YASLKeyboard } from "@/editor/keyboard";
-import * as YASL from "@/yasl";
+import {IDE} from "@/core/editor/ide";
+import {YASLKeyboard} from "@/core/editor/keyboard";
+import * as YASL from "@/core/yasl";
 import "./yasl-repl.scss";
 
 enum ReplOutputType {

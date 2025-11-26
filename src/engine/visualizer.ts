@@ -1,7 +1,7 @@
-import { DFS_Graph_Traversal } from "@/algorithms/algorithms";
+import {DFS_Graph_Traversal} from "@/core/algorithms/algorithms";
 import { Scene } from "@/engine/scene";
 import { Graph } from "@/graph";
-import { Vector } from "@/utils/geometry";
+import {Vector} from "@/core/utils/geometry";
 
 const RADIUS = 20;
 

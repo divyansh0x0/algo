@@ -1,4 +1,4 @@
-import { NativeValue, YASLNode } from "@/yasl/tree";
+import {NativeValue, YASLNode} from "@/core/yasl/tree";
 
 export enum EnvironmentReturnCode {
     AlreadyDefined,
@@ -20,19 +20,20 @@ export interface RValue {
 export class Environment {
     private variable_map = new Map<string, RValue | null>();
 
-    constructor() { }
+    constructor() {
+    }
 
     define(name: string, value: NativeValue) {
         if (this.variable_map.has(name))
             return EnvironmentReturnCode.AlreadyDefined;
-        this.variable_map.set(name, { type: RValueType.Native, value });
+        this.variable_map.set(name, {type: RValueType.Native, value});
         return EnvironmentReturnCode.Success;
     }
 
     defineScope(name: string, value: Environment) {
         if (this.variable_map.has(name))
             return EnvironmentReturnCode.AlreadyDefined;
-        this.variable_map.set(name, { type: RValueType.Environment, value });
+        this.variable_map.set(name, {type: RValueType.Environment, value});
         return EnvironmentReturnCode.Success;
     }
 
@@ -40,7 +41,7 @@ export class Environment {
         if (!this.variable_map.has(name))
             return EnvironmentReturnCode.NotDefined;
 
-        this.variable_map.set(name, { type: RValueType.Native, value: new_value });
+        this.variable_map.set(name, {type: RValueType.Native, value: new_value});
         return EnvironmentReturnCode.Success;
     }
 
@@ -48,7 +49,7 @@ export class Environment {
         if (!this.variable_map.has(name))
             return EnvironmentReturnCode.NotDefined;
 
-        this.variable_map.set(name, { type: RValueType.Environment, value: new_value });
+        this.variable_map.set(name, {type: RValueType.Environment, value: new_value});
         return EnvironmentReturnCode.Success;
     }
 

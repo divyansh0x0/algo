@@ -15,6 +15,7 @@
         outline: 1px solid transparent;
         transition: outline-color 100ms linear;
         cursor: text;
+
         &.focused {
             outline: 1px solid #fff;
         }

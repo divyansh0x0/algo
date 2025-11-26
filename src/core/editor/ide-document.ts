@@ -12,15 +12,15 @@ interface Piece {
 export class IDEDocument {
     private lineOffsets: number[] = [];
     private readonly original_buffer: string;
-    private add_buffer: string    = "";
-    private pieces: Piece[]       = [];
+    private add_buffer: string = "";
+    private pieces: Piece[] = [];
 
     constructor(original: string = "") {
         this.original_buffer = original;
         if (original.length > 0) {
             this.pieces.push({
-                type  : PieceType.ORIGINAL,
-                start : 0,
+                type: PieceType.ORIGINAL,
+                start: 0,
                 length: original.length
             });
         }
@@ -33,50 +33,50 @@ export class IDEDocument {
         let curr_pos = 0;
         if (index <= 0) {
             this.pieces.splice(0, 0, {
-                type  : PieceType.ADD,
-                start : index,
+                type: PieceType.ADD,
+                start: index,
                 length: text.length
             });
             return;
         }
         if (index >= this.getContentLength()) {
             this.pieces.push({
-                type  : PieceType.ADD,
-                start : this.getContentLength(),
+                type: PieceType.ADD,
+                start: this.getContentLength(),
                 length: text.length
             });
             return;
         }
         for (let i = 0; i < this.pieces.length; i++) {
-            const piece   = this.pieces[i];
+            const piece = this.pieces[i];
             const new_pos = piece.length + curr_pos;
 
 
             if (new_pos > index) { // piece found
 
                 // position inside piece
-                const piece_offset        = index - curr_pos;
+                const piece_offset = index - curr_pos;
                 //if inside piece then split the piece
                 const new_pieces: Piece[] = [];
                 // left piece
                 if (piece_offset > 0) {
                     new_pieces.push({
-                        type  : piece.type,
-                        start : piece.start,
+                        type: piece.type,
+                        start: piece.start,
                         length: piece_offset
                     });
                 }
                 // added piece
                 new_pieces.push({
-                    type  : PieceType.ADD,
-                    start : prev_add_buffer_length,
+                    type: PieceType.ADD,
+                    start: prev_add_buffer_length,
                     length: text.length
                 });
                 // right piece
                 if (piece_offset < piece.length) {
                     new_pieces.push({
-                        type  : piece.type,
-                        start : piece.start + piece_offset,
+                        type: piece.type,
+                        start: piece.start + piece_offset,
                         length: piece.length - piece_offset
                     });
                 }

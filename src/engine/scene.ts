@@ -4,10 +4,10 @@ import { Edge }                                      from "@/engine/components/e
 import { Logger }                                    from "@/engine/components/logger";
 import { Node }                                      from "@/engine/components/node";
 import { ThemeManager }                              from "@/engine/theme";
-import { Size, Vector }                              from "@/utils/geometry";
-import { Mouse }                                     from "@/utils/mouse";
-import { AABB, ForceQuadTree, QuadTreeNode }         from "@/utils/quadtree";
-import { Vmath }                                     from "@/utils/vmath";
+import {Size, Vector} from "@/core/utils/geometry";
+import {Mouse} from "@/core/utils/mouse";
+import {AABB, ForceQuadTree, QuadTreeNode} from "@/core/utils/quadtree";
+import {Vmath} from "@/core/utils/vmath";
 
 const ZERO_VEC = Object.freeze({ x: 0, y: 0 });
 const PAUSE_ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M14 19V5h4v14zm-8 0V5h4v14z\"/></svg>";

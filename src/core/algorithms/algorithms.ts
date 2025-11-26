@@ -4,14 +4,14 @@ import {
     HighlightNodeCommand,
     SceneCommand
 } from "@/engine/commands/scenecommands";
-import { Scene } from "@/engine/scene";
-import { Graph } from "@/graph";
+import {Scene} from "@/engine/scene";
+import {Graph} from "@/graph";
 
 export function* DFS_Graph_Traversal(graph: Graph, start_node: string): Generator<SceneCommand> {
     const visited: string[] = [];
 
     //stores tuples (parent_node, curr_node)
-    const stack: [ string | null, string | null ][] = [ [ null, start_node ] ];
+    const stack: [string | null, string | null][] = [[null, start_node]];
 
     while (stack.length > 0) {
         const last_el = stack.pop()!;
@@ -27,7 +27,7 @@ export function* DFS_Graph_Traversal(graph: Graph, start_node: string): Generato
 
             for (const neigbour of graph.getNeighbors(curr)) {
                 if (!visited.includes(neigbour)) {
-                    stack.push([ curr, neigbour ]);
+                    stack.push([curr, neigbour]);
                 }
             }
         }

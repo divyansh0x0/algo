@@ -1,4 +1,4 @@
-import { keywords, TokenType, YASLToken } from "@/yasl/YASLToken";
+import {keywords, TokenType, YASLToken} from "@/core/yasl/YASLToken";
 
 export interface LexerError {
     message: string;
@@ -9,16 +9,17 @@ export interface LexerError {
 
 export class Lexer {
     private LineMap: number[] = [];
-    private tokens_list       = Array<YASLToken>();
-    private curr_line         = 0;
-    private curr_col          = 0;
-    private curr_read_index   = 0;
-    private start_read_index  = 0;
-    private next_read_index   = 0;
-    private whitespace_regex  = /\s/;
+    private tokens_list = Array<YASLToken>();
+    private curr_line = 0;
+    private curr_col = 0;
+    private curr_read_index = 0;
+    private start_read_index = 0;
+    private next_read_index = 0;
+    private whitespace_regex = /\s/;
     private is_analysis_complete = false;
 
-    constructor(private text: string, private tokenise_whitespaces = false) {}
+    constructor(private text: string, private tokenise_whitespaces = false) {
+    }
 
     getTokens(): YASLToken[] {
         while (!this.isEOF()) {
@@ -207,10 +208,10 @@ export class Lexer {
 
 
         const error: LexerError = {
-            column : this.curr_col,
-            line   : this.curr_line,
+            column: this.curr_col,
+            line: this.curr_line,
             message: msg,
-            source : token_value ? token_value : this.text.slice(this.start_read_index, this.next_read_index)
+            source: token_value ? token_value : this.text.slice(this.start_read_index, this.next_read_index)
         };
 
         this.addToken(TokenType.ERROR, error);
@@ -235,11 +236,11 @@ export class Lexer {
     private addToken(type: TokenType, obj: Object | null = null) {
         const lexeme = this.text.slice(this.start_read_index, this.next_read_index);
         this.tokens_list.push({
-            type  : type,
+            type: type,
             lexeme: lexeme,
             literal: obj,
-            start : this.start_read_index,
-            end   : this.next_read_index
+            start: this.start_read_index,
+            end: this.next_read_index
         });
     }
 
@@ -277,9 +278,9 @@ export class Lexer {
     }
 
     private consume_number(start_number: string): void {
-        let has_decimal        = false;
-        let num_str            = start_number;
-        let prev_char          = "";
+        let has_decimal = false;
+        let num_str = start_number;
+        let prev_char = "";
         let invalid_underscore = false;
         while (!this.isEOF()) {
             const c = this.peek();
@@ -302,7 +303,7 @@ export class Lexer {
                 this.consume();
                 has_decimal = true;
                 num_str += ".";
-                prev_char   = c;
+                prev_char = c;
             } else {
                 break;
             }
