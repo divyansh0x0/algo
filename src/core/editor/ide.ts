@@ -1,11 +1,11 @@
-import * as Editor                  from "@/editor";
-import { CaretManager }             from "@/editor/caret";
-import { KeyCodes, KeyManager }     from "@/editor/key-manager";
-import { IDESelection }             from "@/editor/selection";
-import { StringUtils }              from "@/utils/stringutils";
-import { Vmath }                    from "@/utils/vmath";
-import * as YASL                    from "@/yasl";
-import { Lexer, Parser, YASLToken } from "@/yasl";
+import * as Editor from "@/core/editor/index";
+import {CaretManager} from "@/core/editor/caret";
+import {KeyCodes, KeyManager} from "@/core/editor/key-manager";
+import {IDESelection} from "@/core/editor/selection";
+import {StringUtils} from "@/core/utils/stringutils";
+import {Vmath} from "@/core/utils/vmath";
+import * as YASL from "@/core/yasl";
+import {Lexer, Parser, YASLToken} from "@/core/yasl";
 import "./yasl-editor.scss";
 
 const TEST_CODE = `//Test for text highlight
@@ -32,16 +32,16 @@ function getMonospaceCharBox(el: HTMLElement) {
     // Set of chars to test ascenders/descenders/full caps
     const testChars = "MWXgyjq";
 
-    const span          = document.createElement("span");
-    span.textContent    = testChars;
+    const span = document.createElement("span");
+    span.textContent = testChars;
     span.style.visibility = "hidden";
     span.style.position = "absolute";
     span.style.whiteSpace = "pre";
 
     // Copy font styling from the div
-    const computed        = window.getComputedStyle(el);
-    span.style.font       = computed.font;
-    span.style.fontSize   = computed.fontSize;
+    const computed = window.getComputedStyle(el);
+    span.style.font = computed.font;
+    span.style.fontSize = computed.fontSize;
     span.style.fontFamily = computed.fontFamily;
     span.style.letterSpacing = computed.letterSpacing;
     span.style.fontWeight = computed.fontWeight;
@@ -71,7 +71,7 @@ function isInBounds(x: number, y: number, rect: DOMRect): any {
 
 export class IDERow {
     private insertion_col = 0;
-    private _raw: string  = "";
+    private _raw: string = "";
 
     constructor(private ide: IDE, private row_el: HTMLElement) {
         this.row_el.classList.add("yasl-editor-row");
@@ -79,35 +79,39 @@ export class IDERow {
 
     private _tokens: YASL.YASLToken[] = [];
 
-    get tokens(): YASLToken[] {return this._tokens;}
+    get tokens(): YASLToken[] {
+        return this._tokens;
+    }
 
     get raw(): string {
         return this._raw;
     }
 
 
-    private set tokens(value: YASLToken[]) {this._tokens = value;}
+    private set tokens(value: YASLToken[]) {
+        this._tokens = value;
+    }
 
     private set raw(str: string) {
-        this._raw   = str;
+        this._raw = str;
         const lexer = new Lexer(this._raw + "\n", true);
         this.tokens = lexer.getTokens();
     };
 
     render() {
-        const raw_text    = this.raw;
+        const raw_text = this.raw;
         let rendered_text = "";
         if (this.tokens.length > 0) {
             for (const token of this.tokens) {
                 if (token.type === YASL.TokenType.EOF)
                     break;
                 const text = raw_text.slice(token.start, token.end);
-                rendered_text += `<span class='${ YASL.StringifyTokenType(token.type) }'>${ text }</span>`;
+                rendered_text += `<span class='${YASL.StringifyTokenType(token.type)}'>${text}</span>`;
             }
         } else {
             rendered_text = raw_text;
         }
-        let x        = 1000;
+        let x = 1000;
         this.row_el.innerHTML = rendered_text;
         this._tokens = this.tokens;
 
@@ -124,11 +128,11 @@ export class IDERow {
         console.log(this.raw, total_indent);
         for (let i = 1; i < total_indent; i++) {
             const start_x = i * indent_width;
-            const mid_x   = start_x + indent_decoration_width;
-            const end_x   = mid_x;
-            gradient_str += `, transparent ${ start_x }px ,var(--yasl-ide-indent-color) ${ mid_x }px, transparent ${ end_x }px`;
+            const mid_x = start_x + indent_decoration_width;
+            const end_x = mid_x;
+            gradient_str += `, transparent ${start_x}px ,var(--yasl-ide-indent-color) ${mid_x}px, transparent ${end_x}px`;
         }
-        this.row_el.style.background = `linear-gradient(90deg ${ gradient_str } )`;
+        this.row_el.style.background = `linear-gradient(90deg ${gradient_str} )`;
     }
 
     goToStart(): void {
@@ -204,13 +208,13 @@ export class IDERow {
             this.raw = "";
         }
         if (start >= 0 && end >= 0 && start !== end) {
-            const left  = this.raw.slice(0, start);
+            const left = this.raw.slice(0, start);
             const right = this.raw.slice(end, this.raw.length);
             this.raw = left + right;
         } else if (start > 0 && end < 0) {
             const corrected_end = this.raw.length + end + 1;
-            const left          = this.raw.slice(0, start);
-            const right         = this.raw.slice(corrected_end, this.raw.length);
+            const left = this.raw.slice(0, start);
+            const right = this.raw.slice(corrected_end, this.raw.length);
             this.raw = left + right;
         }
         this.render();
@@ -229,10 +233,10 @@ export class IDERow {
             const rect = child.getBoundingClientRect();
             if (isInBounds(x, y, rect)) {
                 const start_x = rect.x;
-                const end_x   = rect.x + rect.width;
+                const end_x = rect.x + rect.width;
 
                 const anchor_col = this.ide.getColumnFromPoint(start_x);
-                const head_col   = this.ide.getColumnFromPoint(end_x);
+                const head_col = this.ide.getColumnFromPoint(end_x);
 
                 this.ide.selection.setAnchor(anchor_col, this.ide.active_row_index);
                 this.ide.selection.moveHead(head_col, this.ide.active_row_index);
@@ -251,19 +255,19 @@ export class IDERow {
 }
 
 export class IDE {
-    public readonly row_wrapper_rect         = new DOMRect();
-    public tab_width: number                 = 4;
+    public readonly row_wrapper_rect = new DOMRect();
+    public tab_width: number = 4;
     public readonly caret_manager: CaretManager;
-    private readonly editor_rows: IDERow[]   = [];
-    private readonly gutter_el               = document.createElement("div");
-    private readonly editor_el               = document.createElement("div");
-    public readonly selection: IDESelection  = new IDESelection(this.editor_el, this);
-    private readonly row_wrapper             = document.createElement("div");
-    private readonly key_manager: KeyManager = new KeyManager(this.editor_el, (key) => this.bindKeyboardEvents(key));
-    private is_mouse_down: boolean           = false;
-    private row_height: number               = 10;
-    private char_width: number               = 10;
-    private _active_row_index: number        = 0;
+    private readonly editor_rows: IDERow[] = [];
+    private readonly gutter_el = document.createElement("div");
+    private readonly editor_el = document.createElement("div");
+    public readonly selection: IDESelection = new IDESelection(this.editor_el, this);
+    private readonly row_wrapper = document.createElement("div");
+    private readonly key_manager: KeyManager = new KeyManager(this.editor_el, (key) => this.bindKeyboardEvents(key.toLowerCase()));
+    private is_mouse_down: boolean = false;
+    private row_height: number = 10;
+    private char_width: number = 10;
+    private _active_row_index: number = 0;
 
     constructor(parent: HTMLElement) {
         this.createDomStructure(parent);
@@ -327,12 +331,12 @@ export class IDE {
         await document.fonts.ready;
 
         const computed = window.getComputedStyle(this.editor_el);
-        const fontStr  = `${ computed.fontSize } ${ computed.fontFamily }`;
+        const fontStr = `${computed.fontSize} ${computed.fontFamily}`;
         await document.fonts.load(fontStr);
 
         await new Promise(requestAnimationFrame);
 
-        const char_box   = getMonospaceCharBox(this.editor_el);
+        const char_box = getMonospaceCharBox(this.editor_el);
         const new_height = char_box.height;
 
         for (const row of this.editor_rows) {
@@ -345,7 +349,7 @@ export class IDE {
 
 
         const row_el = document.createElement("div");
-        const row    = new IDERow(this, row_el);
+        const row = new IDERow(this, row_el);
         row.setHeight(this.row_height);
         this.editor_rows.push(row);
         this.row_wrapper.appendChild(row_el);
@@ -427,17 +431,17 @@ export class IDE {
     updateIdeRect() {
         if (!this.editor_el)
             return;
-        const rect: DOMRect          = this.row_wrapper.getBoundingClientRect();
+        const rect: DOMRect = this.row_wrapper.getBoundingClientRect();
         this.row_wrapper_rect.height = rect.height;
-        this.row_wrapper_rect.width  = rect.width;
-        this.row_wrapper_rect.x      = rect.x;
-        this.row_wrapper_rect.y      = rect.y;
+        this.row_wrapper_rect.width = rect.width;
+        this.row_wrapper_rect.x = rect.x;
+        this.row_wrapper_rect.y = rect.y;
 
     }
 
     insertRowAfter(index: number): void {
         const old_row = this.editor_rows[index].getDomNode();
-        const row_el  = document.createElement("div");
+        const row_el = document.createElement("div");
         const new_row = new IDERow(this, row_el);
 
         new_row.setHeight(this.row_height);
@@ -481,7 +485,7 @@ export class IDE {
     }
 
     pasteString(str: string) {
-        let row_str   = "";
+        let row_str = "";
         let row_index = 0;
         for (const char of str) {
             if (char === "\n") {
@@ -516,7 +520,7 @@ export class IDE {
             text += row.raw + "\n";
         }
 
-        const lexer  = new Lexer(text);
+        const lexer = new Lexer(text);
         const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
 
         console.log(text);
@@ -528,13 +532,13 @@ export class IDE {
         if (!this.selection.isSelected())
             return;
         const start_pos = this.selection.getStart();
-        const end_pos   = this.selection.getEnd();
+        const end_pos = this.selection.getEnd();
 
         const start_line = start_pos.line;
-        const start_col  = start_pos.col;
+        const start_col = start_pos.col;
 
         const end_line = end_pos.line;
-        const end_col  = end_pos.col;
+        const end_col = end_pos.col;
         //
         if (start_line === end_line) {
             const row = this.editor_rows[start_line];
@@ -546,7 +550,7 @@ export class IDE {
 
 
         const start_row = this.editor_rows[start_line];
-        const end_row   = this.editor_rows[end_line];
+        const end_row = this.editor_rows[end_line];
 
         start_row.removeStr(start_col, -1);
         end_row.removeStr(0, end_col);
@@ -590,7 +594,7 @@ export class IDE {
 
     private moveCol(delta: -1 | 1): void {
         if (this.selection.isSelected()) {
-            const final_pos       = delta < 0 ? this.selection.getStart() : this.selection.getEnd();
+            const final_pos = delta < 0 ? this.selection.getStart() : this.selection.getEnd();
             this.active_row_index = final_pos.line;
             this.caret_manager.setColumn(final_pos.col);
         } else {
@@ -690,7 +694,7 @@ export class IDE {
                 if (Editor.isPrintableKey(key)) {
                     this.appendChar(key);
                 } else {
-                    console.log("unknown key handing over to IDE:", key);
+                    console.log("unknown key:", key);
                 }
                 break;
         }
@@ -704,8 +708,8 @@ export class IDE {
     private copyText(): void {
         let copied_text = "";
         if (this.selection.isSelected() && !this.selection.isOneRowSelected()) {
-            const start     = this.selection.getStart();
-            const end       = this.selection.getEnd();
+            const start = this.selection.getStart();
+            const end = this.selection.getEnd();
             const start_row = this.editor_rows[start.line];
             if (start.line === end.line) {
                 copied_text = start_row.raw.slice(start.col, end.col);
@@ -724,7 +728,7 @@ export class IDE {
 
         } else {
             const active_row = this.editor_rows[this.active_row_index];
-            copied_text      = active_row.raw;
+            copied_text = active_row.raw;
         }
 
 

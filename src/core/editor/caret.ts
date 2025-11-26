@@ -1,8 +1,8 @@
-import { IDERow } from "@/editor/ide";
-import { Vmath }  from "@/utils/vmath";
+import {IDERow} from "@/core/editor/ide";
+import {Vmath} from "@/core/utils/vmath";
 
 export class CaretManager {
-    private readonly spawned_carets: YASLCaret[]                     = [];
+    private readonly spawned_carets: YASLCaret[] = [];
     private is_typing_timer_id: ReturnType<typeof setTimeout> | null = null;
 
     private readonly primary_caret: YASLCaret;
@@ -59,14 +59,14 @@ export class CaretManager {
         this.primary_caret.setCharWidth(char_width);
         this.primary_caret.setLineHeight(line_height);
         console.log("IDE Font metrics updated from", this._char_width, "to", char_width);
-        this._char_width  = char_width;
+        this._char_width = char_width;
         this._line_height = line_height;
         this.primary_caret.updateCaretPosition();
     }
 
     moveColToWordEnd(): void {
         const tokens = this.primary_row.tokens;
-        const col    = this.primary_caret.column;
+        const col = this.primary_caret.column;
 
         for (const token of tokens) {
             // left to right lexical parsing means we do not need to check if col > token.start
@@ -89,7 +89,7 @@ export class CaretManager {
         if (this.is_typing_timer_id)
             clearTimeout(this.is_typing_timer_id);
         this.primary_caret.typing = true;
-        this.is_typing_timer_id   = setTimeout(() => {
+        this.is_typing_timer_id = setTimeout(() => {
             this.primary_caret.typing = false;
         }, 1000);
 
@@ -100,13 +100,13 @@ export class YASLCaret {
     private readonly caret = document.createElement("div");
 
     private char_width = 10;
-    private line_height       = 10;
+    private line_height = 10;
     private text_before_caret = "";
-    private _column                    = 0;
-    private _typing: boolean           = false;
+    private _column = 0;
+    private _typing: boolean = false;
     private row_el: HTMLElement | null = null;
 
-    private _row                       = 0;
+    private _row = 0;
 
     constructor(private parent: HTMLElement) {
         this.caret.classList.add("caret");
@@ -117,6 +117,7 @@ export class YASLCaret {
     get row(): number {
         return this._row;
     }
+
     get column(): number {
         return this._column;
     }
@@ -146,7 +147,7 @@ export class YASLCaret {
 
     updateCaretPosition() {
         if (this.row_el) {
-            this.caret.style.top  = (this.row_el.offsetTop).toString() + "px";
+            this.caret.style.top = (this.row_el.offsetTop).toString() + "px";
             this.caret.style.left = (this._column * this.char_width).toString() + "px";
         }
     }
@@ -158,7 +159,7 @@ export class YASLCaret {
     }
 
     setLineHeight(line_height: number): void {
-        this.line_height        = line_height;
+        this.line_height = line_height;
         this.caret.style.height = this.line_height + "px";
     }
 

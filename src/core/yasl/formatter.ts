@@ -1,4 +1,4 @@
-import { YASLNode, YASLNodeType } from "@/yasl/tree";
+import {YASLNode, YASLNodeType} from "@/core/yasl/tree";
 
 enum Colors {
     Reset = "\x1b[0m",
@@ -39,10 +39,10 @@ export class formatter {
         }
 
         function serialize(node: YASLNode): any {
-            const result: any = { type: formatter.formatNodeType(node.type) };
+            const result: any = {type: formatter.formatNodeType(node.type)};
 
             const entries = Object.entries(node);
-            for (const [ key, value ] of entries) {
+            for (const [key, value] of entries) {
                 if (key === "type" || key === "next_node") continue;
 
                 if (value && typeof value === "object") {
@@ -87,50 +87,50 @@ export class formatter {
 
         function render(node: YASLNode, indentLevel: number, prefixStr = "") {
             const indent = "  ".repeat(indentLevel);
-            const branch = prefixStr ? `${ prefixStr }└──` : "";
+            const branch = prefixStr ? `${prefixStr}└──` : "";
 
             if (indentLevel === 0) {
-                lines.push(`${ branch }[${ Colors.FgGreen }${ formatter.formatNodeType(node.type) }${ Colors.Reset }]`);
+                lines.push(`${branch}[${Colors.FgGreen}${formatter.formatNodeType(node.type)}${Colors.Reset}]`);
             }
 
             const entries = Object.entries(node);
-            for (const [ key, value ] of entries) {
+            for (const [key, value] of entries) {
                 if (key === "type" || key === "next_node") continue;
 
-                const label = `${ Colors.FgBlue }${ key }${ Colors.Reset }`;
+                const label = `${Colors.FgBlue}${key}${Colors.Reset}`;
                 const newPrefix = prefixStr + "  ";
 
                 if (value && typeof value === "object") {
                     if ("type" in value) {
                         // Child node
-                        lines.push(`${ newPrefix }├── ${ label }: [${ Colors.FgMagenta }${ formatter.formatNodeType(value.type) }${ Colors.Reset }]`);
+                        lines.push(`${newPrefix}├── ${label}: [${Colors.FgMagenta}${formatter.formatNodeType(value.type)}${Colors.Reset}]`);
                         render(value as YASLNode, indentLevel + 1, newPrefix + "│ ");
                     } else if ("lexeme" in value) {
-                        lines.push(`${ newPrefix }├── ${ label }: ${ value.lexeme }`);
+                        lines.push(`${newPrefix}├── ${label}: ${value.lexeme}`);
                     } else if (isIterable(value)) {
-                        lines.push(`${ newPrefix }├── ${ label }: [`);
+                        lines.push(`${newPrefix}├── ${label}: [`);
                         for (const item of value) {
                             if (item && typeof item === "object" && "type" in item) {
-                                lines.push(`${ newPrefix }│   ├── [${ Colors.FgMagenta }${ formatter.formatNodeType(item.type) }${ Colors.Reset }]`);
+                                lines.push(`${newPrefix}│   ├── [${Colors.FgMagenta}${formatter.formatNodeType(item.type)}${Colors.Reset}]`);
                                 const rendered = formatter.formatAst(item, indentLevel + 2);
                                 for (const l of rendered.split("\n")) {
-                                    lines.push(`${ newPrefix }│   │ ${ l }`);
+                                    lines.push(`${newPrefix}│   │ ${l}`);
                                 }
                             } else {
-                                lines.push(`${ newPrefix }│   ├── ${ JSON.stringify(item) }`);
+                                lines.push(`${newPrefix}│   ├── ${JSON.stringify(item)}`);
                             }
                         }
-                        lines.push(`${ newPrefix }│   ]`);
+                        lines.push(`${newPrefix}│   ]`);
                     } else {
-                        lines.push(`${ newPrefix }├── ${ label }: [unknown object]`);
+                        lines.push(`${newPrefix}├── ${label}: [unknown object]`);
                     }
                 } else {
-                    lines.push(`${ newPrefix }├── ${ label }: ${ value }`);
+                    lines.push(`${newPrefix}├── ${label}: ${value}`);
                 }
             }
 
             if (node.next_node) {
-                lines.push(`${ prefixStr }${ "=".repeat(40) } next_node ${ "=".repeat(40) }`);
+                lines.push(`${prefixStr}${"=".repeat(40)} next_node ${"=".repeat(40)}`);
                 render(node.next_node, indentLevel, prefixStr);
             }
         }

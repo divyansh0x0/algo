@@ -1,6 +1,7 @@
-import { Vector } from "@/utils/geometry";
+import {Vector} from "@/core/utils/geometry";
 
 const isPASSIVE = false;
+
 export enum MouseButton {
     Primary = 0,
     Auxiliary = 1,
@@ -25,8 +26,8 @@ export class Mouse {
         window.addEventListener("mouseup", this.onMouseUp as EventListener);
 
         // Touch events
-        window.addEventListener("touchstart", this.onTouchStart as EventListener, { passive: isPASSIVE });
-        window.addEventListener("touchmove", this.onTouchMove as EventListener, { passive: isPASSIVE });
+        window.addEventListener("touchstart", this.onTouchStart as EventListener, {passive: isPASSIVE});
+        window.addEventListener("touchmove", this.onTouchMove as EventListener, {passive: isPASSIVE});
         window.addEventListener("touchend", this.onTouchEnd as EventListener);
         window.addEventListener("touchcancel", this.onTouchEnd as EventListener);
     }

@@ -1,9 +1,9 @@
 import { Drawable } from "@/engine/components/drawable";
 import { Scene } from "@/engine/scene";
 import { ColorStates, ThemeManager } from "@/engine/theme";
-import { Vector } from "@/utils/geometry";
-import { QuadTreeNode } from "@/utils/quadtree";
-import { Vmath } from "@/utils/vmath";
+import {Vector} from "@/core/utils/geometry";
+import {QuadTreeNode} from "@/core/utils/quadtree";
+import {Vmath} from "@/core/utils/vmath";
 
 
 export class Node extends Drawable {

@@ -1,6 +1,6 @@
 import { Color } from "@/engine/color";
 import { Drawable } from "@/engine/components/drawable";
-import { Vmath } from "@/utils/vmath";
+import {Vmath} from "@/core/utils/vmath";
 
 
 function transition(curr_val: number, to_val: number, t: number, easing: (t: number) => number) {

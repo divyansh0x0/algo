@@ -3,7 +3,7 @@
  */
 
 
-import { formatter }                                                     from "@/yasl/formatter";
+import {formatter} from "@/core/yasl/formatter";
 import {
     IdentifierNode,
     YASLExpression,
@@ -13,8 +13,8 @@ import {
     YASLNodeTypeChecker,
     YASLProgram,
     YASLValueType
-}                                                                        from "@/yasl/tree";
-import { BinaryOperatorToken, TokenType, UnaryOperatorToken, YASLToken } from "@/yasl/YASLToken";
+} from "@/core/yasl/tree";
+import {BinaryOperatorToken, TokenType, UnaryOperatorToken, YASLToken} from "@/core/yasl/YASLToken";
 
 export interface ParserError {
     message: string;
@@ -60,31 +60,31 @@ function isOperator(token: YASLToken) {
     }
 }
 
-function getBindingPower(token_type: TokenType): [ number, number ] | null {
+function getBindingPower(token_type: TokenType): [number, number] | null {
     //right associative has lower right power while left associative has lower left power
     switch (token_type) {
         case TokenType.DOT:
-            return [ 100, 101 ];
+            return [100, 101];
 
         case TokenType.LPAREN:
-            return [ 90, 91 ];
+            return [90, 91];
         case TokenType.AND:
         case TokenType.OR:
-            return [ 80, 81 ];
+            return [80, 81];
         case TokenType.INCREMENT:
         case TokenType.DECREMENT:
-            return [ 80, -1 ];
+            return [80, -1];
         case TokenType.POWER:
-            return [ 30, 29 ];
+            return [30, 29];
         case TokenType.MULTIPLY:
         case TokenType.MODULO:
         case TokenType.DIVIDE:
-            return [ 20, 21 ];
+            return [20, 21];
         case TokenType.MINUS:
         case TokenType.PLUS:
-            return [ 10, 11 ];
+            return [10, 11];
         case TokenType.INLINE_ASSIGN:
-            return [ 1, 0 ];
+            return [1, 0];
 
         default:
             return null;
@@ -135,7 +135,7 @@ function isExpressionTerminator(type: TokenType): boolean {
 }
 
 function binarySearch(target: number, arr: number[]): number {
-    let low  = 0;
+    let low = 0;
     let high = arr.length - 1;
 
     while (low <= high) {
@@ -147,16 +147,17 @@ function binarySearch(target: number, arr: number[]): number {
     return -1; // not found
 }
 
-function indexToLineCol(offset: number, line_map: number[]): [ number, number ] {
+function indexToLineCol(offset: number, line_map: number[]): [number, number] {
     let line = binarySearch(offset, line_map);
-    let col  = offset - line_map[line];
-    return [ line, col ];
+    let col = offset - line_map[line];
+    return [line, col];
 }
+
 export class Parser {
     private next_index = 0;
     private parenthesis_count = 0;
 
-    private program      = new YASLProgram();
+    private program = new YASLProgram();
     private node_factory = new YASLNodeFactory();
 
     private errors = Array<ParserError>();
@@ -232,17 +233,17 @@ export class Parser {
     private errorToken(msg: string, token: YASLToken | null = null) {
 
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
-        const [ line1, col1 ] = indexToLineCol(error_token.start, this.line_map);
-        const [ line2, col2 ] = indexToLineCol(error_token.end, this.line_map);
+        const [line1, col1] = indexToLineCol(error_token.start, this.line_map);
+        const [line2, col2] = indexToLineCol(error_token.end, this.line_map);
 
         this.errors.push({
-            message   : msg,
-            token     : error_token,
-            highlight : "",
-            start_col : col1,
-            end_col   : col2,
+            message: msg,
+            token: error_token,
+            highlight: "",
+            start_col: col1,
+            end_col: col2,
             start_line: line1,
-            end_line  : line2
+            end_line: line2
         });
         this.synchronize();
     }
@@ -331,7 +332,7 @@ export class Parser {
 
         this.expect(TokenType.ASSIGN, "Invalid token");
         const value_node = this.consumeExpression();
-        const node                           = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.end_index : identifier.end);
+        const node = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.end_index : identifier.end);
         this.program.addStatement(node);
     }
 
@@ -372,7 +373,7 @@ export class Parser {
             case TokenType.STRING:
                 return this.node_factory.getLiteralNode(token.literal as string, YASLValueType.string, token.start, token.end);
             default:
-                this.errorToken(`Unexpected token in nud: ${ token.lexeme }`, token);
+                this.errorToken(`Unexpected token in nud: ${token.lexeme}`, token);
                 break;
         }
         return null;
@@ -383,8 +384,8 @@ export class Parser {
      * @param left_node
      * @param bp
      */
-    private led(op_token: YASLToken, left_node: YASLNode, bp: [ number, number ]): YASLExpression | null {
-        const [ , right_bp ] = bp;
+    private led(op_token: YASLToken, left_node: YASLNode, bp: [number, number]): YASLExpression | null {
+        const [, right_bp] = bp;
 
 
         if (op_token.type === TokenType.LPAREN) {
@@ -429,7 +430,7 @@ export class Parser {
         //Assignment
         if (op_token.type === TokenType.INLINE_ASSIGN) {
             if (!YASLNodeTypeChecker.isLValue(left_node)) {
-                this.errorToken(`${ formatter.formatAstJSON(left_node) } is an invalid LValue`, op_token);
+                this.errorToken(`${formatter.formatAstJSON(left_node)} is an invalid LValue`, op_token);
                 return null;
             }
             return this.node_factory.getAssignmentExpression(op_token, left_node, right_node);
@@ -472,7 +473,7 @@ export class Parser {
 
             const bp = getBindingPower(op_token.type);
             if (!bp) break;
-            const [ left_binding_power ] = bp;
+            const [left_binding_power] = bp;
 
             if (left_binding_power < min_binding_power) break;
 

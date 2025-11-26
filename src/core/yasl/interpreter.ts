@@ -1,4 +1,4 @@
-import { Environment, EnvironmentReturnCode } from "@/yasl/environment";
+import {Environment, EnvironmentReturnCode} from "@/core/yasl/environment";
 import {
     BinaryExpression,
     CallNode,
@@ -15,8 +15,8 @@ import {
     YASLNodeType,
     YASLNodeTypeChecker,
     YASLValueType
-}                                             from "@/yasl/tree";
-import { TokenType }                          from "@/yasl/YASLToken";
+} from "@/core/yasl/tree";
+import {TokenType} from "@/core/yasl/YASLToken";
 
 interface StatementResult {
     line: number,
@@ -31,7 +31,8 @@ export class Interpreter {
     private statement_callback: null | StatementResultCallback = null;
     private line: number = 0;
 
-    constructor() {}
+    constructor() {
+    }
 
     attachStatementCallback(callback: StatementResultCallback | null) {
         this.statement_callback = callback;

@@ -1,4 +1,4 @@
-import { Vector } from "@/utils/geometry";
+import {Vector} from "@/core/utils/geometry";
 
 interface ArgumentDefinition {
     name: string;

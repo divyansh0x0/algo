@@ -12,12 +12,12 @@ export function isPrintableKey(key: string) {
 }
 
 export function getLetterWidthDOM(letter: string, font = "16px monospace") {
-    const span          = document.createElement("span");
+    const span = document.createElement("span");
     span.style.visibility = "hidden";
     span.style.position = "absolute";
     span.style.whiteSpace = "pre"; // preserves exact width
-    span.style.font     = font;
-    span.textContent    = letter;
+    span.style.font = font;
+    span.textContent = letter;
 
     document.body.appendChild(span);
     const width = span.getBoundingClientRect().width;

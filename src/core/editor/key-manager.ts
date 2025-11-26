@@ -1,25 +1,25 @@
 export enum KeyCodes {
-    Alt         = "alt",
-    CapsLock    = "capsLock",
-    Ctrl        = "control",
-    Backspace   = "backspace",
-    Delete      = "delete",
-    Undefined   = "inidentified",
-    Shift       = "shift",
-    Enter       = "enter",
-    Tab         = "tab",
-    Space       = " ",
-    ARROW_DOWN  = "arrowdown",
-    ARROW_UP    = "arrowup",
-    ARROW_LEFT  = "arrowleft",
+    Alt = "alt",
+    CapsLock = "capsLock",
+    Ctrl = "control",
+    Backspace = "backspace",
+    Delete = "delete",
+    Undefined = "inidentified",
+    Shift = "shift",
+    Enter = "enter",
+    Tab = "tab",
+    Space = " ",
+    ARROW_DOWN = "arrowdown",
+    ARROW_UP = "arrowup",
+    ARROW_LEFT = "arrowleft",
     ARROW_RIGHT = "arrowright",
-    Home        = "home",
-    End         = "end",
-    COPY        = "ctrl+c",
+    Home = "home",
+    End = "end",
+    COPY = "ctrl+c",
 }
 
 export class KeyManager {
-    private is_shortcut_key             = false;
+    private is_shortcut_key = false;
     private prev_keys_pressed: string[] = [];
 
     constructor(el: HTMLElement, private keybinding_handler: (key: string) => any) {

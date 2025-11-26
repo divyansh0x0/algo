@@ -2,7 +2,7 @@ import { ColorAnimation } from "@/engine/animation";
 import { Color } from "@/engine/color";
 import { Scene } from "@/engine/scene";
 import { ColorStates, ThemeManager } from "@/engine/theme";
-import { Vector } from "@/utils/geometry";
+import {Vector} from "@/core/utils/geometry";
 
 
 export abstract class Drawable {

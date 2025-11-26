@@ -1,4 +1,4 @@
-import { Vmath } from "@/utils/vmath";
+import {Vmath} from "@/core/utils/vmath";
 
 function isValidHexColor(color: string) {
     //adding 1 to 3,4,6,8 valid hex lengths to count for # in the beginning
