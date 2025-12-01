@@ -1,0 +1,13 @@
+#yasl-keyboard {
+    width: 10px;
+    height: 100px;
+    background: #000;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    transition: width 100ms linear;
+
+    &.open {
+        width: 90vw;
+    }
+}
