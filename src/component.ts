@@ -1,3 +1,0 @@
-class SliderElement extends HTMLElement {
-
-}
