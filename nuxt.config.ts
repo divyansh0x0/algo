@@ -11,10 +11,11 @@ const cssFiles = fs.readdirSync(cssDir)
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  ssr:true,
+  ssr: false,
   nitro:{
-    preset:'github_pages',
+    preset: 'static',
   },
+
   devtools: { enabled: true },
   css: cssFiles,
   modules: [
@@ -26,6 +27,7 @@ export default defineNuxtConfig({
   ],
 
   app:{
+    baseURL: '/algo/',
     head:{
       title: 'Algorithm Visualizer',
       htmlAttrs: {
