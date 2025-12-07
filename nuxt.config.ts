@@ -8,13 +8,13 @@ const cssFiles = fs.readdirSync(cssDir)
     .filter(f => f.endsWith('.css'))
     .map(f => `~/assets/css/${f}`)
 
-
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  ssr:true,
+  ssr: false,
   nitro:{
-    preset:'github_pages',
+    preset: 'static',
   },
+
   devtools: { enabled: true },
   css: cssFiles,
   modules: [
@@ -22,10 +22,13 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/scripts',
     '@nuxt/ui',
-    '@nuxt/test-utils'
+    '@nuxt/test-utils',
   ],
-
+  vite: {
+    plugins: []
+  },
   app:{
+    baseURL: '/algo/',
     head:{
       title: 'Algorithm Visualizer',
       htmlAttrs: {

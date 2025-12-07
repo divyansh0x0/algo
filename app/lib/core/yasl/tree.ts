@@ -1,4 +1,4 @@
-import {BinaryOperatorToken, UnaryOperatorToken, YASLToken} from "@/lib/core/yasl/YASLToken";
+import {type BinaryOperatorToken, type UnaryOperatorToken, type YASLToken} from "@/lib/core/yasl/YASLToken";
 
 
 export type YASLExpression =

@@ -5,7 +5,7 @@ import {IDESelection} from "@/lib/core/editor/selection";
 import {StringUtils} from "@/lib/core/utils/stringutils";
 import {Vmath} from "@/lib/core/utils/vmath";
 import * as YASL from "@/lib/core/yasl";
-import {Lexer, Parser, YASLToken} from "@/lib/core/yasl";
+import {Lexer, Parser, type YASLToken} from "@/lib/core/yasl";
 import "./yasl-editor.scss";
 
 const TEST_CODE = `//Test for text highlight
@@ -277,7 +277,7 @@ export class IDE {
         this.initialize().then(() => {
             this.editor_el.classList.add("ready");
         });
-        this.caret_manager = new CaretManager(this.editor_el, this.editor_rows[this.active_row_index]);
+        this.caret_manager = new CaretManager(this.editor_el, this.getEditorRow(this.active_row_index));
     }
 
     private createDomStructure(parent: HTMLElement) {
@@ -301,10 +301,10 @@ export class IDE {
     set active_row_index(new_row_index: number) {
         if (new_row_index === undefined || new_row_index === null)
             return;
-        const old_editor_row = this.editor_rows[this.active_row_index];
+        const old_editor_row = this.getEditorRow(this.active_row_index);
 
         const new_index = Vmath.clamp(new_row_index, 0, this.editor_rows.length - 1);
-        const new_editor_row = this.editor_rows[new_index];
+        const new_editor_row = this.getEditorRow(new_index);
 
         old_editor_row.deactivate();
         new_editor_row.activate();
@@ -440,7 +440,7 @@ export class IDE {
     }
 
     insertRowAfter(index: number): void {
-        const old_row = this.editor_rows[index].getDomNode();
+        const old_row = this.getEditorRow(index).getDomNode();
         const row_el = document.createElement("div");
         const new_row = new IDERow(this, row_el);
 
@@ -467,10 +467,13 @@ export class IDE {
     getMaxColumn(row: number): number {
         if (row >= this.editor_rows.length)
             return 0;
-        const editor_row = this.editor_rows[row];
+        const editor_row = this.getEditorRow(row);
         return editor_row.raw.length;
     }
 
+    getEditorRow(row: number): IDERow {
+        return this.editor_rows[row % this.editor_rows.length]!;
+    }
     getTotalRowIndices(): number {
         return this.editor_rows.length - 1;
     }
@@ -494,7 +497,7 @@ export class IDE {
                     this.moveDown();
                 }
 
-                const row = this.editor_rows[row_index];
+                const row = this.getEditorRow(row_index);
                 row.setText(row_str);
                 row_str = "";
                 row_index++;
@@ -506,17 +509,17 @@ export class IDE {
         if (row_str.length > 0) {
             this.insertRowAfterCurrent();
             this.moveDown();
-            const row = this.editor_rows[row_index];
+            const row = this.getEditorRow(row_index);
             row.setText(row_str);
             row_str = "";
         }
-        this.editor_rows[this.active_row_index].goToEnd();
+        this.getEditorRow(this.active_row_index).goToEnd();
     }
 
     run() {
         let text = "";
         for (let i = 0; i < this.editor_rows.length; i++) {
-            const row = this.editor_rows[i];
+            const row = this.getEditorRow(i);
             text += row.raw + "\n";
         }
 
@@ -549,8 +552,8 @@ export class IDE {
         }
 
 
-        const start_row = this.editor_rows[start_line];
-        const end_row = this.editor_rows[end_line];
+        const start_row = this.getEditorRow(start_line);
+        const end_row = this.getEditorRow(end_line);
 
         start_row.removeStr(start_col, -1);
         end_row.removeStr(0, end_col);
@@ -604,7 +607,7 @@ export class IDE {
     }
 
     private appendChar(key: string): void {
-        const active_row = this.editor_rows[this.active_row_index];
+        const active_row = this.getEditorRow(this.active_row_index);
         this.deleteSelection();
         active_row.appendStr(key);
         this.caret_manager.moveCol(key.length);
@@ -615,12 +618,12 @@ export class IDE {
             this.deleteSelection();
             return;
         }
-        const active_row = this.editor_rows[this.active_row_index];
+        const active_row = this.getEditorRow(this.active_row_index);
         switch (dir) {
             case -1:
                 active_row.backspaceChar();
                 if (this.caret_manager.isAtStart() && !this.isFirstRowActive()) {
-                    const prev_row = this.editor_rows[this.active_row_index - 1];
+                    const prev_row = this.getEditorRow(this.active_row_index - 1);
                     this.active_row_index -= 1;
                     this.caret_manager.setColumn(-1);
                     prev_row.appendStr(active_row.raw);
@@ -629,7 +632,7 @@ export class IDE {
                 break;
             case 1:
                 if (this.caret_manager.isAtEnd() && !this.isLastRowActive()) {
-                    const next_row = this.editor_rows[this.active_row_index + 1];
+                    const next_row = this.getEditorRow(this.active_row_index + 1);
                     active_row.appendStr(next_row.raw);
                     this.deleteRow(this.active_row_index + 1);
 
@@ -649,7 +652,7 @@ export class IDE {
 
     private bindKeyboardEvents(key: KeyCodes | string) {
         console.log(this);
-        const active_row = this.editor_rows[this.active_row_index];
+        const active_row = this.getEditorRow(this.active_row_index);
         switch (key) {
             case KeyCodes.Backspace:
                 this.deleteChar(-1);
@@ -710,7 +713,7 @@ export class IDE {
         if (this.selection.isSelected() && !this.selection.isOneRowSelected()) {
             const start = this.selection.getStart();
             const end = this.selection.getEnd();
-            const start_row = this.editor_rows[start.line];
+            const start_row = this.getEditorRow(start.line);
             if (start.line === end.line) {
                 copied_text = start_row.raw.slice(start.col, end.col);
             } else {
@@ -718,16 +721,16 @@ export class IDE {
                 copied_text = start_row.raw.slice(start.col, start_row.raw.length);
 
                 for (let i = start.line + 1; i < end.line; i++) {
-                    const row = this.editor_rows[i];
+                    const row = this.getEditorRow(i);
                     copied_text += "\n" + row.raw;
                 }
-                const end_row = this.editor_rows[end.line];
+                const end_row = this.getEditorRow(end.line);
                 copied_text += "\n" + end_row.raw.slice(0, end.col);
             }
 
 
         } else {
-            const active_row = this.editor_rows[this.active_row_index];
+            const active_row = this.getEditorRow(this.active_row_index);
             copied_text = active_row.raw;
         }
 

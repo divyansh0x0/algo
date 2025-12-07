@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import {onMounted} from "vue";
+import {useThemeManager} from "~/composables/useThemeManager";
 
-onMounted(async () => {
-    const {ThemeManager, ThemeType} = await import("@/lib/engine");
-    ThemeManager.setThemeType(ThemeType.AUTO);
-});
+useThemeManager();
 </script>
 <template>
-    <main class="page-content">
+    <ButtonTheme/>
+    <main :class="$colorMode.value" class="h-screen w-screen overflow-hidden">
             <NuxtPage />
     </main>
 </template>
 <style scoped>
-.page-content {
-    height: 100vh;
-}
 </style>

@@ -1,5 +1,6 @@
 import "./yasl-editor.scss";
 
+export * from "./ide";
 
 export function isPrintableKey(key: string) {
     // Exclude special keys like "Shift", "Enter", etc.
@@ -7,7 +8,6 @@ export function isPrintableKey(key: string) {
         // Checks if it's a visible character (not control chars)
         return key.match(/[\p{L}\p{N}\p{P}\p{S}\p{Z}]/u);
     }
-
     return false;
 }
 
