@@ -7,7 +7,7 @@
     top: 20%;
     left: 10%;
     z-index: 2;
-    background-color: var(--surface-bg-color);
+    background-color: var(--bg-surface);
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);

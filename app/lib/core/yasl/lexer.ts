@@ -1,4 +1,4 @@
-import {keywords, TokenType, YASLToken} from "@/lib/core/yasl/YASLToken";
+import {keywords, TokenType, type YASLToken} from "@/lib/core/yasl/YASLToken";
 
 export interface LexerError {
     message: string;
@@ -201,7 +201,7 @@ export class Lexer {
     }
 
     private peek() {
-        return this.isEOF() ? "\0" : this.text[this.next_read_index];
+        return this.isEOF() ? "\0" : this.text[this.next_read_index]!;
     }
 
     private reportError(msg: string, token_value: string | null = null) {
@@ -221,7 +221,7 @@ export class Lexer {
     private consume(): string {
         if (this.isEOF())
             return "\0";
-        const c = this.text[this.next_read_index];
+        const c = this.text[this.next_read_index]!;
         // subtract 2, because I want the index before current index, that is twice before next index
         if (c === "\n") {
             this.curr_line++;

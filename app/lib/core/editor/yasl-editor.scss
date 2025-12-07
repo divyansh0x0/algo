@@ -12,30 +12,30 @@
     }
 }
 
-:root {
-    --yasl-editor-bg: rgba(255, 255, 255, 0.03);
-    --yasl-row-active-bg: rgba(255, 255, 255, 0.03);
-    --yasl-text-color: #a6a6a6;
-
-    --yasl-editor-selection-color: rgba(70, 136, 255, 0.42);
-
-    --yasl-identifier-color: #7bfbdd;
-    --yasl-symbol-color: #dccaca;
-    --yasl-operator-color: var(--yasl-text-color);
-    --yasl-comment-color: #616161;
-    --yasl-keyword-color: #e4ab85;
-    --yasl-whitespace-color: #fff;
-    --yasl-string-color: #a8ff8d;
-    --yasl-error-color: #ef4848;
-    --yasl-ide-indent-color: rgba(255, 255, 255, 0.23);
-
-    --yasl-repl-border-radius: 10px;
-    --yasl-editor-font-size: 1rem;
-    --yasl-caret-color: #fff;
-    --yasl-loader-bg: rgb(53, 53, 53);
-    --yasl-editor-line-height: 2;
-
-}
+//:root {
+//    --yasl-editor-bg: rgba(255, 255, 255, 0.03);
+//    --yasl-row-active-bg: rgba(255, 255, 255, 0.03);
+//    --yasl-text-color: #a6a6a6;
+//
+//    --yasl-editor-selection-color: rgba(70, 136, 255, 0.42);
+//
+//    --yasl-identifier-color: #7bfbdd;
+//    --yasl-symbol-color: #dccaca;
+//    --yasl-operator-color: var(--yasl-text-color);
+//    --yasl-comment-color: #616161;
+//    --yasl-keyword-color: #e4ab85;
+//    --yasl-whitespace-color: #fff;
+//    --yasl-string-color: #a8ff8d;
+//    --yasl-error-color: #ef4848;
+//    --yasl-ide-indent-color: rgba(255, 255, 255, 0.23);
+//
+//    --yasl-repl-border-radius: 10px;
+//    --yasl-editor-font-size: 1rem;
+//    --yasl-caret-color: #fff;
+//    --yasl-loader-bg: rgb(53, 53, 53);
+//    --yasl-editor-line-height: 2;
+//
+//}
 
 .yasl-editor-wrapper {
     width: 100%;

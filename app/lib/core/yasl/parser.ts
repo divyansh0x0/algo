@@ -5,16 +5,16 @@
 
 import {formatter} from "@/lib/core/yasl/formatter";
 import {
-    IdentifierNode,
-    YASLExpression,
-    YASLNode,
+    type IdentifierNode,
+    type YASLExpression,
+    type YASLNode,
     YASLNodeFactory,
     YASLNodeType,
     YASLNodeTypeChecker,
     YASLProgram,
     YASLValueType
 } from "@/lib/core/yasl/tree";
-import {BinaryOperatorToken, TokenType, UnaryOperatorToken, YASLToken} from "@/lib/core/yasl/YASLToken";
+import {type BinaryOperatorToken, TokenType, type UnaryOperatorToken, type YASLToken} from "@/lib/core/yasl/YASLToken";
 
 export interface ParserError {
     message: string;
@@ -141,7 +141,7 @@ function binarySearch(target: number, arr: number[]): number {
     while (low <= high) {
         const mid = (low + high) >>> 1; // unsigned right shift = fast floor divide by 2
         if (arr[mid] === target) return mid;
-        if (arr[mid] < target) low = mid + 1;
+        if (arr[mid]! < target) low = mid + 1;
         else high = mid - 1;
     }
     return -1; // not found
@@ -149,7 +149,7 @@ function binarySearch(target: number, arr: number[]): number {
 
 function indexToLineCol(offset: number, line_map: number[]): [number, number] {
     let line = binarySearch(offset, line_map);
-    let col = offset - line_map[line];
+    let col = offset - line_map[line]!;
     return [line, col];
 }
 
@@ -231,28 +231,32 @@ export class Parser {
     }
 
     private errorToken(msg: string, token: YASLToken | null = null) {
-
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
-        const [line1, col1] = indexToLineCol(error_token.start, this.line_map);
-        const [line2, col2] = indexToLineCol(error_token.end, this.line_map);
+        if (error_token != null) {
+            const [line1, col1] = indexToLineCol(error_token.start, this.line_map);
+            const [line2, col2] = indexToLineCol(error_token.end, this.line_map);
+            this.errors.push({
+                message: msg,
+                token: error_token,
+                highlight: "",
+                start_col: col1,
+                end_col: col2,
+                start_line: line1,
+                end_line: line2
+            });
+        }
 
-        this.errors.push({
-            message: msg,
-            token: error_token,
-            highlight: "",
-            start_col: col1,
-            end_col: col2,
-            start_line: line1,
-            end_line: line2
-        });
+
         this.synchronize();
     }
 
     private consume(): YASLToken {
 
         const token = this.tokens[this.next_index];
-        this.next_index++;
-        return token;
+        if (this.next_index < this.tokens.length - 1) {
+            this.next_index++;
+        }
+        return token!;
     }
 
     /**
@@ -262,10 +266,10 @@ export class Parser {
         return this.peek().type === token_type;
     }
 
-    private peek() {
+    private peek(): YASLToken {
         if (this.next_index >= this.tokens.length)
-            return this.tokens[this.tokens.length - 1];
-        return this.tokens[this.next_index];
+            return this.tokens[this.tokens.length - 1]!;
+        return this.tokens[this.next_index]!;
     }
 
     /**

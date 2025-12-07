@@ -1,26 +1,31 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, nextTick } from 'vue'
+import {nextTick, onBeforeUnmount, onMounted} from 'vue'
 import {useVisualizerClient} from "~/composables/useVisualizer.client";
+
 const algorithm = 'DFS Graph Traversal'
 let updateCanvasSize : () => void;
-
+const canvas = ref<HTMLCanvasElement | null>(null);
+const container = ref<HTMLDivElement | null>(null);
+let observer: ResizeObserver | null = null;
 onMounted(async () => {
     const visualizer_data = useVisualizerClient();
+    if (!canvas.value || !container.value) {
+        return
+    }
     if(!import.meta.client) return;
     const {Scene, Visualizer, Graph} = await import("@/lib/engine");
-    const canvas = document.getElementById('visualizer-canvas')! as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('visualizer-canvas-container')! as HTMLDivElement;
+    const ctx = canvas.value.getContext('2d');
     if(!ctx) return;
 
     if(!visualizer_data.value.scene){
         visualizer_data.value.scene = new Scene(ctx);
     }
     updateCanvasSize= ()=> {
-        if (!ctx || !container) return
-
+        if (!canvas.value || !ctx || !container.value) {
+            return
+        }
         const ratio = window.devicePixelRatio || 1
-        const rect = container.getBoundingClientRect()
+        const rect = container.value.getBoundingClientRect()
 
         const prevTransform = ctx.getTransform()
         ctx.canvas.width = Math.round(rect.width * ratio)
@@ -29,7 +34,7 @@ onMounted(async () => {
         visualizer_data.value.scene.render();
     }
     await nextTick()
-    if (!canvas) return
+    if (!canvas.value) return
 
     if (ctx) {
         updateCanvasSize()
@@ -38,29 +43,33 @@ onMounted(async () => {
     visualizer.load(Graph.clustered_graph);
     visualizer.start();
     visualizer_data.value.scene.start();
-    window.addEventListener('resize', updateCanvasSize)
-
+    // container.value.addEventListener('resize', updateCanvasSize)
+    observer = new ResizeObserver(updateCanvasSize);
+    observer.observe(container.value);
 })
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', updateCanvasSize)
+    if (!container.value) return;
+    observer?.unobserve(container.value);
 })
 </script>
 
 <template>
-    <div id="visualizer-canvas-container">
+    <div ref="container" style="position: relative;height: 100%; width: 100%">
         <canvas
-            ref="canvasRef"
-            id="visualizer-canvas"
+            ref="canvas"
             v-bind="$attrs"
-            width="100"
-            height="100"
         ></canvas>
+        <OverlayToolbar class="overlay-toolbar"/>
+
     </div>
 </template>
 
 <style scoped>
-#visualizer-canvas-container {
-    height: 100%;
+.overlay-toolbar {
+    width: 100%;
+    height: fit-content;
+    position: absolute;
+    padding: var(--padding-sm);
 }
 </style>

@@ -1,7 +1,6 @@
 import {Animator, EasingFunctions, ValueAnimation} from "@/lib/engine/animation";
 import {Drawable} from "@/lib/engine/components/drawable";
 import {Edge} from "@/lib/engine/components/edge";
-import {Logger} from "@/lib/engine/components/logger";
 import {Node} from "@/lib/engine/components/node";
 import {ThemeManager} from "@/lib/engine/theme";
 import {Size, Vector} from "@/lib/core/utils/geometry";
@@ -264,22 +263,22 @@ export class Scene {
             -this.camera.y * dpr * this.camera.zoom
         );
 
-        if (!this.camera.camera_updated && !this.bounds_updated && !this.repaint_drawables) {
-            if (!this.last_draw_image) {
-                this.ctx.canvas.toBlob((blob) => {
-                    if (!blob)
-                        return;
-                    this.last_draw_image = new Image();
-                    this.last_draw_image.loading = "eager";
-                    this.last_draw_image.src = URL.createObjectURL(blob);
-                }, "image/png", 1);
-            } else if (this.last_draw_image.complete) {
-                const point = this.getTransformedPoint(0, 0);
-                const inv_scale = 1 / (this.camera.zoom * dpr);
-                this.ctx.drawImage(this.last_draw_image, point.x, point.y, this.ctx.canvas.width * inv_scale, this.ctx.canvas.height * inv_scale);
-                return;
-            }
-        }
+        // if (!this.camera.camera_updated && !this.bounds_updated && !this.repaint_drawables) {
+        //     if (!this.last_draw_image) {
+        //         this.ctx.canvas.toBlob((blob) => {
+        //             if (!blob)
+        //                 return;
+        //             this.last_draw_image = new Image();
+        //             this.last_draw_image.loading = "eager";
+        //             this.last_draw_image.src = URL.createObjectURL(blob);
+        //         }, "image/png", 1);
+        //     } else if (this.last_draw_image.complete) {
+        //         const point = this.getTransformedPoint(0, 0);
+        //         const inv_scale = 1 / (this.camera.zoom * dpr);
+        //         this.ctx.drawImage(this.last_draw_image, point.x, point.y, this.ctx.canvas.width * inv_scale, this.ctx.canvas.height * inv_scale);
+        //         return;
+        //     }
+        // }
         if (this.camera.camera_updated || this.bounds_updated || this.repaint_drawables) {
             this.last_draw_image = null;
         }

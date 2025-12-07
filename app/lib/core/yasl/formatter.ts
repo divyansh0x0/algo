@@ -1,4 +1,4 @@
-import {YASLNode, YASLNodeType} from "@/lib/core/yasl/tree";
+import {type YASLNode, YASLNodeType} from "@/lib/core/yasl/tree";
 
 enum Colors {
     Reset = "\x1b[0m",

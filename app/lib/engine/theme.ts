@@ -1,9 +1,9 @@
-import { Color } from "@/lib/engine/color";
+import {Color} from "@/lib/engine/color";
 
 export enum ThemeType {
-    LIGHT,
-    DARK,
-    AUTO
+    LIGHT = "light",
+    DARK = "dark",
+    AUTO = "auto"
 }
 
 export enum ColorStates {
@@ -89,6 +89,7 @@ export const ThemeManager = (function () {
             themeUpdated();
 
         },
+
 
         /**
          * Return the css bg color property for item_name
