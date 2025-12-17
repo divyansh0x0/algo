@@ -12,18 +12,18 @@ const {theme, toggleTheme} = useThemeManager();
 
 <style scoped>
 button {
+    border-radius: var(--border-radius-circle);
     font-size: 2em;
     min-height: 30px;
-    width: fit-content;
     min-width: 30px;
-    z-index: 99;
-    position: fixed;
-    top: var(--spacing-lg);
-    right: var(--spacing-lg);
     padding: var(--padding-sm);
-    border-radius: var(--border-radius-circle);
-    background-color: var(--color-overlay);
-    color: var(--text-on-background-color);
+    position: fixed;
+    right: var(--spacing-lg);
+    top: var(--spacing-lg);
+    width: fit-content;
+    z-index: 99;
+    //background-color: var(--color-overlay);
+    //color: var(--text-on-background-color);
 }
 
 .icon {

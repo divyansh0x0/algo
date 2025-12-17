@@ -1,130 +1,87 @@
 :root {
-    --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
-    --debug-color: #f00;
-
-    /* Common static variables */
-    --border-radius: 10px;
-    --border-radius-sm: 0.5em;
-    --border-radius-md: 2em;
-    --border-radius-lg: 4em;
-    --border-radius-circle: 99999px;
-
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --transition-speed: 0.3s;
-
-    /* Spacing */
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 30px;
-    /* Padding */
-    --padding-sm: 0.5em;
-    --padding-md: 1em;
-    --padding-lg: 1.5em;
-
-    /* Base accent color */
     --color-accent: #2962FF; /* Blue 800 */
+
 }
 
 [theme="light"] {
-    --color-overlay: rgba(0, 0, 0, 0.05);
-    --border-color: rgba(0, 0, 0, 0.52);
-    --overlay-color: rgba(0, 0, 0, 0.04);
-    --primary-color: #0c0050;
-    --primary-color-hover: #bb88fa;
-
-    --slider-color: #000;
-    --grid-color: #b8b8b8;
-    --surface-bg-color: #ededed;
-    --bg-surface: #fff;
-    --canvas-bg-default-color: #ededed;
-
-    /* === NODE COLORS === */
     --node-bg-border-color: #000;
+    --button-bg-default-color: #5b88fa;
+    /* === NODE COLORS === */
+    --canvas-bg-default-color: #ffffff;
+    --edge-bg-default-color: #999999;
     --node-bg-default-color: #0057b8;
+    --button-bg-highlighted-color: #e0e0e0;
+    --edge-bg-highlighted-color: #ff8c00;
+
     --node-bg-highlighted-color: #132e80;
-    --node-bg-selected-color: #d0d0d0;
+    --button-bg-hover-color: #c0c0c0;
+    --edge-bg-hover-color: #002ada;
     --node-bg-hover-color: #c0c0c0;
 
-    --node-fg-default-color: #333333;
-    --node-fg-highlighted-color: #222222;
-    --node-fg-selected-color: #111111;
-    --node-fg-hover-color: #000000;
-
     /* === EDGE COLORS === */
-    --edge-bg-default-color: #999999;
-    --edge-bg-highlighted-color: #ff8c00;
-    --edge-bg-selected-color: #d0d0d0;
-    --edge-bg-hover-color: #002ada;
-
-    --edge-fg-default-color: #333333;
-    --edge-fg-highlighted-color: #222222;
-    --edge-fg-selected-color: #111111;
-    --edge-fg-hover-color: #000000;
-
-    /* === BUTTON COLORS === */
-    --button-bg-default-color: #5b88fa;
-    --button-bg-highlighted-color: #e0e0e0;
     --button-bg-selected-color: #d0d0d0;
-    --button-bg-hover-color: #c0c0c0;
+    --edge-bg-selected-color: #d0d0d0;
+    --node-bg-selected-color: #d0d0d0;
+    --grid-color: #d6d6d8;;
 
     --button-fg-default-color: #333333;
+    --edge-fg-default-color: #333333;
+    --node-fg-default-color: #333333;
     --button-fg-highlighted-color: #222222;
-    --button-fg-selected-color: #111111;
+
+    /* === BUTTON COLORS === */
+    --edge-fg-highlighted-color: #222222;
+    --node-fg-highlighted-color: #222222;
     --button-fg-hover-color: #000000;
+    --edge-fg-hover-color: #000000;
+
+    --node-fg-hover-color: #000000;
+    --button-fg-selected-color: #111111;
+    --edge-fg-selected-color: #111111;
+    --node-fg-selected-color: #111111;
 
     /* === TEXT COLORS === */
+    --text-on-background-color: #000000;
     --text-on-primary-color: #ffffff;
     --text-on-secondary-color: #000000;
-    --text-on-background-color: #000000;
 
 }
 
 [theme="dark"] {
-    --color-overlay: rgba(255, 255, 255, 0.05);
-    --border-color: rgba(255, 255, 255, 0.18);
-    --overlay-color: rgba(255, 255, 255, 0.04);
-    --primary-color: #5b88fa;
-    --primary-color-hover: #afc7ff;
-
-    --bg-surface: #0e0e0e;
-    --slider-color: #a8a8a8;
-    --grid-color: #373737;
-    --surface-bg-color: #191919;
-    --canvas-bg-default-color: #111111;
-    /* === NODE COLORS === */
     --node-bg-border-color: #002ffd;
+    --button-bg-default-color: #3d73fd;
+    /* === NODE COLORS === */
+    --canvas-bg-default-color: #0e0e13;
+    --edge-bg-default-color: #f8f8f8;
     --node-bg-default-color: #9c9c9c;
+    --button-bg-highlighted-color: #3a3a3a;
+    --edge-bg-highlighted-color: #708bd8;
+
     --node-bg-highlighted-color: #70d1ec;
-    --node-bg-selected-color: #444444;
+    --button-bg-hover-color: #505050;
+    --edge-bg-hover-color: #505050;
     --node-bg-hover-color: #505050;
 
-    --node-fg-default-color: #e0e0e0;
-    --node-fg-highlighted-color: #f0f0f0;
-    --node-fg-selected-color: #ffffff;
-    --node-fg-hover-color: #cccccc;
-
     /* === EDGE COLORS === */
-    --edge-bg-default-color: #f8f8f8;
-    --edge-bg-highlighted-color: #708bd8;
+    --button-bg-selected-color: #444444;
     --edge-bg-selected-color: #444444;
-    --edge-bg-hover-color: #505050;
+    --node-bg-selected-color: #444444;
+    --grid-color: #2c2b2c;
 
     --edge-fg-default-color: #e0e0e0;
+    --node-fg-default-color: #e0e0e0;
     --edge-fg-highlighted-color: #f0f0f0;
-    --edge-fg-selected-color: #ffffff;
-    --edge-fg-hover-color: #cccccc;
+    --node-fg-highlighted-color: #f0f0f0;
 
     /* === BUTTON COLORS === */
-    --button-bg-default-color: #3d73fd;
-    --button-bg-highlighted-color: #3a3a3a;
-    --button-bg-selected-color: #444444;
-    --button-bg-hover-color: #505050;
+    --edge-fg-hover-color: #cccccc;
+    --node-fg-hover-color: #cccccc;
+    --edge-fg-selected-color: #ffffff;
+    --node-fg-selected-color: #ffffff;
 
     /* === TEXT COLORS === */
+    --text-on-background-color: #f5f5f5;
     --text-on-primary-color: #000000;
     --text-on-secondary-color: #dddddd;
-    --text-on-background-color: #f5f5f5;
 }
 
