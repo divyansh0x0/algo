@@ -1,5 +1,3 @@
-import {Vector} from "@/lib/core/utils/geometry";
-
 interface ArgumentDefinition {
     name: string;
     type: string;

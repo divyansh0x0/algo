@@ -1,7 +1,6 @@
 :root {
     --color-accent: #6471e3; /* Blue 800 */
     --debug-color: #f00;
-
     /* Common static variables */
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --padding-lg: 1.5em;
@@ -29,6 +28,7 @@
 
 [theme="dark"] {
     --color-background: rgb(19 19 24);
+    color-scheme: dark;
     --color-error: rgb(255 180 171);
     --color-error-container: rgb(147 0 10);
     --color-inverse-on-surface: rgb(48 48 54);
@@ -81,6 +81,7 @@
 
 [theme="light"] {
     --color-background: rgb(251 248 255);
+    color-scheme: light;
     --color-error: rgb(186 26 26);
     --color-error-container: rgb(255 218 214);
     --color-inverse-on-surface: rgb(242 239 247);

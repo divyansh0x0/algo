@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import {nextTick, onBeforeUnmount, onMounted} from 'vue'
-import {useVisualizerClient} from "~/composables/useVisualizer.client";
 
 const algorithm = 'DFS Graph Traversal'
 let updateCanvasSize : () => void;
 const canvas = ref<HTMLCanvasElement | null>(null);
 const container = ref<HTMLDivElement | null>(null);
 let observer: ResizeObserver | null = null;
+let engine: any;
 onMounted(async () => {
-    const visualizer_data = useVisualizerClient();
     if (!canvas.value || !container.value) {
         return
     }
     if(!import.meta.client) return;
-    const {Scene, Visualizer, Graph} = await import("@/lib/engine");
+    const {Scene, Engine, Visualizer, Graph} = await import("@/lib/engine");
     const ctx = canvas.value.getContext('2d');
     if(!ctx) return;
-
-    if(!visualizer_data.value.scene){
-        visualizer_data.value.scene = new Scene(ctx);
-    }
     updateCanvasSize= ()=> {
         if (!canvas.value || !ctx || !container.value) {
             return
@@ -31,26 +26,39 @@ onMounted(async () => {
         ctx.canvas.width = Math.round(rect.width * ratio)
         ctx.canvas.height = Math.round(rect.height * ratio)
         ctx.setTransform(prevTransform)
-        visualizer_data.value.scene.render();
+        // const entity = scene.createEntity();
+        // entity.add(new ECPosition(ctx.canvas.width/2,ctx.canvas.height/2));
+        // entity.add(new ECVelocity(0,0));
+        // entity.add(ECAxisAlignedBoundingBox.fromRectangle(100,100));
+        // entity.add(new ECRectangle(100,100, ECDrawableStyle.Fill));
+        // entity.add(new ECBackgroundColor(new Color(255,255,255,0.05)));
+        // entity.add(new ECDraggable());
+        // scene.addEntity(entity);
+
     }
+    const scene = new Scene();
+    engine = new Engine();
+    engine.attachScene(scene);
+    const visualizer = new Visualizer(scene, ctx);
+    visualizer.addArray([1, 2, 3, 4]);
+
+
     await nextTick()
     if (!canvas.value) return
 
     if (ctx) {
         updateCanvasSize()
     }
-    const visualizer = new Visualizer(visualizer_data.value.scene, algorithm);
-    visualizer.load(Graph.clustered_graph);
-    visualizer.start();
-    visualizer_data.value.scene.start();
     // container.value.addEventListener('resize', updateCanvasSize)
     observer = new ResizeObserver(updateCanvasSize);
     observer.observe(container.value);
+    engine.start();
 })
 
 onBeforeUnmount(() => {
     if (!container.value) return;
     observer?.unobserve(container.value);
+    engine?.stop();
 })
 </script>
 
