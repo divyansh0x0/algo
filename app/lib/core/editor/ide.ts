@@ -2,8 +2,8 @@ import * as Editor from "@/lib/core/editor/index";
 import {CaretManager} from "@/lib/core/editor/caret";
 import {KeyCodes, KeyManager} from "@/lib/core/editor/key-manager";
 import {IDESelection} from "@/lib/core/editor/selection";
-import {StringUtils} from "@/lib/core/utils/stringutils";
-import {Vmath} from "@/lib/core/utils/vmath";
+import {StringUtils} from "~/lib/engine/utils/stringutils";
+import {Vmath} from "~/lib/engine/utils/vmath";
 import * as YASL from "@/lib/core/yasl";
 import {Lexer, Parser, type YASLToken} from "@/lib/core/yasl";
 import "./yasl-editor.scss";
@@ -51,7 +51,7 @@ function getMonospaceCharBox(el: HTMLElement) {
     const rect = span.getBoundingClientRect();
     document.body.removeChild(span);
 
-    console.log("Calculating font metrics for", span.style.fontFamily);
+
     const charWidth = rect.width / testChars.length;
     const charHeight = rect.height;
 
@@ -125,7 +125,6 @@ export class IDERow {
         let gradient_str = "";
 
         const indent_decoration_width = 2;
-        console.log(this.raw, total_indent);
         for (let i = 1; i < total_indent; i++) {
             const start_x = i * indent_width;
             const mid_x = start_x + indent_decoration_width;
@@ -198,7 +197,7 @@ export class IDERow {
             this.ide.caret_manager.moveCol(-1);
         }
 
-        console.log("backspace", this.raw);
+
         this.render();
 
     }
@@ -377,7 +376,6 @@ export class IDE {
                     this.caret_manager.setColumn(col);
                     this.selection.setAnchor(col, row);
                     this.is_mouse_down = true;
-                    console.log(this.active_row_index);
                     break;
                 }
                 case 2:
@@ -524,10 +522,7 @@ export class IDE {
         }
 
         const lexer = new Lexer(text);
-        const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
-
-        console.log(text);
-        console.log(parser.getProgram());
+        const parser = new Parser(lexer.getTokens(), lexer.getLineMap());        
 
     }
 
@@ -651,7 +646,7 @@ export class IDE {
     }
 
     private bindKeyboardEvents(key: KeyCodes | string) {
-        console.log(this);
+
         const active_row = this.getEditorRow(this.active_row_index);
         switch (key) {
             case KeyCodes.Backspace:
@@ -697,7 +692,6 @@ export class IDE {
                 if (Editor.isPrintableKey(key)) {
                     this.appendChar(key);
                 } else {
-                    console.log("unknown key:", key);
                 }
                 break;
         }
@@ -717,7 +711,6 @@ export class IDE {
             if (start.line === end.line) {
                 copied_text = start_row.raw.slice(start.col, end.col);
             } else {
-                console.log(start_row.raw);
                 copied_text = start_row.raw.slice(start.col, start_row.raw.length);
 
                 for (let i = start.line + 1; i < end.line; i++) {
@@ -744,7 +737,7 @@ export class IDE {
 }
 
 // handleKeyPress(key: string, ctrl_key_pressed:boolean, shift_key_pressed:boolean) {
-//     console.log("deleting selection", this.selection.isSelected(), this.selection);
+//     
 //     this.caret_manager.posChanged();
 //
 //     if(ctrl_key_pressed){

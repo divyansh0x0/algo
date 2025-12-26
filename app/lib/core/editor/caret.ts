@@ -1,5 +1,5 @@
 import {IDERow} from "@/lib/core/editor/ide";
-import {Vmath} from "@/lib/core/utils/vmath";
+import {Vmath} from "~/lib/engine/utils/vmath";
 
 export class CaretManager {
     private readonly spawned_carets: YASLCaret[] = [];

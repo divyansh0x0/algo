@@ -1,4 +1,4 @@
-import {Vector} from "@/lib/core/utils/geometry";
+import {Vector} from "~/lib/engine/utils/Size";
 
 const isPASSIVE = false;
 

@@ -61,6 +61,13 @@ onMounted(() => {
         </div>
         <div ref="right" style="flex: 1">
             <slot name="right"/>
+            <label for="fruits">Choose a fruit:</label>
+            <!--            <select style="position: fixed; top: 0; left:0" name="fruits" id="fruits">-->
+            <!--                <option value="apple">Apple</option>-->
+            <!--                <option value="banana">Banana</option>-->
+            <!--                <option value="orange">Orange</option>-->
+            <!--                <option value="grape" selected>Grape</option>-->
+            <!--            </select>-->
         </div>
     </div>
 </template>

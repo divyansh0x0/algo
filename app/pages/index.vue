@@ -1,5 +1,8 @@
 <script setup lang="ts">
-
+const isIDELoaded = ref(false);
+onMounted(() => {
+    isIDELoaded.value = true;
+})
 </script>
 
 <template>
@@ -10,7 +13,9 @@
             <VisualizerCanvas/>
         </template>
         <template v-slot:right>
-            <IDEContainer class="ide-container"/>
+            <OverlayLoader :loading="!isIDELoaded">
+                <IDEContainer class="ide-container"/>
+            </OverlayLoader>
         </template>
     </DividerContainer>
 </template>

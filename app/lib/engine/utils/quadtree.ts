@@ -1,9 +1,11 @@
 //Axis Aligned Bounding Box
-import {Size, Vector} from "@/lib/core/utils/geometry";
+import {Size} from "~/lib/engine/utils/Size";
+import {Vector2D} from "./Vector2D";
+import {AABB} from "./AABB";
 
 const FLOAT_ERROR = 0.01;
 
-function circleIntersectsAABB(circle_center: Vector, radius: number, aabb: AABB) {
+function circleIntersectsAABB(circle_center: Vector2D, radius: number, aabb: AABB) {
     // Compute AABB bounds
     const minX = aabb.center.x - aabb.half_dimension.width;
     const maxX = aabb.center.x + aabb.half_dimension.width;
@@ -22,7 +24,7 @@ function circleIntersectsAABB(circle_center: Vector, radius: number, aabb: AABB)
     return dist_sqrd <= radius * radius;
 }
 
-function circleContainsPoint(circle_center: Vector, radius: number, point: Vector) {
+function circleContainsPoint(circle_center: Vector2D, radius: number, point: Vector2D) {
     const dx = circle_center.x - point.x;
     const dy = circle_center.y - point.y;
     const dist_sqrd = dx * dx + dy * dy;
@@ -31,55 +33,9 @@ function circleContainsPoint(circle_center: Vector, radius: number, point: Vecto
 
 }
 
-export class AABB {
-    public center: Vector;
-    public half_dimension: Size;
-
-    constructor(center: Vector, half_dimension: Size) {
-        this.center = center;
-        this.half_dimension = half_dimension;
-    }
-
-    static fromRect(x: number, y: number, w: number, h: number) {
-        return new AABB(new Vector(x + w / 2, y + h / 2), new Size(w / 2, h / 2));
-    }
-
-    update(center: Vector, half_dimension: Size): void {
-        this.center = center;
-        this.half_dimension = half_dimension;
-    }
-
-    updateRect(x: number, y: number, w: number, h: number) {
-        this.center.set(x + w / 2, y + h / 2);
-        this.half_dimension.set(w / 2, h / 2);
-    }
-
-    /**
-     * Checks if point is inside this rectangle
-     * @param {Vector} vec
-     */
-    containsPoint(vec: Vector): boolean {
-        return Math.abs(vec.x - this.center.x) <= this.half_dimension.width
-            && Math.abs(vec.y - this.center.y) <= this.half_dimension.height;
-
-    }
-
-    intersectsAABB(other: AABB): boolean {
-        return this.center.x - other.center.x <= this.half_dimension.width + other.half_dimension.width
-            && this.center.y - other.center.y <= this.half_dimension.height + other.half_dimension.height;
-    }
-
-    toString() {
-        return `${this.center} ${this.half_dimension}`;
-    }
-
-    copy(): AABB {
-        return new AABB(this.center.copy(), this.half_dimension.copy());
-    }
-}
 
 export class QuadTreeNode {
-    constructor(public id: string, public point: Vector, public mass: number = 10) {
+    constructor(public id: string, public point: Vector2D, public mass: number = 10) {
     }
 
 }
@@ -89,7 +45,7 @@ export class ForceQuadTree {
     static ACCURACY = 0.9;
     static FULL_ACCURACY_AREA = new Size(100, 100);
     static FULL_ACCURACY_CIRCLE_RADIUS = 100;
-    COM: Vector | undefined;
+    COM: Vector2D | undefined;
     mass = 0;
     regions: ForceQuadTree[] = [];
     has_sub_divisions: boolean = false;
@@ -107,27 +63,27 @@ export class ForceQuadTree {
         const half_dim = this.boundary.half_dimension;
         const center = this.boundary.center;
         const tr = new ForceQuadTree(new AABB(
-            new Vector(center.x + half_dim.width / 2, center.y - half_dim.height / 2),
+            new Vector2D(center.x + half_dim.width / 2, center.y - half_dim.height / 2),
             this.boundary.half_dimension.scale(0.5)
         ));
         const tl = new ForceQuadTree(new AABB(
-            new Vector(center.x - half_dim.width / 2, center.y - half_dim.height / 2),
+            new Vector2D(center.x - half_dim.width / 2, center.y - half_dim.height / 2),
             this.boundary.half_dimension.scale(0.5)
         ));
         const bl = new ForceQuadTree(new AABB(
-            new Vector(center.x - half_dim.width / 2, center.y + half_dim.height / 2),
+            new Vector2D(center.x - half_dim.width / 2, center.y + half_dim.height / 2),
             this.boundary.half_dimension.scale(0.5)
         ));
 
         const br = new ForceQuadTree(new AABB(
-            new Vector(center.x + half_dim.width / 2, center.y + half_dim.height / 2),
+            new Vector2D(center.x + half_dim.width / 2, center.y + half_dim.height / 2),
             this.boundary.half_dimension.scale(0.5)
         ));
         this.regions.push(tr, tl, bl, br);
         this.has_sub_divisions = true;
     }
 
-    contains(pos: Vector) {
+    contains(pos: Vector2D) {
         return this.boundary.containsPoint(pos);
     }
 
@@ -196,10 +152,10 @@ export class ForceQuadTree {
     }
 
 
-    getTotalForcesOnPoint(quad_tree_node: QuadTreeNode, force_func: (a: QuadTreeNode, b: QuadTreeNode) => Vector) {
+    getTotalForcesOnPoint(quad_tree_node: QuadTreeNode, force_func: (a: QuadTreeNode, b: QuadTreeNode) => Vector2D) {
         if (this.regions.length === 0)
-            return new Vector(0, 0);
-        const total_force = new Vector(0, 0);
+            return new Vector2D(0, 0);
+        const total_force = new Vector2D(0, 0);
         const nearby_nodes = this.getNodesInCircularRange(quad_tree_node.point, ForceQuadTree.FULL_ACCURACY_CIRCLE_RADIUS);
         for (const other_node of nearby_nodes) {
             if (quad_tree_node.id != other_node.id)
@@ -211,8 +167,8 @@ export class ForceQuadTree {
         return total_force;
     }
 
-    getForceDueToRegions(quad_tree_node: QuadTreeNode, force_func: (a: QuadTreeNode, b: QuadTreeNode) => Vector, excluded_nodes: QuadTreeNode[] = [], depth = 0): Vector {
-        const force = new Vector(0, 0);
+    getForceDueToRegions(quad_tree_node: QuadTreeNode, force_func: (a: QuadTreeNode, b: QuadTreeNode) => Vector2D, excluded_nodes: QuadTreeNode[] = [], depth = 0): Vector2D {
+        const force = new Vector2D(0, 0);
         const min_threshold = 1 - ForceQuadTree.ACCURACY;
         for (const region of this.regions) {
             if (!region.COM || region.mass === 0) continue;
@@ -259,7 +215,7 @@ export class ForceQuadTree {
         return nodes_in_range;
     }
 
-    getNodesInCircularRange(center: Vector, radius: number): QuadTreeNode[] {
+    getNodesInCircularRange(center: Vector2D, radius: number): QuadTreeNode[] {
         const nodes_in_range: QuadTreeNode[] = [];
 
         // If bounds is not in the boundary of quadtree then abort
