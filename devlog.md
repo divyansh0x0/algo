@@ -30,3 +30,10 @@ Animating in ECS is also extremely easy.
 
 Now i will start working on the array swap and some animation followed by parsing my AST of code into commands that can
 control the scene.
+
+### DECEMEBER 29, 2025
+The bare bone ECS system is ready. Now i can render an array + have its swaps animated. Now i can finally move onto compiling the AST into commands.
+I am thinking of making a cpu like instruction set and a virtual machine which will execute those instruction. It will have:
+1. registors : Just like a cpu, i need registers to store operations, operands, instruction pointer, etc.
+2. instrution sets: These will be similar to assembly but will be JS objects
+3. A middleware which will sit between the renderer and the runtime of YASL
