@@ -12,8 +12,6 @@ import {ESDragMoveSystem} from "~/lib/core/engine/scene/systems/ESDragMoveSystem
 import {ESMoveTo} from "~/lib/core/engine/scene/systems/ESMoveTo";
 import {ECText} from "~/lib/core/engine/scene/components/ECText";
 import {Color} from "~/lib/core/engine/utils/Color";
-import {ECGroupMember} from "~/lib/core/engine/scene/components/ECGroupMember";
-
 //Visual array
 class VArray {
     constructor(private internalArr: number[]) {
@@ -35,10 +33,11 @@ class VArray {
                 .addComponent(elEntity,new ECAxisAlignedBoundingBox(50, 50))
                 .addComponent(elEntity,new ECText(el.toString()))
                 .addComponent(elEntity,new ECTextColor(new Color("#fff")))
-                .addComponent(elEntity,new ECGroupMember(this.internalArr.length - i - 1));
-            stacklayout.members.push(elEntity);
+            stacklayout.add(elEntity);
         }
-
+        setInterval(()=>{
+            stacklayout.swap(2,3);
+        },2000)
         // console.log(stacklayout);
 
     }
@@ -58,6 +57,8 @@ export class Visualizer {
         scene.addSystem(new ESStackLayout())
         // console.log(new ESStackLayout());
         scene.addSystem(new ESMoveTo());
+
+
     }
 
     addArray(arr: number[]) {
