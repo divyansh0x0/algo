@@ -1,4 +1,4 @@
-import type {Scene} from "~/lib/core/engine/scene/Scene";
+import type {World} from "~/lib/core/engine/scene/World";
 
 enum PointerType {
     Mouse, Touch
@@ -12,7 +12,7 @@ interface Pointer {
 }
 
 class InputController {
-    constructor(private scene: Scene) {
+    constructor(private scene: World) {
     }
 
     attach(canvas: HTMLCanvasElement) {
