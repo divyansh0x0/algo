@@ -17,6 +17,8 @@ export class TransitionSystem implements EntitySystem {
     update(dt: number,world: World): void {
         for (const entity of world.getEntities()) {
             const transition = world.getComponent(entity,ECColorTransition);
+            if(!transition)
+                continue;
             let colorComponent: Color | undefined;
             // Determine which color to transition
             switch (transition?.target) {

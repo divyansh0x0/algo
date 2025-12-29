@@ -42,7 +42,7 @@ export class World {
         return this.components.get(componentClass) as SparseSet<T> | undefined;
     }
 
-    entityHas<T extends EntityComponent>(entity:Entity, componentClass: ComponentClass<T>): Entity {
+    entityHas<T extends EntityComponent>(entity:Entity, componentClass: ComponentClass<T>): boolean {
         const sparseSet = this.components.get(componentClass)
         if(!sparseSet)
             return false;
