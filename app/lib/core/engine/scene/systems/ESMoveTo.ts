@@ -17,6 +17,7 @@ export class ESMoveTo implements EntitySystem {
     update(dt: number, entities: Entity[]): void {
         for (const entity of entities) {
             const moveTo = entity.get(ECMoveTo)!;
+            console.log("Moving to:", moveTo.finalPos);
             const pos = entity.get(ECPosition)!;
             const t = Math.min(moveTo.elapsedTimeMs / moveTo.durationMs, 1)
             if (t === 1) {

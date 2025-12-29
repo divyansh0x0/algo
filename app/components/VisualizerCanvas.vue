@@ -12,7 +12,7 @@ onMounted(async () => {
         return
     }
     if(!import.meta.client) return;
-    const {Scene, Engine, Visualizer, Graph} = await import("~/lib/core/engine");
+    const {Scene: World, Engine, Visualizer, Graph} = await import("~/lib/core/engine");
     const ctx = canvas.value.getContext('2d');
     if(!ctx) return;
     updateCanvasSize= ()=> {

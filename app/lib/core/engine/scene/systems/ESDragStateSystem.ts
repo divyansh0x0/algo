@@ -1,9 +1,9 @@
-import {Entity} from '../Entity';
-import {ECPosition} from '../components/ECPosition';
-import {ECDraggable} from '../components/ECDraggable';
-import {type EntitySystem, ESRequirements} from './EntitySystem';
-import {ECID, ECMouseListener} from '../components';
-import {ECAxisAlignedBoundingBox} from '../components/ECAxisAlignedBoundingBox';
+import {Entity} from "../Entity";
+import {ECPosition} from "../components/ECPosition";
+import {ECDraggable} from "../components/ECDraggable";
+import {type EntitySystem, ESRequirements} from "./EntitySystem";
+import {ECID, ECMouseListener} from "../components";
+import {ECAxisAlignedBoundingBox} from "../components/ECAxisAlignedBoundingBox";
 
 export class ESDragStateSystem implements EntitySystem {
     requirement = ESRequirements.from(ECID.Draggable, ECID.Position, ECID.AABB, ECID.MouseListener);

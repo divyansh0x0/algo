@@ -5,6 +5,8 @@ import {ECStackLayout, ECStackLayoutDirection} from "~/lib/core/engine/scene/com
 import {ECAxisAlignedBoundingBox} from "~/lib/core/engine/scene/components/ECAxisAlignedBoundingBox";
 import {Vector2D} from "~/lib/core/engine/utils";
 import {ECGroupMember} from "~/lib/core/engine/scene/components/ECGroupMember";
+import {ESMoveTo} from "~/lib/core/engine/scene/systems/ESMoveTo";
+import {ECMoveTo} from "~/lib/core/engine/scene/components/ECMoveTo";
 
 export class ESStackLayout implements EntitySystem {
     requirement: ESRequirements = ESRequirements.from(ECID.StackLayout, ECID.Position);
@@ -36,8 +38,10 @@ export class ESStackLayout implements EntitySystem {
             }
 
             lastX += aabb.halfWidth;
-            pos.x = lastX;
-            pos.y = layoutCenter.y;
+            member.add(new ECMoveTo(new Vector2D(lastX,layoutCenter.y), 1000));
+
+            // pos.x = lastX;
+            // pos.y = layoutCenter.y;
             lastX += aabb.halfWidth + stackLayout.spacing;
         }
     }
@@ -74,6 +78,12 @@ export class ESStackLayout implements EntitySystem {
             // const layoutAABB = entity.get(ECAxisAlignedBoundingBox);
             const stackLayout = entity.get(ECStackLayout)!;
             const members = stackLayout.members;
+            const sortedMembers = members.sort((entA, entB)=>{
+                const a =entA.get(ECGroupMember)!;
+                const b = entB.get(ECGroupMember)!;
+
+                return a.index - b.index
+            })
             let lastMemberIndex = 0;
             for (const member of members) {
                 if (!member.has(ECGroupMember)) {
@@ -82,9 +92,9 @@ export class ESStackLayout implements EntitySystem {
                     lastMemberIndex++;
             }
             if (stackLayout.direction === ECStackLayoutDirection.Horizontal)
-                this.layHorizontally(stackLayout, layoutCenter, members);
+                this.layHorizontally(stackLayout, layoutCenter, sortedMembers);
             else
-                this.layVertically(stackLayout, layoutCenter, members);
+                this.layVertically(stackLayout, layoutCenter, sortedMembers);
 
 
         }

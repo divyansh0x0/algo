@@ -1,19 +1,19 @@
-import type {Scene} from "~/lib/core/engine/scene/Scene";
+import type {World} from "~/lib/core/engine/scene/World";
 
 export class Engine {
     private frame_id: number | null = null
-    private scene: Scene | null = null;
+    private scene: World | null = null;
     private is_running: boolean = false;
 
     constructor() {
 
     }
 
-    attachScene(scene: Scene): void {
+    attachScene(scene: World): void {
         this.scene = scene;
     }
 
-    detachScene(scene: Scene): void {
+    detachScene(scene: World): void {
         this.scene = scene;
     }
 

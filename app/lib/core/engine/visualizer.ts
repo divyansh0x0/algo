@@ -1,4 +1,4 @@
-import type {Scene} from "~/lib/core/engine/scene/Scene";
+import type {World} from "~/lib/core/engine/scene/World";
 import {ECBorderColor, ECDrawableStyle, ECPosition, ECRectangle, ECTextColor} from "~/lib/core/engine/scene/components";
 import {ECStackLayout, ECStackLayoutDirection} from "~/lib/core/engine/scene/components/ECStackLayout";
 import {ESStackLayout} from "~/lib/core/engine/scene/systems/ESStackLayout";
@@ -19,7 +19,7 @@ class VArray {
     constructor(private internalArr: number[]) {
     }
 
-    spawn(scene: Scene, name: string) {
+    spawn(scene: World, name: string) {
 
         const stacklayout = new ECStackLayout(name, ECStackLayoutDirection.Horizontal, 10);
         const layoutEntity = scene.createEntity()
@@ -34,7 +34,7 @@ class VArray {
                 .add(new ECRectangle(100, 100, ECDrawableStyle.Stroke))
                 .add(new ECAxisAlignedBoundingBox(50, 50))
                 .add(new ECText(el.toString()))
-                .add(new ECTextColor(new Color("#fff"))).add(new ECGroupMember(i));
+                .add(new ECTextColor(new Color("#fff"))).add(new ECGroupMember(this.internalArr.length - i - 1));
             stacklayout.members.push(elEntity);
             // console.log(el);
             scene.addEntity(elEntity);
@@ -46,9 +46,9 @@ class VArray {
 }
 
 export class Visualizer {
-    private readonly scene: Scene;
+    private readonly scene: World;
 
-    constructor(scene: Scene, ctx: CanvasRenderingContext2D) {
+    constructor(scene: World, ctx: CanvasRenderingContext2D) {
         this.scene = scene;
         scene.addSystem(new RenderSystem(ctx));
         scene.addSystem(new KinematicsSystem());
