@@ -22,22 +22,21 @@ class VArray {
     spawn(scene: World, name: string) {
 
         const stacklayout = new ECStackLayout(name, ECStackLayoutDirection.Horizontal, 10);
-        const layoutEntity = scene.createEntity()
-            .add(new ECPosition(0, 0))
-            .add(stacklayout).add(new ECBorderColor(new Color("#00f")));
-        // console.log(layoutEntity);
-        scene.addEntity(layoutEntity);
+        const layoutEntity = scene.createEntity();
+        scene.addComponent(layoutEntity, new ECPosition(0, 0))
+            .addComponent(layoutEntity,stacklayout)
+            .addComponent(layoutEntity,new ECBorderColor(new Color("#00f")));
+    
         for (let i = 0; i < this.internalArr.length; i++) {
             const el = this.internalArr[i]!;
             const elEntity = scene.createEntity();
-            elEntity.add(new ECPosition(0, 0))
-                .add(new ECRectangle(100, 100, ECDrawableStyle.Stroke))
-                .add(new ECAxisAlignedBoundingBox(50, 50))
-                .add(new ECText(el.toString()))
-                .add(new ECTextColor(new Color("#fff"))).add(new ECGroupMember(this.internalArr.length - i - 1));
+            scene.addComponent(elEntity,new ECPosition(0, 0))
+                .addComponent(elEntity,new ECRectangle(100, 100, ECDrawableStyle.Stroke))
+                .addComponent(elEntity,new ECAxisAlignedBoundingBox(50, 50))
+                .addComponent(elEntity,new ECText(el.toString()))
+                .addComponent(elEntity,new ECTextColor(new Color("#fff")))
+                .addComponent(elEntity,new ECGroupMember(this.internalArr.length - i - 1));
             stacklayout.members.push(elEntity);
-            // console.log(el);
-            scene.addEntity(elEntity);
         }
 
         // console.log(stacklayout);
