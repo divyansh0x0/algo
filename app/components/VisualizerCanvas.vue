@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {nextTick, onBeforeUnmount, onMounted} from 'vue'
+import {nextTick, onBeforeUnmount, onMounted} from "vue";
 
 const algorithm = 'DFS Graph Traversal'
 let updateCanvasSize : () => void;
@@ -12,7 +12,7 @@ onMounted(async () => {
         return
     }
     if(!import.meta.client) return;
-    const {Scene, Engine, Visualizer, Graph} = await import("@/lib/engine");
+    const {Scene, Engine, Visualizer, Graph} = await import("~/lib/core/engine");
     const ctx = canvas.value.getContext('2d');
     if(!ctx) return;
     updateCanvasSize= ()=> {

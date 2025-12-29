@@ -1,5 +1,5 @@
 type Theme = "light" | "dark";
-const {ThemeManager, ThemeType} = await import("@/lib/engine");
+const {ThemeManager, ThemeType} = await import("~/lib/core/engine");
 
 function updateTheme(theme: Theme) {
     ThemeManager.setThemeType(theme == "light" ? ThemeType.LIGHT : ThemeType.DARK);
