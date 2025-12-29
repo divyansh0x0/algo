@@ -5,6 +5,7 @@ import {ECMouseListener} from "../components/ECMouseListener";
 import {Vector2D} from "../../utils/Vector2D";
 import {ECAxisAlignedBoundingBox} from "../components/ECAxisAlignedBoundingBox";
 import {ECPosition} from "../components";
+import type { World } from "../World";
 
 // filepath: e:\Projects\Algo\app\lib\engine\scene\systems\ESMouseListener.ts
 
@@ -45,14 +46,16 @@ export class ESMouseListener implements EntitySystem {
         return true;
     }
 
-    update(_: number, entities: Entity[]): void {
-        for (const entity of entities) {
-            const mouseListener = entity.get(ECMouseListener)!;
+    update(_: number,world: World): void {
+        for (const entity of world.getEntities()) {
+            const mouseListener = world.getComponent(entity,ECMouseListener);
             // Reset frame-specific states
 
-            const aabb = entity.get(ECAxisAlignedBoundingBox);
-            const center = entity.get(ECPosition);
+            const aabb = world.getComponent(entity,ECAxisAlignedBoundingBox);
+            const center = world.getComponent(entity,ECPosition);
 
+            if(!aabb || !center || !mouseListener)
+                continue;
             //check intersection
             const isIntersecting = aabb && center &&
                 this.mousePosition.x >= center.x - aabb.halfWidth &&

@@ -10,13 +10,14 @@ type ComponentClass<T extends EntityComponent = EntityComponent> =
 export class World {
     private id_counter = 0;
     private components = new Map<ComponentClass, SparseSet<EntityComponent>>();
-    private entities = new Set<number>();
+    private entities = new Set<Entity>();
     private systems: EntitySystem[] = []
     createEntity():Entity{
         const id = this.id_counter++;
-        this.entities.add(id);
+        const entity = new Entity(id);
+        this.entities.add(entity);
 
-        return new Entity(id);
+        return entity;
     }
     addComponent<T extends EntityComponent>(entity:Entity, component:T){
         let sparseSet = this.components.get(component.constructor as ComponentClass<T>);
@@ -34,14 +35,20 @@ export class World {
         }
     }
     getComponent<T extends EntityComponent>(entity:Entity, componentClass: ComponentClass<T>){
-        return this.components.get(componentClass)?.get(entity.id);
+        return this.components.get(componentClass)?.get(entity.id) as T | undefined;
     }
 
     getComponentStore<T extends EntityComponent>(componentClass:ComponentClass<T>){
         return this.components.get(componentClass) as SparseSet<T> | undefined;
     }
 
+    entityHas<T extends EntityComponent>(entity:Entity, componentClass: ComponentClass<T>): Entity {
+        const sparseSet = this.components.get(componentClass)
+        if(!sparseSet)
+            return false;
 
+        return sparseSet.contains(entity.id);
+    }
     addSystem(system:EntitySystem){
         this.systems.push(system);
         return this;
@@ -53,5 +60,9 @@ export class World {
             
             system?.update(dt_ms,this);
         }
+    }
+
+    getEntities(){
+        return this.entities;
     }
 }

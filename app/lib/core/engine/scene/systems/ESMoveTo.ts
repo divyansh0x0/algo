@@ -3,6 +3,7 @@ import type {Entity} from "~/lib/core/engine/scene/Entity";
 import {ECID, ECPosition} from "~/lib/core/engine/scene/components";
 import {ECMoveTo} from "~/lib/core/engine/scene/components/ECMoveTo";
 import {lerp} from "~/lib/core/engine/utils/Lerp";
+import type { World } from "../World";
 
 export class ESMoveTo implements EntitySystem {
     requirement: ESRequirements = ESRequirements.from(ECID.Position, ECID.MoveTo);
@@ -14,14 +15,17 @@ export class ESMoveTo implements EntitySystem {
         return true;
     }
 
-    update(dt: number, entities: Entity[]): void {
-        for (const entity of entities) {
-            const moveTo = entity.get(ECMoveTo)!;
-            console.log("Moving to:", moveTo.finalPos);
-            const pos = entity.get(ECPosition)!;
+    update(dt: number,world: World): void {
+        for (const entity of world.getEntities()) {
+            const moveTo = world.getComponent(entity,ECMoveTo);
+            if(!moveTo)
+                continue;
+            const pos = world.getComponent(entity,ECPosition);
             const t = Math.min(moveTo.elapsedTimeMs / moveTo.durationMs, 1)
+            if(!pos)
+                continue;
             if (t === 1) {
-                entity.markForRemoval(ECMoveTo);
+                world.removeComponent(entity,ECMoveTo);
                 continue;
             }
             const newX = lerp(pos.x, moveTo.finalPos.x, t);

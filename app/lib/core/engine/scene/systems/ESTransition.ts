@@ -5,6 +5,7 @@ import {ECColorTransition, ECColorTransitionType} from "../components/ECTransiti
 import {ECBackgroundColor, ECBorderColor, ECTextColor} from "../components/ECColor";
 import {lerpColor} from "~/lib/core/engine/utils/Lerp";
 import {Color} from "~/lib/core/engine/utils/Color";
+import type { World } from "../World";
 
 export class TransitionSystem implements EntitySystem {
     requirement = ESRequirements.from(ECID.Color, ECID.ColorTransition);
@@ -13,20 +14,20 @@ export class TransitionSystem implements EntitySystem {
         return true;
     }
 
-    update(dt: number, entities: Entity[]): void {
-        for (const entity of entities) {
-            const transition = entity.get(ECColorTransition)!;
+    update(dt: number,world: World): void {
+        for (const entity of world.getEntities()) {
+            const transition = world.getComponent(entity,ECColorTransition);
             let colorComponent: Color | undefined;
             // Determine which color to transition
             switch (transition?.target) {
                 case ECColorTransitionType.Fill:
-                    colorComponent = entity.get(ECBackgroundColor)?.value;
+                    colorComponent = world.getComponent(entity,ECBackgroundColor)?.value;
                     break;
                 case ECColorTransitionType.Border:
-                    colorComponent = entity.get(ECBorderColor)?.value;
+                    colorComponent = world.getComponent(entity,ECBorderColor)?.value;
                     break;
                 case ECColorTransitionType.Text:
-                    colorComponent = entity.get(ECTextColor)?.value;
+                    colorComponent = world.getComponent(entity,ECTextColor)?.value;
                     break;
             }
             if (!colorComponent) continue;

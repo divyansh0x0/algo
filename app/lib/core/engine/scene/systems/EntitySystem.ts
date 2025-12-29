@@ -1,5 +1,6 @@
 import type {Entity} from "../Entity";
 import {ECID} from "~/lib/core/engine/scene/components";
+import type { World } from "../World";
 
 export class ESRequirements {
     private uniqueMask = 0;
@@ -32,11 +33,9 @@ export class ESRequirements {
 }
 
 export interface EntitySystem {
-    requirement: ESRequirements;
-
     start(): boolean;
 
-    update(dt: number, entities: Entity[]): void;
+    update(dt: number, world:World): void;
 
     end(): void;
 }

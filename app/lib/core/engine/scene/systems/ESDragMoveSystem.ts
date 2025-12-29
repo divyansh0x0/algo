@@ -4,6 +4,7 @@ import {ECDraggable} from "../components/ECDraggable";
 import {type EntitySystem, ESRequirements} from "./EntitySystem";
 import {ECID, ECMouseListener} from "../components";
 import {ECGroupMember} from "~/lib/core/engine/scene/components/ECGroupMember";
+import type { World } from "../World";
 
 export class ESDragMoveSystem implements EntitySystem {
     requirement = ESRequirements.from(ECID.Draggable, ECID.Position, ECID.AABB, ECID.MouseListener);
@@ -12,25 +13,27 @@ export class ESDragMoveSystem implements EntitySystem {
         return true;
     }
 
-    applyDrag(entity: Entity) {
+    applyDrag(entity: Entity, world:World) {
 
-        const drag = entity.get(ECDraggable)!;
-        if (!drag.isDragging) {
+        const drag = world.getComponent(entity, ECDraggable);
+        if (!drag || !drag.isDragging) {
             return;
         }
-        const pos = entity.get(ECPosition)!;
-        const mouse = entity.get(ECMouseListener)!;
+        const pos = world.getComponent(entity,ECPosition);
+        const mouse = world.getComponent(entity,ECMouseListener);
 
+        if(!pos || !mouse)
+            return;
         const newPos = mouse.mousePosition;
         pos.set(newPos.x - drag.offsetX, newPos.y - drag.offsetY);
 
     }
 
-    update(_: number, entities: Entity[]): void {
-        for (const entity of entities) {
-            const groupMember = entity.get(ECGroupMember);
+    update(_: number, world:World): void {
+        for (const entity of world.getEntities()) {
+            const groupMember = world.getComponent(entity, ECGroupMember);
             if (!groupMember) {
-                this.applyDrag(entity);
+                this.applyDrag(entity,world);
             } else {
 
             }
