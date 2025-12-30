@@ -1,4 +1,4 @@
-export enum TokenType {
+export enum YASLTokenType {
     // Comparison
     ERROR = "error",
     COMMENT = "comment",
@@ -82,101 +82,96 @@ export enum TokenType {
     COLON = ":",
 
     IDENTIFIER = "identifier",
-    EOF = "\0",
 }
 
-export function StringifyTokenType(token_type: TokenType): string {
+export function StringifyTokenType(token_type: YASLTokenType): string {
     switch (token_type) {
         // Operators (arithmetic, logical, bitwise, assignment, comparison, unary)
-        case TokenType.PLUS:
-        case TokenType.MINUS:
-        case TokenType.MULTIPLY:
-        case TokenType.DIVIDE:
-        case TokenType.MODULO:
-        case TokenType.POWER:
-        case TokenType.PLUS_ASSIGN:
-        case TokenType.MINUS_ASSIGN:
-        case TokenType.MULTIPLY_ASSIGN:
-        case TokenType.DIVIDE_ASSIGN:
-        case TokenType.MOD_ASSIGN:
-        case TokenType.POW_ASSIGN:
-        case TokenType.EQUAL_EQUAL:
-        case TokenType.NOT_EQUAL:
-        case TokenType.LESS_THAN:
-        case TokenType.GREATER_THAN:
-        case TokenType.LESS_THAN_EQUAL_TO:
-        case TokenType.GREATER_THAN_EQUAL_TO:
-        case TokenType.AND:
-        case TokenType.OR:
-        case TokenType.NOT:
-        case TokenType.BIT_AND:
-        case TokenType.BIT_OR:
-        case TokenType.BIT_NOT:
-        case TokenType.BIT_XOR:
-        case TokenType.BIT_SHIFT_LEFT:
-        case TokenType.BIT_SHIFT_RIGHT:
-        case TokenType.INCREMENT:
-        case TokenType.DECREMENT:
-        case TokenType.NEGATE:
-        case TokenType.ASSIGN:
-        case TokenType.INLINE_ASSIGN:
+        case YASLTokenType.PLUS:
+        case YASLTokenType.MINUS:
+        case YASLTokenType.MULTIPLY:
+        case YASLTokenType.DIVIDE:
+        case YASLTokenType.MODULO:
+        case YASLTokenType.POWER:
+        case YASLTokenType.PLUS_ASSIGN:
+        case YASLTokenType.MINUS_ASSIGN:
+        case YASLTokenType.MULTIPLY_ASSIGN:
+        case YASLTokenType.DIVIDE_ASSIGN:
+        case YASLTokenType.MOD_ASSIGN:
+        case YASLTokenType.POW_ASSIGN:
+        case YASLTokenType.EQUAL_EQUAL:
+        case YASLTokenType.NOT_EQUAL:
+        case YASLTokenType.LESS_THAN:
+        case YASLTokenType.GREATER_THAN:
+        case YASLTokenType.LESS_THAN_EQUAL_TO:
+        case YASLTokenType.GREATER_THAN_EQUAL_TO:
+        case YASLTokenType.AND:
+        case YASLTokenType.OR:
+        case YASLTokenType.NOT:
+        case YASLTokenType.BIT_AND:
+        case YASLTokenType.BIT_OR:
+        case YASLTokenType.BIT_NOT:
+        case YASLTokenType.BIT_XOR:
+        case YASLTokenType.BIT_SHIFT_LEFT:
+        case YASLTokenType.BIT_SHIFT_RIGHT:
+        case YASLTokenType.INCREMENT:
+        case YASLTokenType.DECREMENT:
+        case YASLTokenType.NEGATE:
+        case YASLTokenType.ASSIGN:
+        case YASLTokenType.INLINE_ASSIGN:
             return "operator";
 
         // Literals
-        case TokenType.NUMBER:
+        case YASLTokenType.NUMBER:
             return "number";
-        case TokenType.STRING:
+        case YASLTokenType.STRING:
             return "string";
 
-        case TokenType.WHITESPACE:
+        case YASLTokenType.WHITESPACE:
             return "whitespace";
-        case TokenType.COMMENT:
+        case YASLTokenType.COMMENT:
             return "comment";
         // Keywords
-        case TokenType.NULL:
-        case TokenType.TRUE:
-        case TokenType.FALSE:
-        case TokenType.LET:
-        case TokenType.IF:
-        case TokenType.ELSE:
-        case TokenType.SWITCH:
-        case TokenType.CASE:
-        case TokenType.DEFAULT:
-        case TokenType.FOR:
-        case TokenType.WHILE:
-        case TokenType.THEN:
-        case TokenType.DO:
-        case TokenType.BREAK:
-        case TokenType.CONTINUE:
-        case TokenType.IN:
-        case TokenType.INSTANCEOF:
-        case TokenType.FUNCTION:
-        case TokenType.RETURN:
+        case YASLTokenType.NULL:
+        case YASLTokenType.TRUE:
+        case YASLTokenType.FALSE:
+        case YASLTokenType.LET:
+        case YASLTokenType.IF:
+        case YASLTokenType.ELSE:
+        case YASLTokenType.SWITCH:
+        case YASLTokenType.CASE:
+        case YASLTokenType.DEFAULT:
+        case YASLTokenType.FOR:
+        case YASLTokenType.WHILE:
+        case YASLTokenType.THEN:
+        case YASLTokenType.DO:
+        case YASLTokenType.BREAK:
+        case YASLTokenType.CONTINUE:
+        case YASLTokenType.IN:
+        case YASLTokenType.INSTANCEOF:
+        case YASLTokenType.FUNCTION:
+        case YASLTokenType.RETURN:
             return "keyword";
 
         // Symbols
-        case TokenType.LPAREN:
-        case TokenType.RPAREN:
-        case TokenType.LBRACKET:
-        case TokenType.RBRACKET:
-        case TokenType.LBRACE:
-        case TokenType.RBRACE:
-        case TokenType.COMMA:
-        case TokenType.DOT:
-        case TokenType.COLON:
-        case TokenType.STATEMENT_END:
+        case YASLTokenType.LPAREN:
+        case YASLTokenType.RPAREN:
+        case YASLTokenType.LBRACKET:
+        case YASLTokenType.RBRACKET:
+        case YASLTokenType.LBRACE:
+        case YASLTokenType.RBRACE:
+        case YASLTokenType.COMMA:
+        case YASLTokenType.DOT:
+        case YASLTokenType.COLON:
+        case YASLTokenType.STATEMENT_END:
             return "symbol";
 
         // Identifier
-        case TokenType.IDENTIFIER:
+        case YASLTokenType.IDENTIFIER:
             return "identifier";
 
-        // End of file
-        case TokenType.EOF:
-            return "eof";
-
         // Unknown tokens
-        case TokenType.ERROR:
+        case YASLTokenType.ERROR:
             return "error";
 
         default:
@@ -184,52 +179,52 @@ export function StringifyTokenType(token_type: TokenType): string {
     }
 }
 
-export type UnaryOperatorToken = TokenType.NEGATE | TokenType.MINUS | TokenType.BIT_NOT;
-export type PostfixOperatorToken = TokenType.INCREMENT | TokenType.DECREMENT;
-export type BinaryOperatorToken =
-    TokenType.PLUS
-    | TokenType.MINUS
-    | TokenType.MULTIPLY
-    | TokenType.DIVIDE
-    | TokenType.MODULO
-    | TokenType.INLINE_ASSIGN
-    | TokenType.BIT_AND
-    | TokenType.BIT_OR
-    | TokenType.BIT_XOR
-    | TokenType.BIT_SHIFT_LEFT
-    | TokenType.BIT_SHIFT_RIGHT
-    | TokenType.AND
-    | TokenType.OR;
-export const keywords = Object.freeze(new Map<string, TokenType>(
+export type YASLTokenUnaryOp = YASLTokenType.NEGATE | YASLTokenType.MINUS | YASLTokenType.BIT_NOT;
+export type YASLTokenPostfixOp = YASLTokenType.INCREMENT | YASLTokenType.DECREMENT;
+export type YASLTokenBinaryOp =
+    YASLTokenType.PLUS
+    | YASLTokenType.MINUS
+    | YASLTokenType.MULTIPLY
+    | YASLTokenType.DIVIDE
+    | YASLTokenType.MODULO
+    | YASLTokenType.INLINE_ASSIGN
+    | YASLTokenType.BIT_AND
+    | YASLTokenType.BIT_OR
+    | YASLTokenType.BIT_XOR
+    | YASLTokenType.BIT_SHIFT_LEFT
+    | YASLTokenType.BIT_SHIFT_RIGHT
+    | YASLTokenType.AND
+    | YASLTokenType.OR;
+export const keywords = Object.freeze(new Map<string, YASLTokenType>(
     [
-        ["let", TokenType.LET],
-        ["switch", TokenType.SWITCH],
-        ["if", TokenType.IF],
-        ["else", TokenType.ELSE],
-        ["case", TokenType.CASE],
-        ["default", TokenType.DEFAULT],
-        ["for", TokenType.FOR],
-        ["while", TokenType.WHILE],
-        ["do", TokenType.DO],
-        ["break", TokenType.BREAK],
-        ["continue", TokenType.CONTINUE],
-        ["in", TokenType.IN],
-        ["instanceof", TokenType.INSTANCEOF],
-        ["fn", TokenType.FUNCTION],
-        ["return", TokenType.RETURN],
-        ["true", TokenType.TRUE],
-        ["false", TokenType.FALSE],
-        ["in", TokenType.IN],
-        ["and", TokenType.AND],
-        ["or", TokenType.OR],
-        ["not", TokenType.NOT],
-        ["null", TokenType.NULL],
-        ["then", TokenType.THEN]
+        ["let", YASLTokenType.LET],
+        ["switch", YASLTokenType.SWITCH],
+        ["if", YASLTokenType.IF],
+        ["else", YASLTokenType.ELSE],
+        ["case", YASLTokenType.CASE],
+        ["default", YASLTokenType.DEFAULT],
+        ["for", YASLTokenType.FOR],
+        ["while", YASLTokenType.WHILE],
+        ["do", YASLTokenType.DO],
+        ["break", YASLTokenType.BREAK],
+        ["continue", YASLTokenType.CONTINUE],
+        ["in", YASLTokenType.IN],
+        ["instanceof", YASLTokenType.INSTANCEOF],
+        ["fn", YASLTokenType.FUNCTION],
+        ["return", YASLTokenType.RETURN],
+        ["true", YASLTokenType.TRUE],
+        ["false", YASLTokenType.FALSE],
+        ["in", YASLTokenType.IN],
+        ["and", YASLTokenType.AND],
+        ["or", YASLTokenType.OR],
+        ["not", YASLTokenType.NOT],
+        ["null", YASLTokenType.NULL],
+        ["then", YASLTokenType.THEN]
     ]
 ));
 
 export interface YASLToken {
-    type: TokenType;
+    type: YASLTokenType;
     lexeme: string;
     literal: Object | string | number | boolean | null;
     // line: number;

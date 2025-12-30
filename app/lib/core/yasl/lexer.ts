@@ -1,4 +1,4 @@
-import {keywords, TokenType, type YASLToken} from "@/lib/core/yasl/YASLToken";
+import {keywords, YASLTokenType, type YASLToken} from "@/lib/core/yasl/YASLToken";
 
 export interface LexerError {
     message: string;
@@ -29,7 +29,6 @@ export class Lexer {
         if (!this.is_analysis_complete) {
             this.start_read_index = this.next_read_index;
             this.is_analysis_complete = true;
-            this.addToken(TokenType.EOF);
         }
         return this.tokens_list;
     }
@@ -48,7 +47,7 @@ export class Lexer {
         switch (c) {
             case ";":
             case "\n":
-                this.addToken(TokenType.STATEMENT_END, null);
+                this.addToken(YASLTokenType.STATEMENT_END, null);
                 this.LineMap.push(this.curr_read_index);
                 break;
 
@@ -64,94 +63,94 @@ export class Lexer {
             case "|":
             case "^":
             case "~":
-                this.addToken(c as TokenType);
+                this.addToken(c as YASLTokenType);
                 break;
             case ":":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.INLINE_ASSIGN);
+                    this.addToken(YASLTokenType.INLINE_ASSIGN);
                 } else
-                    this.addToken(TokenType.COLON);
+                    this.addToken(YASLTokenType.COLON);
                 break;
             case "=":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.EQUAL_EQUAL);
+                    this.addToken(YASLTokenType.EQUAL_EQUAL);
                 } else {
-                    this.addToken(TokenType.ASSIGN);
+                    this.addToken(YASLTokenType.ASSIGN);
                 }
                 break;
             case "<":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.LESS_THAN_EQUAL_TO);
+                    this.addToken(YASLTokenType.LESS_THAN_EQUAL_TO);
                 } else if (this.peek() == "<") {
                     this.consume();
-                    this.addToken(TokenType.BIT_SHIFT_LEFT);
+                    this.addToken(YASLTokenType.BIT_SHIFT_LEFT);
                 } else {
-                    this.addToken(TokenType.LESS_THAN);
+                    this.addToken(YASLTokenType.LESS_THAN);
                 }
                 break;
             case ">":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.GREATER_THAN_EQUAL_TO);
+                    this.addToken(YASLTokenType.GREATER_THAN_EQUAL_TO);
                 } else if (this.peek() == ">") {
                     this.consume();
-                    this.addToken(TokenType.BIT_SHIFT_RIGHT);
+                    this.addToken(YASLTokenType.BIT_SHIFT_RIGHT);
                 } else {
-                    this.addToken(TokenType.GREATER_THAN);
+                    this.addToken(YASLTokenType.GREATER_THAN);
                 }
                 break;
             case "!":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.NOT_EQUAL);
+                    this.addToken(YASLTokenType.NOT_EQUAL);
                 } else {
-                    this.addToken(TokenType.NEGATE);
+                    this.addToken(YASLTokenType.NEGATE);
                 }
                 break;
             case "+":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.PLUS_ASSIGN);
+                    this.addToken(YASLTokenType.PLUS_ASSIGN);
                 } else if (this.peek() == "+") {
                     this.consume();
-                    this.addToken(TokenType.INCREMENT);
+                    this.addToken(YASLTokenType.INCREMENT);
                 } else
-                    this.addToken(TokenType.PLUS);
+                    this.addToken(YASLTokenType.PLUS);
                 break;
             case "-":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.MINUS_ASSIGN);
+                    this.addToken(YASLTokenType.MINUS_ASSIGN);
                 } else if (this.peek() == "-") {
                     this.consume();
-                    this.addToken(TokenType.DECREMENT);
+                    this.addToken(YASLTokenType.DECREMENT);
                 } else
-                    this.addToken(TokenType.MINUS);
+                    this.addToken(YASLTokenType.MINUS);
                 break;
             case "*":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.MULTIPLY_ASSIGN);
+                    this.addToken(YASLTokenType.MULTIPLY_ASSIGN);
                 } else if (this.peek() == "*") {
                     this.consume();
                     if (this.peek() == "=") {
                         this.consume();
-                        this.addToken(TokenType.POW_ASSIGN);
+                        this.addToken(YASLTokenType.POW_ASSIGN);
                     } else
-                        this.addToken(TokenType.POWER);
+                        this.addToken(YASLTokenType.POWER);
                 } else
-                    this.addToken(TokenType.MULTIPLY);
+                    this.addToken(YASLTokenType.MULTIPLY);
                 break;
 
             case "%":
                 if (this.peek() == "=") {
                     this.consume();
-                    this.addToken(TokenType.MOD_ASSIGN);
+                    this.addToken(YASLTokenType.MOD_ASSIGN);
                 } else
-                    this.addToken(TokenType.MODULO);
+                    this.addToken(YASLTokenType.MODULO);
                 break;
             case "/":
                 switch (this.peek()) {
@@ -163,14 +162,14 @@ export class Lexer {
                             else break;
                         }
 
-                        this.addToken(TokenType.COMMENT);
+                        this.addToken(YASLTokenType.COMMENT);
                         break;
                     case "=":
                         this.consume();
-                        this.addToken(TokenType.DIVIDE_ASSIGN);
+                        this.addToken(YASLTokenType.DIVIDE_ASSIGN);
                         break;
                     default:
-                        this.addToken(TokenType.DIVIDE);
+                        this.addToken(YASLTokenType.DIVIDE);
 
                 }
                 break;
@@ -182,7 +181,7 @@ export class Lexer {
             case " ":
             case "\t":
                 if (this.tokenise_whitespaces)
-                    this.addToken(TokenType.WHITESPACE);
+                    this.addToken(YASLTokenType.WHITESPACE);
                 break;
             default:
                 this.reportError("Invalid token", c);
@@ -201,7 +200,7 @@ export class Lexer {
     }
 
     private peek() {
-        return this.isEOF() ? "\0" : this.text[this.next_read_index]!;
+        return this.isEOF() ? "": this.text[this.next_read_index]!;
     }
 
     private reportError(msg: string, token_value: string | null = null) {
@@ -214,13 +213,11 @@ export class Lexer {
             source: token_value ? token_value : this.text.slice(this.start_read_index, this.next_read_index)
         };
 
-        this.addToken(TokenType.ERROR, error);
+        this.addToken(YASLTokenType.ERROR, error);
 
     }
 
     private consume(): string {
-        if (this.isEOF())
-            return "\0";
         const c = this.text[this.next_read_index]!;
         // subtract 2, because I want the index before current index, that is twice before next index
         if (c === "\n") {
@@ -233,7 +230,7 @@ export class Lexer {
         return c;
     }
 
-    private addToken(type: TokenType, obj: Object | null = null) {
+    private addToken(type: YASLTokenType, obj: Object | null = null) {
         const lexeme = this.text.slice(this.start_read_index, this.next_read_index);
         this.tokens_list.push({
             type: type,
@@ -259,21 +256,21 @@ export class Lexer {
 
             switch (identifier) {
                 case "true":
-                    this.addToken(TokenType.TRUE, true);
+                    this.addToken(YASLTokenType.TRUE, true);
                     break;
                 case "false":
-                    this.addToken(TokenType.FALSE, false);
+                    this.addToken(YASLTokenType.FALSE, false);
                     break;
                 case "null":
-                    this.addToken(TokenType.NULL, null);
+                    this.addToken(YASLTokenType.NULL, null);
                     break;
                 default:
-                    this.addToken(identifier as TokenType, identifier);
+                    this.addToken(identifier as YASLTokenType, identifier);
                     break;
             }
 
         } else
-            this.addToken(TokenType.IDENTIFIER, identifier);
+            this.addToken(YASLTokenType.IDENTIFIER, identifier);
 
     }
 
@@ -318,7 +315,7 @@ export class Lexer {
             if (!Number.isFinite(value) || Number.isNaN(value))
                 this.reportError("Numeric overflow", num_str);
             else
-                this.addToken(TokenType.NUMBER, value);
+                this.addToken(YASLTokenType.NUMBER, value);
         }
     }
 
@@ -332,7 +329,7 @@ export class Lexer {
                 this.reportError(`Invalid newline in single line string`, str);
                 return;
             }
-            if (c == "\0") {
+            if (this.isEOF()) {
                 this.reportError(`Reached end of file after`, str);
                 return;
             }
@@ -362,7 +359,7 @@ export class Lexer {
             } else
                 str += c;
         }
-        this.addToken(TokenType.STRING, str);
+        this.addToken(YASLTokenType.STRING, str);
     }
 }
 

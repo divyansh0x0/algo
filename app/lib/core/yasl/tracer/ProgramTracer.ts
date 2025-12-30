@@ -1,11 +1,11 @@
-import {Environment, EnvironmentReturnCode} from "@/lib/core/yasl/environment";
+import {YASLEnvironment, EnvironmentReturnCode} from "@/lib/core/yasl/environment";
 import {
     type BinaryExpression,
     type CallNode,
     type DeclarationStatement,
     type IdentifierNode,
     type LiteralNode,
-    type NativeValue,
+    type YASLNativeValue,
     type PropertyAccessNode,
     type UnaryExpression,
     type YASLAssignment,
@@ -16,21 +16,23 @@ import {
     YASLNodeTypeChecker,
     YASLValueType
 } from "@/lib/core/yasl/tree";
-import {TokenType} from "@/lib/core/yasl/YASLToken";
+import {YASLTokenType as YASLTokenType} from "@/lib/core/yasl/YASLToken";
+import { TraceList } from "./TraceList";
+import { TracerType } from "./Tracers";
 
 interface StatementResult {
     line: number,
-    result: NativeValue
+    result: YASLNativeValue
 }
 
 type StatementResultCallback = ((t: StatementResult) => void);
 
-export class Interpreter {
+export class ProgramTracer {
     private next_node: YASLNode | null = null;
-    private current_scope = new Environment();
+    private current_scope = new YASLEnvironment();
     private statement_callback: null | StatementResultCallback = null;
     private line: number = 0;
-
+    private tracerList: TraceList = new TraceList();
     constructor() {
     }
 
@@ -54,8 +56,8 @@ export class Interpreter {
         return this.next_node === null;
     }
 
-    parseStatement(node: YASLNode) {
-        let result: NativeValue | null = null;
+    private parseStatement(node: YASLNode) {
+        let result: YASLNativeValue | null = null;
         switch (node.type) {
             case YASLNodeType.DECLARATION_STATEMENT:
                 result = this.parseDeclaration(node as DeclarationStatement);
@@ -81,8 +83,8 @@ export class Interpreter {
     }
 
 
-    parseExpression(node: YASLExpression): NativeValue {
-        let value: NativeValue = null;
+    private parseExpression(node: YASLExpression): YASLNativeValue {
+        let value: YASLNativeValue = null;
         switch (node.type) {
             case YASLNodeType.UNARY_EXPRESSION:
                 value = this.parseUnaryExpression(node as UnaryExpression);
@@ -104,7 +106,7 @@ export class Interpreter {
         return value;
     }
 
-    parseLiteral(node: LiteralNode) {
+    private parseLiteral(node: LiteralNode) {
         switch (node.valueType) {
             case YASLValueType.number:
                 return node.value as number;
@@ -118,78 +120,78 @@ export class Interpreter {
         return null;
     }
 
-    parseAssignment(node: YASLAssignment): NativeValue {
+    private parseAssignment(node: YASLAssignment): YASLNativeValue {
+
+        const assign_line = this.line;
         const lvalue = node.lvalue;
         const rvalue = this.parseExpression(node.rvalue);
+        this.tracerList.emitAssignVariable(node.lvalue.toString(), rvalue, assign_line);
         if (YASLNodeTypeChecker.isIdentifier(lvalue)) {
             this.handleEnvironmentReturnCode(this.current_scope.mutate(lvalue.name, rvalue), lvalue);
         } else if (YASLNodeTypeChecker.isPropertyAccess(lvalue)) {
             this.error("Not implemented", lvalue);
-
-            // this.current_scope.defineScope(lvalue.parent_node, rvalue);
         }
         console.log("Assigned ", rvalue, "to", lvalue);
 
         return rvalue;
     }
 
-    parseDeclaration(node: DeclarationStatement) {
+    private parseDeclaration(node: DeclarationStatement) {
         if (node.rvalue) {
             const rvalue = this.parseExpression(node.rvalue);
             this.current_scope.define(node.lvalue, rvalue);
             return rvalue;
-        } else
-            this.current_scope.define(node.lvalue, null);
-        console.log("Assigned ", node.rvalue, "to", node.lvalue);
+        } 
+        this.current_scope.define(node.lvalue, null);
         return null;
     }
 
-    parseBinaryExpression(node: BinaryExpression) {
+    private parseBinaryExpression(node: BinaryExpression) {
         let value = null;
-        const right: NativeValue = this.parseExpression(node.expression_left);
-        const left: NativeValue = this.parseExpression(node.expression_right);
+        const right: YASLNativeValue = this.parseExpression(node.expression_right);
+        const left: YASLNativeValue = this.parseExpression(node.expression_left);
         switch (node.op) {
-            case TokenType.MINUS:
+            case YASLTokenType.MINUS:
                 if (typeof right === "number" && typeof left === "number")
                     value = left - right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
-            case TokenType.PLUS:
+            case YASLTokenType.PLUS:
                 if (typeof right === "number" && typeof left === "number")
                     value = left + right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
-            case TokenType.MULTIPLY:
+            case YASLTokenType.MULTIPLY:
                 if (typeof right === "number" && typeof left === "number")
                     value = left * right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
-            case TokenType.DIVIDE:
+            case YASLTokenType.DIVIDE:
                 if (typeof right === "number" && typeof left === "number")
                     value = left / right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
-            case TokenType.MODULO:
+            case YASLTokenType.MODULO:
                 if (typeof right === "number" && typeof left === "number")
                     value = left % right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
 
-            case TokenType.AND:
+            case YASLTokenType.AND:
                 if (typeof right === "boolean" && typeof left === "boolean")
                     value = left && right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
 
-            case TokenType.OR:
+            case YASLTokenType.OR:
                 if (typeof right === "boolean" && typeof left === "boolean")
-                    value = left && right;
+                    value = left || right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
@@ -199,24 +201,24 @@ export class Interpreter {
         return value;
     }
 
-    parseUnaryExpression(node: UnaryExpression) {
+    private parseUnaryExpression(node: UnaryExpression) {
         let value = null;
-        const right: NativeValue = this.parseExpression(node.expression);
+        const right: YASLNativeValue = this.parseExpression(node.expression);
         switch (node.op) {
-            case TokenType.NEGATE:
+            case YASLTokenType.NEGATE:
                 if (typeof right === "boolean" || typeof right === "number")
                     value = !right;
                 else
                     this.valueError(YASLValueType.boolean, node);
 
                 break;
-            case TokenType.MINUS:
+            case YASLTokenType.MINUS:
                 if (typeof right === "number")
                     value = -1 * right;
                 else
                     this.valueError(YASLValueType.number, node);
                 break;
-            case TokenType.BIT_NOT:
+            case YASLTokenType.BIT_NOT:
                 if (typeof right === "number")
                     value = ~right;
                 else
@@ -228,15 +230,15 @@ export class Interpreter {
         return value;
     }
 
-    getIdentifierValue(node: IdentifierNode) {
+    private getIdentifierValue(node: IdentifierNode) {
         this.current_scope.get(node.name);
     }
 
-    getPropertyValue(node: PropertyAccessNode) {
+    private getPropertyValue(node: PropertyAccessNode) {
         this.error("Not implemented get property value", node);
     }
 
-    parseFunction(node: CallNode) {
+    private parseFunction(node: CallNode) {
         const function_name = node.identifier;
         if (YASLNodeTypeChecker.isIdentifier(function_name)) {
 
@@ -254,7 +256,7 @@ export class Interpreter {
         return null;
     }
 
-    consumeNode() {
+    private consumeNode() {
         const curr_node = this.next_node;
         if (curr_node)
             this.next_node = curr_node?.next_node;

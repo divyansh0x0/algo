@@ -103,7 +103,7 @@ export class IDERow {
         let rendered_text = "";
         if (this.tokens.length > 0) {
             for (const token of this.tokens) {
-                if (token.type === YASL.TokenType.EOF)
+                if (token.type === YASL.YASLTokenType.EOF)
                     break;
                 const text = raw_text.slice(token.start, token.end);
                 rendered_text += `<span class='${YASL.StringifyTokenType(token.type)}'>${text}</span>`;

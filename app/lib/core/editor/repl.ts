@@ -20,7 +20,7 @@ export class YASLRepl {
     private readonly yasl_editor: IDE;
     private readonly repl_input_container: HTMLDivElement = document.createElement("div");
     private readonly repl_output_container: HTMLDivElement = document.createElement("div");
-    private readonly runtime = new YASL.Interpreter();
+    private readonly runtime = new YASL.ProgramTracer();
 
     constructor(parent: HTMLElement) {
         // this.input_text.classList.add("yasl-repl-input");
