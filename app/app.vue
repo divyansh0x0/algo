@@ -1,13 +1,26 @@
 <script setup lang="ts">
-import {useThemeManager} from "~/composables/useThemeManager";
+import { Lexer, Parser, ProgramTracer } from "./lib/core/yasl";
 
-useThemeManager();
+onMounted(() => {
+    const code = `
+let a = 5`
+    const lexer = new Lexer(code);
+    const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
+    console.log("Tokens:", lexer.getTokens());
+    // const ast = parser.getProgram();
+    // console.log(ast);
+    // const tracer = new ProgramTracer();
+    // if (ast.root)
+    //     tracer.run(ast.root);
+    // else
+    //     console.log("No AST root found");
+});
+
 </script>
 <template>
-    <ButtonTheme/>
+    <ButtonTheme />
     <main :class="$colorMode.value" class="h-screen w-screen overflow-hidden">
-            <NuxtPage />
+        <NuxtPage />
     </main>
 </template>
-<style scoped>
-</style>
+<style scoped></style>

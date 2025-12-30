@@ -1,4 +1,4 @@
-import {type BinaryOperatorToken, type UnaryOperatorToken, type YASLToken} from "@/lib/core/yasl/YASLToken";
+import {type YASLTokenBinaryOp, type YASLTokenUnaryOp, type YASLToken} from "@/lib/core/yasl/YASLToken";
 
 
 export type YASLExpression =
@@ -10,7 +10,7 @@ export type YASLExpression =
     | IdentifierNode
     | PropertyAccessNode
     | PostfixOperation;
-export type NativeValue = string | number | boolean | null;
+export type YASLNativeValue = string | number | boolean | null;
 export type YASLLValue = IdentifierNode | PropertyAccessNode;
 
 export enum YASLNodeType {
@@ -70,13 +70,13 @@ export interface YASLNode {
 }
 
 export interface BinaryExpression extends YASLNode {
-    op: BinaryOperatorToken;
+    op: YASLTokenBinaryOp;
     expression_left: YASLExpression;
     expression_right: YASLExpression;
 }
 
 export interface UnaryExpression extends YASLNode {
-    op: UnaryOperatorToken;
+    op: YASLTokenUnaryOp;
     expression: YASLExpression;
 }
 
@@ -91,7 +91,7 @@ export interface TernaryExpression extends YASLNode {
 }
 
 export interface LiteralNode extends YASLNode {
-    value: NativeValue;
+    value: YASLNativeValue;
     valueType: YASLValueType;
 }
 
@@ -198,7 +198,7 @@ export class YASLNodeTypeChecker {
 export class YASLNodeFactory {
     private node_index = 0;
 
-    getBinaryExpression(op: BinaryOperatorToken, expression_left: YASLExpression, expression_right: YASLExpression): BinaryExpression {
+    getBinaryExpression(op: YASLTokenBinaryOp, expression_left: YASLExpression, expression_right: YASLExpression): BinaryExpression {
         return {
             op,
             expression_left,
@@ -211,7 +211,7 @@ export class YASLNodeFactory {
         };
     }
 
-    getUnaryExpression(op: UnaryOperatorToken, expression: YASLExpression, start: number, end: number): UnaryExpression {
+    getUnaryExpression(op: YASLTokenUnaryOp, expression: YASLExpression, start: number, end: number): UnaryExpression {
         return {
             op,
             expression,
@@ -245,7 +245,7 @@ export class YASLNodeFactory {
     //     };
     // }
 
-    getLiteralNode(value: NativeValue, valueType: YASLValueType, start_index: number, end_index: number): LiteralNode {
+    getLiteralNode(value: YASLNativeValue, valueType: YASLValueType, start_index: number, end_index: number): LiteralNode {
         return {
             value,
             valueType,
