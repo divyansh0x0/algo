@@ -1,6 +1,6 @@
-import type { YASLNativeValue } from "../tree";
 import type { YASLTokenBinaryOp, YASLTokenUnaryOp } from "../YASLToken";
 import { TracerType, type YASLTracer, type YASLTracerArrayRead, type YASLTracerArraySwap, type YASLTracerArrayWrite, type YASLTracerAssignVariable, type YASLTracerBinaryOperation, type YASLTracerConditionEvaluation, type YASLTracerDeclareVariable, type YASLTracerJump, type YASLTracerUnaryOperation } from "./Tracers";
+import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
 
 export class TraceList{
     traces: YASLTracer[] = [];

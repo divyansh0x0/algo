@@ -8,8 +8,8 @@
  */
 
 import { int } from "zod/v4";
-import type { YASLNativeValue} from "../tree";
 import type { YASLTokenUnaryOp, YASLTokenBinaryOp } from "../YASLToken";
+import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
 
 export enum TracerType {
     DECLARE_VARIABLE,
