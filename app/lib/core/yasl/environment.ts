@@ -1,4 +1,5 @@
-import {type YASLNativeValue, type YASLNode} from "@/lib/core/yasl/tree";
+import {type YASLNode} from "@/lib/core/yasl/tree";
+import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
 
 export enum EnvironmentReturnCode {
     AlreadyDefined,

@@ -1,4 +1,4 @@
-import {keywords, YASLTokenType, type YASLToken} from "@/lib/core/yasl/YASLToken";
+import {keywords, YASLTokenType, type YASLToken} from "./YASLToken";
 
 export interface LexerError {
     message: string;
@@ -362,24 +362,3 @@ export class Lexer {
         this.addToken(YASLTokenType.STRING, str);
     }
 }
-
-const lexer = new Lexer(`//Test for text highlight
-let x = 1000;
-let y = "hello world"
-print(x,y)
-
-if(x > 100){
-    print("x above hundred")
-}
-switch(y){
-    case 1:
-        while((let x:=2)){
-            someFunction(x)
-            x++;
-        }
-        break
-    default:
-        break
-}
-            `, true);
-console.log(lexer.getTokens());

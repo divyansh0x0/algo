@@ -1,4 +1,4 @@
-import {type YASLNode, YASLNodeType} from "@/lib/core/yasl/tree";
+import {type YASLNode, YASLNodeType} from "./tree";
 
 enum Colors {
     Reset = "\x1b[0m",
@@ -86,7 +86,6 @@ export class formatter {
         }
 
         function render(node: YASLNode, indentLevel: number, prefixStr = "") {
-            const indent = "  ".repeat(indentLevel);
             const branch = prefixStr ? `${prefixStr}└──` : "";
 
             if (indentLevel === 0) {
@@ -188,6 +187,10 @@ export class formatter {
                 return "Property Access";
             case YASLNodeType.POSTFIX_OPERATION:
                 return "Postfix Operation";
+            case YASLNodeType.ARRAY:
+                return "Array";
+            case YASLNodeType.IndexingOperation:
+                return "Indexing Operation"
             default:
                 return "Unknown YASLNode Type (" + YASLNodeType + ")";
         }

@@ -226,7 +226,7 @@ export const keywords = Object.freeze(new Map<string, YASLTokenType>(
 export interface YASLToken {
     type: YASLTokenType;
     lexeme: string;
-    literal: Object | string | number | boolean | null;
+    literal: object | string | number | boolean | null;
     // line: number;
     start: number;
     end: number;

@@ -1,11 +1,10 @@
-import {YASLEnvironment, EnvironmentReturnCode} from "@/lib/core/yasl/environment";
+import {YASLEnvironment, EnvironmentReturnCode} from "../environment";
 import {
     type BinaryExpression,
     type CallNode,
     type DeclarationStatement,
     type IdentifierNode,
     type LiteralNode,
-    type YASLNativeValue,
     type PropertyAccessNode,
     type UnaryExpression,
     type YASLAssignment,
@@ -13,12 +12,15 @@ import {
     type YASLLValue,
     type YASLNode,
     YASLNodeType,
-    YASLNodeTypeChecker,
     YASLValueType
-} from "@/lib/core/yasl/tree";
-import {YASLTokenType as YASLTokenType} from "@/lib/core/yasl/YASLToken";
+} from "../tree";
+import {YASLTokenType as YASLTokenType} from "../YASLToken";
 import { TraceList } from "./TraceList";
-import { TracerType } from "./Tracers";
+import {Lexer} from "../lexer";
+import type {YASLNativeValue} from "../natives/YASLNativeValue";
+import {YASLNodeTypeChecker} from "../YASLNodeTypeChecker";
+import {Parser} from "../parser/Parser";
+import {formatter} from "../formatter";
 
 interface StatementResult {
     line: number,
@@ -33,8 +35,7 @@ export class ProgramTracer {
     private statement_callback: null | StatementResultCallback = null;
     private line: number = 0;
     private tracerList: TraceList = new TraceList();
-    constructor() {
-    }
+
 
     attachStatementCallback(callback: StatementResultCallback | null) {
         this.statement_callback = callback;
@@ -121,7 +122,7 @@ export class ProgramTracer {
     }
 
     private parseAssignment(node: YASLAssignment): YASLNativeValue {
-
+        const parseLine = this.line;
         const assign_line = this.line;
         const lvalue = node.lvalue;
         const rvalue = this.parseExpression(node.rvalue);
@@ -133,16 +134,20 @@ export class ProgramTracer {
         }
         console.log("Assigned ", rvalue, "to", lvalue);
 
+        this.tracerList.emitAssignVariable(lvalue.toString(),rvalue,parseLine);
         return rvalue;
     }
 
     private parseDeclaration(node: DeclarationStatement) {
+        const parseLine = this.line;
         if (node.rvalue) {
             const rvalue = this.parseExpression(node.rvalue);
             this.current_scope.define(node.lvalue, rvalue);
+            this.tracerList.emitDeclareVariable(node.lvalue,parseLine,rvalue);
             return rvalue;
-        } 
+        }
         this.current_scope.define(node.lvalue, null);
+        this.tracerList.emitDeclareVariable(node.lvalue,parseLine,null);
         return null;
     }
 
@@ -287,4 +292,21 @@ export class ProgramTracer {
                 break;
         }
     }
+
+    getTraces(){
+        return this.tracerList;
+    }
 }
+const lexer = new Lexer("a = [3, b,'hi']");
+const p = new Parser(lexer.getTokens(),lexer.getLineMap());
+console.log(lexer.getTokens());
+const prog=p.getProgram();
+// const programTracer = new ProgramTracer();
+if(prog.root){
+
+    console.log(formatter.formatAst(prog.root));
+    // programTracer.run(prog.root);
+    // console.log(programTracer.getTraces().traces);
+}
+else
+    console.error("Welp its fucked")
