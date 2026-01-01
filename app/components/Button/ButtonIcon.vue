@@ -6,7 +6,8 @@ const props = defineProps({
 
 <template>
     <button v-bind="$attrs">
-        <Icon v-if="props.icon" :name="props.icon"/>
+        <slot/>
+        <Icon  v-if="props.icon" inline :name="props.icon"/>
     </button>
 </template>
 

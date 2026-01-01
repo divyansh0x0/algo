@@ -80,6 +80,11 @@ canvas {
 input {
     outline: none;
 }
+.iconify{
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}
 
 /* Base input style */
 /*input[type="range"] {*/

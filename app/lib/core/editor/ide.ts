@@ -9,23 +9,7 @@ import {Lexer, Parser, type YASLToken} from "@/lib/core/yasl";
 import "./yasl-editor.scss";
 
 const TEST_CODE = `//Test for text highlight
-let x = 1000;
-let y = "hello world"
-print(x,y)
-
-if(x > 100){
-    print("x above hundred")
-}
-switch(y){
-    case 1:
-        while((let x:=2)){
-            someFunction(x)
-            x++;
-        }
-        break
-    default:
-        break
-}
+let x = [1,2,3];
 `;
 
 function getMonospaceCharBox(el: HTMLElement) {
@@ -520,10 +504,7 @@ export class IDE {
             const row = this.getEditorRow(i);
             text += row.raw + "\n";
         }
-
-        const lexer = new Lexer(text);
-        const parser = new Parser(lexer.getTokens(), lexer.getLineMap());        
-
+        console.log("Ran");
     }
 
     private deleteSelection(): void {
