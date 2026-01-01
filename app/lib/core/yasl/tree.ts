@@ -1,4 +1,4 @@
-import type {YASLToken,  YASLTokenBinaryOp,  YASLTokenUnaryOp} from "@/lib/core/yasl/YASLToken";
+import type {YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp} from "@/lib/core/yasl/YASLToken";
 import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
 
 export type YASLExpression =
@@ -9,8 +9,8 @@ export type YASLExpression =
     | CallNode
     | IdentifierNode
     | PropertyAccessNode
-    | PostfixOperation | IndexingOperation| ArrayLiteralNode;
-export type YASLLValue = IdentifierNode | PropertyAccessNode;
+    | PostfixOperation | IndexingOperation | ArrayLiteralNode;
+export type YASLLValue = IdentifierNode | PropertyAccessNode | IndexingOperation;
 
 export enum YASLNodeType {
     IDENTIFIER = "identifier",
@@ -36,8 +36,8 @@ export enum YASLNodeType {
     TERNARY_EXPRESSION = "ternaryExpression",
     PROPERTY_ACCESS = "propertyAccess",
     POSTFIX_OPERATION = "postfixOperation",
-    ARRAY="array",
-    IndexingOperation="indexingOperation",
+    ARRAY = "array",
+    IndexingOperation = "indexingOperation",
 }
 
 export enum YASLValueType {
@@ -65,8 +65,8 @@ export interface PostfixOperation extends YASLNode {
 }
 
 export interface PropertyAccessNode extends YASLNode {
-    parent_node: YASLLValue,
-    child_node: IdentifierNode,
+    curr_node: YASLExpression,
+    property_node?: YASLExpression,
 }
 
 export interface BinaryExpression extends YASLNode {
@@ -98,18 +98,21 @@ export interface LiteralNode extends YASLNode {
 export interface IdentifierNode extends YASLNode {
     name: string;
 }
-export interface ArrayLiteralNode extends YASLNode{
+
+export interface ArrayLiteralNode extends YASLNode {
     type: YASLNodeType.ARRAY;
-    elements: YASLExpression[]
+    elements: YASLExpression[];
 }
-export interface IndexingOperation extends YASLNode{
+
+export interface IndexingOperation extends YASLNode {
     type: YASLNodeType.IndexingOperation;
     operand: YASLExpression;
-    index:YASLExpression;
+    index: YASLExpression;
 }
+
 export interface CallNode extends YASLNode {
-    identifier: YASLLValue;
-    args: YASLNode[];
+    callee: YASLExpression;
+    args: YASLExpression[];
 }
 
 export interface BreakStatement extends YASLNode {
@@ -132,7 +135,7 @@ export interface DeclarationStatement extends YASLNode {
 
 export interface YASLAssignment extends YASLNode {
     operator: YASLToken,
-    lvalue: YASLLValue,
+    lvalue: YASLExpression,
     rvalue: YASLExpression,
 }
 

@@ -1,9 +1,11 @@
-import {YASLEnvironment, EnvironmentReturnCode} from "../environment";
+import {EnvironmentReturnCode, YASLEnvironment} from "../environment/environment";
 import {
+    type ArrayLiteralNode,
     type BinaryExpression,
     type CallNode,
     type DeclarationStatement,
     type IdentifierNode,
+    type IndexingOperation,
     type LiteralNode,
     type PropertyAccessNode,
     type UnaryExpression,
@@ -15,12 +17,15 @@ import {
     YASLValueType
 } from "../tree";
 import {YASLTokenType as YASLTokenType} from "../YASLToken";
-import { TraceList } from "./TraceList";
+import {TraceList} from "./TraceList";
 import {Lexer} from "../lexer";
 import type {YASLNativeValue} from "../natives/YASLNativeValue";
 import {YASLNodeTypeChecker} from "../YASLNodeTypeChecker";
 import {Parser} from "../parser/Parser";
 import {formatter} from "../formatter";
+import {YASLArrayObj} from "../natives/YASLArrayObj";
+import type {YASLMemPointer} from "../environment/YASLMemPointer";
+import {YASLArrayValueMemPointer} from "../environment/YASLArrayValueMemPointer";
 
 interface StatementResult {
     line: number,
@@ -31,11 +36,16 @@ type StatementResultCallback = ((t: StatementResult) => void);
 
 export class ProgramTracer {
     private next_node: YASLNode | null = null;
-    private current_scope = new YASLEnvironment();
+    private rootScope: YASLEnvironment;
+    private currentScope: YASLEnvironment;
     private statement_callback: null | StatementResultCallback = null;
     private line: number = 0;
     private tracerList: TraceList = new TraceList();
 
+    constructor() {
+        this.rootScope = new YASLEnvironment();
+        this.currentScope = this.rootScope;
+    }
 
     attachStatementCallback(callback: StatementResultCallback | null) {
         this.statement_callback = callback;
@@ -48,7 +58,7 @@ export class ProgramTracer {
             const node = this.consumeNode();
             if (!node)
                 break;
-            this.parseStatement(node);
+            this.evalStatement(node);
             this.line++;
         }
     }
@@ -57,21 +67,21 @@ export class ProgramTracer {
         return this.next_node === null;
     }
 
-    private parseStatement(node: YASLNode) {
+    private evalStatement(node: YASLNode) {
         let result: YASLNativeValue | null = null;
         switch (node.type) {
             case YASLNodeType.DECLARATION_STATEMENT:
-                result = this.parseDeclaration(node as DeclarationStatement);
+                result = this.evalDeclaration(node as DeclarationStatement);
                 break;
             case YASLNodeType.ASSIGNMENT:
-                result = this.parseAssignment(node as YASLAssignment);
+                result = this.evalAssignment(node as YASLAssignment);
                 break;
             case YASLNodeType.CALL:
-                result = this.parseFunction(node as CallNode);
+                result = this.evalFunction(node as CallNode);
                 break;
             default:
                 if (YASLNodeTypeChecker.isExpression(node))
-                    result = this.parseExpression(node);
+                    result = this.evalExpression(node);
                 else
                     this.error("Invalid statement", node);
         }
@@ -84,30 +94,29 @@ export class ProgramTracer {
     }
 
 
-    private parseExpression(node: YASLExpression): YASLNativeValue {
-        let value: YASLNativeValue = null;
+    private evalExpression(node: YASLExpression): YASLNativeValue {
         switch (node.type) {
             case YASLNodeType.UNARY_EXPRESSION:
-                value = this.parseUnaryExpression(node as UnaryExpression);
-                break;
+                return this.evalUnaryExpression(node as UnaryExpression);
             case YASLNodeType.BINARY_EXPRESSION:
-                value = this.parseBinaryExpression(node as BinaryExpression);
-                break;
+                return this.evalBinaryExpression(node as BinaryExpression);
+            case YASLNodeType.IndexingOperation:
+                return this.evalIndexingOperation(node as IndexingOperation);
             case YASLNodeType.ASSIGNMENT:
-                value = this.parseAssignment(node as YASLAssignment);
-                break;
+                return this.evalAssignment(node as YASLAssignment);
+            case YASLNodeType.ARRAY:
+                return this.evalArray(node as ArrayLiteralNode);
             case YASLNodeType.LITERAL:
-                value = this.parseLiteral(node as LiteralNode);
+                return this.evalLiteral(node as LiteralNode);
+            case YASLNodeType.IDENTIFIER:
+                return this.evalMemAccessUsingIdentifier(node as IdentifierNode)?.get() ?? null;
+            default:
+                this.error("Invalid expression", node);
+                return null;
         }
-        if (!value) {
-            this.error("Invalid expression", node);
-            return null;
-        }
-
-        return value;
     }
 
-    private parseLiteral(node: LiteralNode) {
+    private evalLiteral(node: LiteralNode) {
         switch (node.valueType) {
             case YASLValueType.number:
                 return node.value as number;
@@ -121,40 +130,55 @@ export class ProgramTracer {
         return null;
     }
 
-    private parseAssignment(node: YASLAssignment): YASLNativeValue {
-        const parseLine = this.line;
-        const assign_line = this.line;
-        const lvalue = node.lvalue;
-        const rvalue = this.parseExpression(node.rvalue);
-        this.tracerList.emitAssignVariable(node.lvalue.toString(), rvalue, assign_line);
-        if (YASLNodeTypeChecker.isIdentifier(lvalue)) {
-            this.handleEnvironmentReturnCode(this.current_scope.mutate(lvalue.name, rvalue), lvalue);
-        } else if (YASLNodeTypeChecker.isPropertyAccess(lvalue)) {
-            this.error("Not implemented", lvalue);
-        }
-        console.log("Assigned ", rvalue, "to", lvalue);
+    private evalAssignment(node: YASLAssignment): YASLNativeValue {
+        // const assign_line = this.line;
+        const lvalue = this.evalLValue(node.lvalue);
+        const rvalue = this.evalExpression(node.rvalue);
+        if (lvalue) {
+            lvalue.set(rvalue);
+            console.log("Assigned ", rvalue, "to", lvalue);
+        } else
+            this.error("LValue does not exist", node.lvalue);
 
-        this.tracerList.emitAssignVariable(lvalue.toString(),rvalue,parseLine);
         return rvalue;
     }
 
-    private parseDeclaration(node: DeclarationStatement) {
-        const parseLine = this.line;
+    private evalDeclaration(node: DeclarationStatement) {
+        const evalLine = this.line;
         if (node.rvalue) {
-            const rvalue = this.parseExpression(node.rvalue);
-            this.current_scope.define(node.lvalue, rvalue);
-            this.tracerList.emitDeclareVariable(node.lvalue,parseLine,rvalue);
+            const rvalue = this.evalExpression(node.rvalue);
+            this.currentScope.define(node.lvalue, rvalue);
+            this.tracerList.emitDeclareVariable(node.lvalue, evalLine, rvalue);
             return rvalue;
         }
-        this.current_scope.define(node.lvalue, null);
-        this.tracerList.emitDeclareVariable(node.lvalue,parseLine,null);
+        this.currentScope.define(node.lvalue, null);
+        this.tracerList.emitDeclareVariable(node.lvalue, evalLine, null);
         return null;
     }
 
-    private parseBinaryExpression(node: BinaryExpression) {
+    private evalArray(node: ArrayLiteralNode): YASLNativeValue {
+        const values: YASLNativeValue[] = [];
+        for (const element of node.elements) {
+            values.push(this.evalExpression(element));
+        }
+        return new YASLArrayObj(values);
+    }
+
+    private evalIndexingOperation(node: IndexingOperation): YASLNativeValue {
+        const operand = this.evalExpression(node.operand);
+        const indexValue = this.evalExpression(node.index);
+        if (operand && typeof operand === "object") {
+            if (indexValue && typeof indexValue === "number")
+                return operand.get(indexValue);
+        }
+
+        return null;
+    }
+
+    private evalBinaryExpression(node: BinaryExpression) {
         let value = null;
-        const right: YASLNativeValue = this.parseExpression(node.expression_right);
-        const left: YASLNativeValue = this.parseExpression(node.expression_left);
+        const right: YASLNativeValue = this.evalExpression(node.expression_right);
+        const left: YASLNativeValue = this.evalExpression(node.expression_left);
         switch (node.op) {
             case YASLTokenType.MINUS:
                 if (typeof right === "number" && typeof left === "number")
@@ -206,9 +230,9 @@ export class ProgramTracer {
         return value;
     }
 
-    private parseUnaryExpression(node: UnaryExpression) {
+    private evalUnaryExpression(node: UnaryExpression) {
         let value = null;
-        const right: YASLNativeValue = this.parseExpression(node.expression);
+        const right: YASLNativeValue = this.evalExpression(node.expression);
         switch (node.op) {
             case YASLTokenType.NEGATE:
                 if (typeof right === "boolean" || typeof right === "number")
@@ -235,29 +259,25 @@ export class ProgramTracer {
         return value;
     }
 
-    private getIdentifierValue(node: IdentifierNode) {
-        this.current_scope.get(node.name);
-    }
-
     private getPropertyValue(node: PropertyAccessNode) {
         this.error("Not implemented get property value", node);
     }
 
-    private parseFunction(node: CallNode) {
-        const function_name = node.identifier;
-        if (YASLNodeTypeChecker.isIdentifier(function_name)) {
+    private evalFunction(node: CallNode): YASLNativeValue {
+        const callNode = node.callee;
+        if (YASLNodeTypeChecker.isIdentifier(callNode)) {
 
-            switch (function_name.name) {
+            switch (callNode.name) {
                 case "print": {
-                    // console.log(node.args)
+                    const values = [];
                     for (const arg of node.args) {
-                        console.log(arg);
+                        values.push(this.evalExpression(arg));
                     }
+                    console.log(...values);
                 }
             }
-        } else {
-            this.error("Not implemented", node);
         }
+
         return null;
     }
 
@@ -293,20 +313,96 @@ export class ProgramTracer {
         }
     }
 
-    getTraces(){
+    getTraces() {
         return this.tracerList;
     }
-}
-const lexer = new Lexer("a = [3, b,'hi']");
-const p = new Parser(lexer.getTokens(),lexer.getLineMap());
-console.log(lexer.getTokens());
-const prog=p.getProgram();
-// const programTracer = new ProgramTracer();
-if(prog.root){
 
-    console.log(formatter.formatAst(prog.root));
-    // programTracer.run(prog.root);
-    // console.log(programTracer.getTraces().traces);
+
+    private evalLValue(lvalue: YASLExpression): YASLMemPointer | null {
+        switch (lvalue.type) {
+            case YASLNodeType.IndexingOperation: {
+                const indexOpNode = lvalue as IndexingOperation;
+                const operand = this.evalLValue(indexOpNode.operand);
+                const index = this.evalExpression(indexOpNode.index);
+                if (!operand) {
+                    this.error("Indexing operation applied to a non existing variable", indexOpNode.operand);
+                    return null;
+                }
+                if (index && typeof index === "number") {
+                    const val = operand.get();
+                    if (!val || typeof val !== "object") {
+                        this.error("Invalid indexing operation", indexOpNode.operand);
+                        return null;
+                    }
+                    return new YASLArrayValueMemPointer(val, index);
+                }
+                this.error("Index operator was not a number", indexOpNode.index);
+                break;
+            }
+            case YASLNodeType.IDENTIFIER:
+                return this.evalMemAccessUsingIdentifier(lvalue as IdentifierNode);
+            case YASLNodeType.PROPERTY_ACCESS: {
+                const propertyAccess = lvalue as PropertyAccessNode;
+                const ptr = this.evalLValue(propertyAccess.curr_node);
+                if (!ptr) {
+                    this.error("Object does not exist in memory", propertyAccess.curr_node);
+                    return null;
+                }
+                const property = propertyAccess.property_node;
+                console.log(property?.type);
+                break;
+            }
+            default:
+                this.error("Invalid expression for lvalue", lvalue);
+
+        }
+        return null;
+    }
+
+    private evalMemAccessUsingIdentifier(node: IdentifierNode) {
+        let val = this.currentScope.get(node.name);
+        const lastScope = this.currentScope;
+        while (!val && this.currentScope.parent) {
+            this.currentScope = this.currentScope.parent;
+            val = this.currentScope.get(node.name);
+        }
+        if (val === undefined) {
+            this.error(`Couldn't find value associated with ${node.name}`, node);
+            return null;
+        }
+        this.currentScope = lastScope;
+
+        return val;
+    }
+
+    private parseArgs(args: YASLExpression[]) {
+        const values: YASLNativeValue[] = [];
+        for (const arg of args) {
+            values.push(this.evalExpression(arg));
+        }
+        return values;
+    }
 }
-else
-    console.error("Welp its fucked")
+
+const code = `
+let a = [1,2,3]
+print("hello world",3)
+
+a.length();
+`;
+const lexer = new Lexer(code);
+const p = new Parser(lexer.getTokens(), lexer.getLineMap());
+// console.log(lexer.getTokens());
+const prog = p.getProgram();
+for (const error of p.getErrors()) {
+    console.log(error);
+}
+const programTracer = new ProgramTracer();
+if (prog.root) {
+
+    // console.log(formatter.formatAst(prog.root));
+    programTracer.run(prog.root);
+    // console.log(programTracer.getTraces().traces);
+
+} else
+    console.error("Welp its fucked");

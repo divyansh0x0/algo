@@ -130,13 +130,13 @@ export class YASLNodeFactory {
         };
     }
 
-    getCallNode(identifier_node: YASLLValue, args: YASLNode[]): CallNode {
+    getCallNode(callee: YASLExpression, args: YASLExpression[]): CallNode {
         return {
             type: YASLNodeType.CALL,
-            identifier: identifier_node,
+            callee: callee,
             debug_id: this.getDebugId(),
-            start_index: identifier_node.start_index,
-            end_index: identifier_node.end_index,
+            start_index: callee.start_index,
+            end_index: callee.end_index,
             args, next_node: null
         };
     }
@@ -184,7 +184,7 @@ export class YASLNodeFactory {
         };
     }
 
-    getAssignmentExpression(assignment_token: YASLToken, lvalue: YASLLValue, rvalue: YASLExpression): YASLAssignment {
+    getAssignmentExpression(assignment_token: YASLToken, lvalue: YASLExpression, rvalue: YASLExpression): YASLAssignment {
         return {
             type: YASLNodeType.ASSIGNMENT,
             lvalue: lvalue,
@@ -297,15 +297,15 @@ export class YASLNodeFactory {
         };
     }
 
-    getPropertyAccessExpression(parent: YASLLValue, child: IdentifierNode): PropertyAccessNode {
+    getPropertyAccessExpression(curr: YASLExpression, child?: YASLExpression): PropertyAccessNode {
         return {
-            parent_node: parent,
-            child_node: child,
+            curr_node: curr,
+            property_node: child,
             type: YASLNodeType.PROPERTY_ACCESS,
             next_node: null,
             debug_id: this.getDebugId(),
-            start_index: parent.start_index,
-            end_index: child.start_index
+            start_index: curr.start_index,
+            end_index: child ? child.end_index : curr.end_index
         };
     }
 

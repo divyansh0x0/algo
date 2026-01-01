@@ -1,6 +1,6 @@
 import {type YASLToken, YASLTokenType} from "../YASLToken";
 import {binarySearch} from "./BinarySearch";
-import type{ YASLValueType} from "../tree";
+import type {YASLValueType} from "../tree";
 
 export function parseTypeToken(token: YASLToken): YASLValueType | null {
     switch (token.lexeme) {
@@ -20,6 +20,7 @@ export function isOperator(token: YASLToken) {
         return false;
     switch (token.type) {
         case YASLTokenType.LPAREN:
+        case YASLTokenType.LBRACKET:
         case YASLTokenType.DOT:
         case YASLTokenType.MODULO:
         case YASLTokenType.MULTIPLY:
@@ -43,6 +44,7 @@ export function getBindingPower(token_type: YASLTokenType): [number, number] | n
             return [100, 101];
 
         case YASLTokenType.LPAREN:
+        case YASLTokenType.LBRACKET:
             return [90, 91];
         case YASLTokenType.AND:
         case YASLTokenType.OR:

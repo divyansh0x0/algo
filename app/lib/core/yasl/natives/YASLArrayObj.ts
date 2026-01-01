@@ -1,6 +1,6 @@
 import type {YASLNativeValue} from "./YASLNativeValue";
 
-export class YASLArray {
+export class YASLArrayObj {
     private readonly internal: YASLNativeValue[];
 
     constructor(initialValues: YASLNativeValue[]) {
@@ -11,11 +11,11 @@ export class YASLArray {
         return this.internal.length;
     }
 
-    get(index: number) {
+    get(index: number): YASLNativeValue {
         if (index < 0 || index >= this.internal.length) {
             throw new Error(`Index ${index} out of bounds`);
         }
-        return this.internal[index];
+        return this.internal[index]!;
     }
 
     set(index: number, value: YASLNativeValue) {
@@ -27,10 +27,10 @@ export class YASLArray {
     push(value:YASLNativeValue){
         this.internal.push(value);
     }
-    pop(){
+    pop(): YASLNativeValue{
         if(this.internal.length === 0)
             throw new Error("Pop from empty array is not possible");
 
-        return this.internal.pop();
+        return this.internal.pop()!;
     }
 }

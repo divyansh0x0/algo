@@ -1,9 +1,6 @@
 import {formatter} from "../formatter";
 import {
-    type IdentifierNode,
     type YASLExpression,
-    type YASLNode,
-    YASLNodeType,
     YASLProgram,
     YASLValueType
 } from "../tree";
@@ -41,6 +38,10 @@ export class Parser {
         return this.program;
     }
 
+    getErrors() {
+        return this.errors;
+    }
+
     private parseStatement() {
         const token = this.peek();
 
@@ -65,10 +66,6 @@ export class Parser {
                 }
                 if (isAssignmentOperator(next_token.type)) {
                     this.consume();
-                    if (!YASLNodeTypeChecker.isLValue(lvalue)) {
-                        this.errorToken("Invalid LValue");
-                        break;
-                    }
                     const rvalue = this.consumeExpression();
                     if (!rvalue) {
                         this.errorToken("Invalid RValue");
@@ -113,8 +110,8 @@ export class Parser {
                 start_line: line1,
                 end_line: line2
             });
+            throw Error(msg);
         }
-
 
         this.synchronize();
     }
@@ -147,7 +144,7 @@ export class Parser {
         if (this.peek().type === token_type) {
             return this.consume();
         } else {
-            this.errorToken(msg ?? `Expected ${token_type} but got ${this.peek()}` );
+            this.errorToken(msg ?? `Expected ${token_type} but got ${this.peek()}`);
             return null;
         }
 
@@ -172,7 +169,8 @@ export class Parser {
                 node = this.consumeExpression();
                 break;
             default:
-                this.errorToken(`Invalid token`, token);
+
+                this.errorToken(`Invalid token in parseExpression`, token);
                 break;
         }
 
@@ -247,15 +245,15 @@ export class Parser {
                 this.expect(YASLTokenType.RPAREN);
                 return expr;
             }
-            case YASLTokenType.LBRACKET:{
+            case YASLTokenType.LBRACKET: {
                 const values: YASLExpression[] = [];
-                while(this.peek().type !== YASLTokenType.RBRACKET){
-                    if(this.isEOF()){
+                while (this.peek().type !== YASLTokenType.RBRACKET) {
+                    if (this.isEOF()) {
                         this.errorToken("Unexpected EOF while reading array");
-                        break
+                        break;
                     }
                     const exp = this.consumeExpression(0);
-                    if(exp)
+                    if (exp)
                         values.push(exp);
                     token = this.peek();
                     if (token.type === YASLTokenType.COMMA) {
@@ -286,9 +284,31 @@ export class Parser {
      * @param left_node
      * @param bp
      */
-    private led(op_token: YASLToken, left_node: YASLNode, bp: [number, number]): YASLExpression | null {
+    private led(op_token: YASLToken, left_node: YASLExpression, bp: [number, number]): YASLExpression | null {
         const [, right_bp] = bp;
+        // Postfix operators
+        if (isPostfixOperator(op_token.type)) {
+            if (!isExpressionTerminator(this.peek().type)) {
+                this.errorToken("Postfix operators can only be followed by an expression terminator");
+            }
+            if (!YASLNodeTypeChecker.isLValue(left_node)) {
+                this.errorToken("Postfix operator can only be applied to a LValue");
+                return null;
+            }
+            return this.node_factory.getPostfixOperation(op_token, left_node);
+        }
 
+        // Indexing operator
+        // identifier followed by '[' marks start of array access
+        if (op_token.type === YASLTokenType.LBRACKET) {
+            const index = this.consumeExpression(0);
+            if (!index) {
+                this.errorToken("Invalid expression used for index");
+            }
+            this.expect(YASLTokenType.RBRACKET, "Expected ']' ");
+            if (index)
+                return this.node_factory.getIndexOperation(left_node, index);
+        }
 
         // Function call
         if (op_token.type === YASLTokenType.LPAREN) {
@@ -298,7 +318,7 @@ export class Parser {
             }
 
             // Argument parsing
-            const args: YASLNode[] = [];
+            const args: YASLExpression[] = [];
             this.parenthesis_count++;
             if (!this.match(YASLTokenType.RPAREN)) {
                 let token = null;
@@ -327,59 +347,23 @@ export class Parser {
         }
 
         //For binary operators only
-
         const right_node = this.consumeExpression(right_bp);
         if (!right_node)
             return null;
 
         //Assignment
         if (op_token.type === YASLTokenType.INLINE_ASSIGN) {
-            if (!YASLNodeTypeChecker.isLValue(left_node)) {
-                this.errorToken(`${formatter.formatAstJSON(left_node)} is an invalid LValue`, op_token);
-                return null;
-            }
             return this.node_factory.getAssignmentExpression(op_token, left_node, right_node);
-
-            // If the op is a dot then i
-
         }
+        //Property access
         if (op_token.type === YASLTokenType.DOT) {
-            if (right_node.type === YASLNodeType.IDENTIFIER && YASLNodeTypeChecker.isLValue(left_node)) {
-                return this.node_factory.getPropertyAccessExpression(left_node, right_node as IdentifierNode);
+            if (YASLNodeTypeChecker.isExpression(left_node) && YASLNodeTypeChecker.isExpression(right_node)) {
+                return this.node_factory.getPropertyAccessExpression(left_node, right_node);
             }
             this.errorToken("The right side of property access must be a valid identifier but was " + formatter.formatNodeType(left_node.type));
             return null;
         }
-
-        if (YASLNodeTypeChecker.isExpression(left_node) && YASLNodeTypeChecker.isExpression(right_node))
-            return this.node_factory.getBinaryExpression(op_token.type as YASLTokenBinaryOp, left_node, right_node);
-        else {
-            this.errorToken("Invalid expression", op_token);
-        }
-        // Postfix operators
-        if (isPostfixOperator(op_token.type)) {
-            if (!isExpressionTerminator(this.peek().type)) {
-                this.errorToken("Postfix operators can only be followed by an expression terminator");
-            }
-            if (!YASLNodeTypeChecker.isLValue(left_node)) {
-                this.errorToken("Postfix operator can only be applied to a LValue");
-                return null;
-            }
-            return this.node_factory.getPostfixOperation(op_token, left_node);
-        }
-
-        // Indexing operator
-        // identifier followed by '[' marks start of array access
-        if(op_token.type === YASLTokenType.LBRACKET){
-            const index = this.consumeExpression(0);
-            if(!index){
-                this.errorToken("Invalid expression used for index")
-            }
-            this.expect(YASLTokenType.RBRACKET, "Expected ']' ")
-            if(YASLNodeTypeChecker.isLValue(left_node) && index)
-                return this.node_factory.getIndexOperation(left_node,index);
-        }
-        return null;
+        return this.node_factory.getBinaryExpression(op_token.type as YASLTokenBinaryOp, left_node, right_node);
     }
 
     /**

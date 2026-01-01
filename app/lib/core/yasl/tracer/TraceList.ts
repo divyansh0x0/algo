@@ -4,7 +4,6 @@ import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
 
 export class TraceList{
     traces: YASLTracer[] = [];
-    constructor(){}
 
     private emit(trace: YASLTracer){
         this.traces.push(trace);
