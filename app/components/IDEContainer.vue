@@ -1,19 +1,27 @@
 <script lang="ts" setup>
 
 const ide_container = ref<HTMLDivElement | null>(null);
+let ide:unknown = null;
 onMounted(async () => {
     const editor = await import("@/lib/core/editor");
-    if (ide_container.value) {
-        const ide = new editor.IDE(ide_container.value);
+    if (ide_container.value !== null) {
+        ide = new editor.IDE(ide_container.value);
     }
-})
+});
+function onRunBtnClick(){
+    if(ide && typeof ide == "object" && "run" in ide && typeof ide["run"] ==="function"){
+        ide.run();
+    }
+}
 </script>
+
 
 <template>
     <div class="wrapper">
-        <div id="editor-container" ref="ide_container">
-
+        <div>
+            <ButtonIcon ref="runBtn" @click="onRunBtnClick" icon="mdi:play"/>
         </div>
+        <div id="editor-container" ref="ide_container"/>
     </div>
 </template>
 
