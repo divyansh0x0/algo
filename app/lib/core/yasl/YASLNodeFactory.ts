@@ -133,7 +133,7 @@ export class YASLNodeFactory {
     getCallNode(callee: YASLExpression, args: YASLExpression[]): CallNode {
         return {
             type: YASLNodeType.CALL,
-            callee: callee,
+            qualifiedName: callee,
             debug_id: this.getDebugId(),
             start_index: callee.start_index,
             end_index: callee.end_index,
@@ -300,7 +300,7 @@ export class YASLNodeFactory {
     getPropertyAccessExpression(curr: YASLExpression, child?: YASLExpression): PropertyAccessNode {
         return {
             curr_node: curr,
-            property_node: child,
+            member_node: child,
             type: YASLNodeType.PROPERTY_ACCESS,
             next_node: null,
             debug_id: this.getDebugId(),

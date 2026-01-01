@@ -10,6 +10,7 @@
 import { int } from "zod/v4";
 import type { YASLTokenUnaryOp, YASLTokenBinaryOp } from "../YASLToken";
 import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
+import type {YASLArrayObj} from "../natives/YASLArrayObj";
 
 export enum TracerType {
     DECLARE_VARIABLE,
@@ -68,19 +69,19 @@ export interface YASLTracerUnaryOperation extends YASLTracer {
 
 export interface YASLTracerArrayWrite extends YASLTracer {
     type: TracerType.ARRAY_WRITE;
-    array_name: string;
+    array_name: YASLArrayObj;
     value: YASLNativeValue ;
 }
 
 export interface YASLTracerArrayRead extends YASLTracer {
     type: TracerType.ARRAY_READ;
-    array_name: string;
+    array_name: YASLArrayObj;
     read_index: number;
 }
 
 export interface YASLTracerArraySwap extends YASLTracer {
     type: TracerType.ARRAY_SWAP;
-    array_name: string;
+    array_name: YASLArrayObj;
     index1: number;
     index2: number;
 }

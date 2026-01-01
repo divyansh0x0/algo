@@ -1,6 +1,7 @@
 import type { YASLTokenBinaryOp, YASLTokenUnaryOp } from "../YASLToken";
 import { TracerType, type YASLTracer, type YASLTracerArrayRead, type YASLTracerArraySwap, type YASLTracerArrayWrite, type YASLTracerAssignVariable, type YASLTracerBinaryOperation, type YASLTracerConditionEvaluation, type YASLTracerDeclareVariable, type YASLTracerJump, type YASLTracerUnaryOperation } from "./Tracers";
 import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
+import type {YASLArrayObj} from "../natives/YASLArrayObj";
 
 export class TraceList{
     traces: YASLTracer[] = [];
@@ -45,7 +46,7 @@ export class TraceList{
             result,
         } as YASLTracerUnaryOperation);
     }
-    emitArrayWrite(array_name: string, value: YASLNativeValue, line: number){
+    emitArrayWrite(array_name: YASLArrayObj, value: YASLNativeValue, line: number){
         this.emit({
             type: TracerType.ARRAY_WRITE,
             array_name,
@@ -53,7 +54,7 @@ export class TraceList{
             line
         } as YASLTracerArrayWrite);
     }
-    emitArrayRead(array_name: string, read_index: number, line: number){
+    emitArrayRead(array_name: YASLArrayObj, read_index: number, line: number){
         this.emit({
             type: TracerType.ARRAY_READ,
             array_name,
@@ -61,7 +62,7 @@ export class TraceList{
             line
         } as YASLTracerArrayRead);
     }
-    emitArraySwap(array_name: string, index1: number, index2: number, line: number){
+    emitArraySwap(array_name: YASLArrayObj, index1: number, index2: number, line: number){
         this.emit({
             type: TracerType.ARRAY_SWAP,
             array_name,
