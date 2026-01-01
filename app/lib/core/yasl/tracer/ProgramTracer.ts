@@ -22,10 +22,11 @@ import {Lexer} from "../lexer";
 import type {YASLNativeValue} from "../natives/YASLNativeValue";
 import {YASLNodeTypeChecker} from "../YASLNodeTypeChecker";
 import {Parser} from "../parser/Parser";
-import {formatter} from "../formatter";
 import {YASLArrayObj} from "../natives/YASLArrayObj";
 import type {YASLMemPointer} from "../environment/YASLMemPointer";
 import {YASLArrayValueMemPointer} from "../environment/YASLArrayValueMemPointer";
+import {YASLNativeFunctions} from "../natives/YASLNativeFunction";
+import {YASLArrayNativeMethods} from "../natives/methods/YASLArrayNativeMethods";
 
 interface StatementResult {
     line: number,
@@ -110,6 +111,8 @@ export class ProgramTracer {
                 return this.evalLiteral(node as LiteralNode);
             case YASLNodeType.IDENTIFIER:
                 return this.evalMemAccessUsingIdentifier(node as IdentifierNode)?.get() ?? null;
+            case YASLNodeType.CALL:
+                return this.evalFunction(node as CallNode);
             default:
                 this.error("Invalid expression", node);
                 return null;
@@ -263,22 +266,55 @@ export class ProgramTracer {
         this.error("Not implemented get property value", node);
     }
 
-    private evalFunction(node: CallNode): YASLNativeValue {
-        const callNode = node.callee;
-        if (YASLNodeTypeChecker.isIdentifier(callNode)) {
+    private evalFunction(callNode: CallNode): YASLNativeValue {
+        const qualifiedName = callNode.qualifiedName;
+        if (YASLNodeTypeChecker.isIdentifier(qualifiedName)) {
+           return this.evalNativeFunctionCall(qualifiedName, callNode);
+        } else if (YASLNodeTypeChecker.isPropertyAccess(qualifiedName)) {
+            return this.evalMethodCall(qualifiedName, callNode);
+        }
+        this.error("Invalid function call", qualifiedName);
+        return null;
+    }
 
-            switch (callNode.name) {
-                case "print": {
-                    const values = [];
-                    for (const arg of node.args) {
-                        values.push(this.evalExpression(arg));
-                    }
-                    console.log(...values);
-                }
-            }
+    private evalMethodCall(qualifiedName: PropertyAccessNode, callNode: CallNode) {
+        if (!YASLNodeTypeChecker.isIdentifier(qualifiedName.member_node)) {
+            this.error("call chains are not implemented", qualifiedName);
+            return null;
         }
 
+        const target = this.evalLValue(qualifiedName.curr_node)?.get();
+        if (target === null) {
+            this.error(`Invalid method call, the target object does not exist`, qualifiedName.curr_node);
+            return null;
+        }
+        const codeLine = this.line;
+        if (typeof target === "object") {
+            // array native functions
+            const arr = target as YASLArrayObj;
+            const methodNode = qualifiedName.member_node;
+            if(YASLNodeTypeChecker.isIdentifier(methodNode)){
+                const methodName = methodNode.name;
+                if(!YASLArrayNativeMethods.has(methodName)){
+                    this.error(`${methodName} does not exist on type array.`, methodNode)
+                }
+                const args = this.evalArgs(callNode.args);
+                return YASLArrayNativeMethods.call(methodName, arr,args,{tracer:this.tracerList, line: codeLine});
+
+            }
+        }
+        this.error(`Invalid call, ${target} is not an object`, qualifiedName.curr_node);
         return null;
+    }
+
+    private evalNativeFunctionCall(identifierNode: IdentifierNode, node: CallNode) {
+        const nativeFunction = YASLNativeFunctions[identifierNode.name];
+        const args = this.evalArgs(node.args);
+        if (!nativeFunction) {
+            this.error(`Function ${identifierNode.name} does not exist`, node);
+            return null;
+        }
+        return nativeFunction(...args);
     }
 
     private consumeNode() {
@@ -348,7 +384,7 @@ export class ProgramTracer {
                     this.error("Object does not exist in memory", propertyAccess.curr_node);
                     return null;
                 }
-                const property = propertyAccess.property_node;
+                const property = propertyAccess.member_node;
                 console.log(property?.type);
                 break;
             }
@@ -375,7 +411,7 @@ export class ProgramTracer {
         return val;
     }
 
-    private parseArgs(args: YASLExpression[]) {
+    private evalArgs(args: YASLExpression[]) {
         const values: YASLNativeValue[] = [];
         for (const arg of args) {
             values.push(this.evalExpression(arg));
@@ -383,26 +419,3 @@ export class ProgramTracer {
         return values;
     }
 }
-
-const code = `
-let a = [1,2,3]
-print("hello world",3)
-
-a.length();
-`;
-const lexer = new Lexer(code);
-const p = new Parser(lexer.getTokens(), lexer.getLineMap());
-// console.log(lexer.getTokens());
-const prog = p.getProgram();
-for (const error of p.getErrors()) {
-    console.log(error);
-}
-const programTracer = new ProgramTracer();
-if (prog.root) {
-
-    // console.log(formatter.formatAst(prog.root));
-    programTracer.run(prog.root);
-    // console.log(programTracer.getTraces().traces);
-
-} else
-    console.error("Welp its fucked");

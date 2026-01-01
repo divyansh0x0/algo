@@ -8,16 +8,16 @@ import {
     YASLNodeType
 } from "./tree";
 
-export class YASLNodeTypeChecker {
-    static isIdentifier(node: YASLNode): node is IdentifierNode {
-        return node.type === YASLNodeType.IDENTIFIER;
-    }
+export const YASLNodeTypeChecker = {
+    isIdentifier(node?: YASLNode|null): node is IdentifierNode {
+        return node !== null && node !== undefined && node.type === YASLNodeType.IDENTIFIER;
+    },
 
-    static isPropertyAccess(node: YASLNode): node is PropertyAccessNode {
+    isPropertyAccess(node: YASLNode): node is PropertyAccessNode {
         return node.type === YASLNodeType.PROPERTY_ACCESS;
-    }
+    },
 
-    static isLValue(node: YASLNode): node is YASLLValue {
+    isLValue(node: YASLNode): node is YASLLValue {
         switch (node.type) {
             case YASLNodeType.IndexingOperation:
             case YASLNodeType.IDENTIFIER:
@@ -26,9 +26,9 @@ export class YASLNodeTypeChecker {
             default:
                 return false;
         }
-    }
+    },
 
-    static isExpression(node: YASLNode): node is YASLExpression {
+    isExpression(node: YASLNode): node is YASLExpression {
         switch (node.type) {
             case YASLNodeType.BINARY_EXPRESSION:
             case YASLNodeType.ASSIGNMENT:
@@ -43,9 +43,9 @@ export class YASLNodeTypeChecker {
                 return false;
         }
 
-    }
+    },
 
-    static isIndexingOperator(node: YASLNode): node is IndexingOperation {
+    isIndexingOperator(node: YASLNode): node is IndexingOperation {
         return node.type === YASLNodeType.IndexingOperation;
-    }
+    },
 }

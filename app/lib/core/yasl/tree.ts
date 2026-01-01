@@ -66,7 +66,7 @@ export interface PostfixOperation extends YASLNode {
 
 export interface PropertyAccessNode extends YASLNode {
     curr_node: YASLExpression,
-    property_node?: YASLExpression,
+    member_node?: YASLExpression,
 }
 
 export interface BinaryExpression extends YASLNode {
@@ -111,7 +111,7 @@ export interface IndexingOperation extends YASLNode {
 }
 
 export interface CallNode extends YASLNode {
-    callee: YASLExpression;
+    qualifiedName: YASLExpression;
     args: YASLExpression[];
 }
 
