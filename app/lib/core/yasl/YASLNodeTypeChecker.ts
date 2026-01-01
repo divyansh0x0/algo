@@ -1,5 +1,6 @@
 import {
     type IdentifierNode,
+    type IndexingOperation,
     type PropertyAccessNode,
     type YASLExpression,
     type YASLLValue,
@@ -17,7 +18,14 @@ export class YASLNodeTypeChecker {
     }
 
     static isLValue(node: YASLNode): node is YASLLValue {
-        return node.type === YASLNodeType.PROPERTY_ACCESS || node.type === YASLNodeType.IDENTIFIER;
+        switch (node.type) {
+            case YASLNodeType.IndexingOperation:
+            case YASLNodeType.IDENTIFIER:
+            case YASLNodeType.PROPERTY_ACCESS:
+                return true;
+            default:
+                return false;
+        }
     }
 
     static isExpression(node: YASLNode): node is YASLExpression {
@@ -27,10 +35,17 @@ export class YASLNodeTypeChecker {
             case YASLNodeType.TERNARY_EXPRESSION:
             case YASLNodeType.UNARY_EXPRESSION:
             case YASLNodeType.LITERAL:
+            case YASLNodeType.PROPERTY_ACCESS:
+            case YASLNodeType.IndexingOperation:
+            case YASLNodeType.IDENTIFIER:
                 return true;
             default:
                 return false;
         }
 
+    }
+
+    static isIndexingOperator(node: YASLNode): node is IndexingOperation {
+        return node.type === YASLNodeType.IndexingOperation;
     }
 }
