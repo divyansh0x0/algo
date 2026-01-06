@@ -1,54 +1,64 @@
-import type {
-  ArrayLiteralNode,
-  BinaryExpression,
-  BreakStatement,
-  CallNode,
-  ContinueStatement,
-  DeclarationStatement,
-  ElseIfStatement,
-  ElseStatement,
-  ForStatement,
-  FunctionDefinitionStatement,
-  IdentifierNode,
-  IfStatement,
-  IndexingOperation,
-  LiteralNode,
-  PostfixOperation,
-  PropertyAccessNode,
-  ReturnStatement,
-  SwitchCaseStatement,
-  SwitchStatement,
-  TernaryExpression,
-  ThenStatement,
-  UnaryExpression,
-  WhileStatement,
-  YASLAssignment,
-} from "../YASLAst";
+import {
+  DefArrayNode, ExpBinaryNode, StmtBlockNode,
+  StmtBreakNode, ExpCallNode,
+  StmtContinueNode,
+  StmtDeclarationNode,
+  StmtElseIfNode,
+  StmtElseNode, StmtForNode, DefFunctionNode,
+  ExpIdentifierNode, StmtIfNode, OpIndexingNode, ExpLiteralNode, ExpPropertyAccessNode, StmtReturnNode,
+  StmtCaseNode,
+  StmtSwitchNode, ExpTernaryNode,
+  StmtThenNode, ExpUnaryNode, StmtWhileNode, ExpAssignNode, YASLNode, OpPostfixNode
+} from "~/lib/core/yasl/YASLNode";
 
 export interface Visitor<T> {
-  visitBinaryExpression(node: BinaryExpression): T;
-  visitUnaryExpression(node: UnaryExpression): T;
-  visitTernaryExpression(node: TernaryExpression): T;
-  visitArrayLiteralNode(node: ArrayLiteralNode): T;
-  visitIndexingOperation(node: IndexingOperation): T;
-  visitLiteralNode(node: LiteralNode): T;
-  visitIdentifierNode(node: IdentifierNode): T;
-  visitCallNode(node: CallNode): T;
-  visitBreakStatement(node: BreakStatement): T;
-  visitBlockStatement(node: BreakStatement): T;
-  visitContinueStatement(node: ContinueStatement): T;
-  visitReturnStatement(node: ReturnStatement): T;
-  visitDeclarationStatement(node: DeclarationStatement): T;
-  visitAssignment(node: YASLAssignment): T;
-  visitFunctionDefinitionStatement(node: FunctionDefinitionStatement): T;
-  visitForStatement(node: ForStatement): T;
-  visitWhileStatement(node: WhileStatement): T;
-  visitIfStatement(node: IfStatement): T;
-  visitElseIfStatement(node: ElseIfStatement): T;
-  visitElseStatement(node: ElseStatement): T;
-  visitThenStatement(node: ThenStatement): T;
-  visitSwitchStatement(node: SwitchStatement): T;
-  visitSwitchCaseStatement(node: SwitchCaseStatement): T;
-  visitPropertyAccessNode(node: PropertyAccessNode): T;
-  visitPostfixOperation(node: PostfixOperation): T;
+  visitDefArray(node: DefArrayNode): T;
+
+  visitDefFunction(node: DefFunctionNode): T;
+
+  visitExpAssign(node: ExpAssignNode): T;
+
+  visitExpBinary(node: ExpBinaryNode): T;
+
+  visitExpCall(node: ExpCallNode): T;
+
+  visitExpLiteral(node: ExpLiteralNode): T;
+
+  visitExpPropertyAccess(node: ExpPropertyAccessNode): T;
+
+  visitExpTernary(node: ExpTernaryNode): T;
+
+  visitExpUnary(node: ExpUnaryNode): T;
+
+  visitExpIdentifier(node: ExpIdentifierNode): T;
+
+  visitOpIndexing(node: OpIndexingNode): T;
+
+  visitOpPostfix(node: OpPostfixNode): T;
+
+  visitStmtBlock(node: StmtBlockNode): T;
+
+  visitStmtBreak(node: StmtBreakNode): T;
+
+  visitStmtCase(node: StmtCaseNode): T;
+
+  visitStmtContinue(node: StmtContinueNode): T;
+
+  visitStmtDeclaration(node: StmtDeclarationNode): T;
+
+  visitStmtElse(node: StmtElseNode): T;
+
+  visitStmtFor(node: StmtForNode): T;
+
+  visitStmtIf(node: StmtIfNode): T;
+
+  visitStmtIfElse(node: StmtElseIfNode): T;
+
+  visitStmtReturn(node: StmtReturnNode): T;
+
+  visitStmtSwitch(node: StmtSwitchNode): T;
+
+  visitStmtThen(node: StmtThenNode): T;
+
+  visitStmtWhile(node: StmtWhileNode): T;
 }

@@ -6,8 +6,6 @@
  * 
  * Each tracer will be used for visualization purpose.
  */
-
-import { int } from "zod/v4";
 import type { YASLTokenUnaryOp, YASLTokenBinaryOp } from "../YASLToken";
 import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
 import type {YASLArrayObj} from "../natives/YASLArrayObj";
