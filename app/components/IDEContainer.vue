@@ -4,7 +4,7 @@ const ide_container = ref<HTMLDivElement | null>(null);
 let ide:unknown = null;
 onMounted(async () => {
     const editor = await import("@/lib/core/editor");
-    if (ide_container.value !== null) {
+    if (ide_container.value) {
         ide = new editor.IDE(ide_container.value);
     }
 });
