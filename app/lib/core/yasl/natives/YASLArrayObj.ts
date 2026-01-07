@@ -3,7 +3,7 @@ import type { YASLNativeValue } from "./YASLNativeValue";
 export class YASLArrayObj {
     private readonly internal: YASLNativeValue[];
 
-    constructor(initialValues: YASLNativeValue[]) {
+    constructor(initialValues: YASLNativeValue[] = []) {
         this.internal = initialValues;
     }
 
