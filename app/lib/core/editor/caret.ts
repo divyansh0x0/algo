@@ -1,5 +1,5 @@
-import {IDERow} from "@/lib/core/editor/ide";
-import {Vmath} from "~/lib/core/engine/utils/vmath";
+import { IDERow } from "@/lib/core/editor/ide";
+import { Vmath } from "~/lib/core/engine/utils/vmath";
 
 export class CaretManager {
     private readonly spawned_carets: YASLCaret[] = [];
@@ -102,11 +102,7 @@ export class YASLCaret {
     private char_width = 10;
     private line_height = 10;
     private text_before_caret = "";
-    private _column = 0;
-    private _typing: boolean = false;
     private row_el: HTMLElement | null = null;
-
-    private _row = 0;
 
     constructor(private parent: HTMLElement) {
         this.caret.classList.add("caret");
@@ -114,14 +110,13 @@ export class YASLCaret {
         parent.style.position = "relative";
     }
 
-    get row(): number {
-        return this._row;
-    }
+    private _column = 0;
 
     get column(): number {
         return this._column;
     }
 
+    private _typing: boolean = false;
 
     get typing(): boolean {
         return this._typing;
@@ -133,6 +128,12 @@ export class YASLCaret {
             this.caret.classList.add("typing");
         } else
             this.caret.classList.remove("typing");
+    }
+
+    private _row = 0;
+
+    get row(): number {
+        return this._row;
     }
 
     setRow(new_row: HTMLElement) {

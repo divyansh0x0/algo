@@ -1,4 +1,4 @@
-import {Color} from "~/lib/core/engine/utils/Color";
+import { Color } from "~/lib/core/engine/utils/Color";
 
 export enum ThemeType {
     LIGHT = "light",
@@ -95,7 +95,7 @@ export const ThemeManager = (function () {
          * Return the css bg color property for item_name
          */
         getBgColor(item_name: string, suffix: ColorStates = ColorStates.DEFAULT): Color {
-            const property_name = `--${ item_name }-bg-${ suffix }-color`;
+            const property_name = `--${item_name}-bg-${suffix}-color`;
             const val = styles.getPropertyValue(property_name);
             if (val === "")
                 console.error(property_name, " is not defined.");
@@ -108,7 +108,7 @@ export const ThemeManager = (function () {
          * @returns {string}
          */
         getFgColor(item_name: string, suffix: ColorStates = ColorStates.DEFAULT): Color {
-            const property_name = `--${ item_name }-fg-${ suffix }-color`;
+            const property_name = `--${item_name}-fg-${suffix}-color`;
             const val = styles.getPropertyValue(property_name);
             if (val === "")
                 console.error(property_name, " is not defined.");
@@ -120,7 +120,7 @@ export const ThemeManager = (function () {
          * @returns {string}
          */
         getTextColor(suffix: ColorStates = ColorStates.ON_BACKGROUND): Color {
-            const property_name = `--text-${ suffix }-color`;
+            const property_name = `--text-${suffix}-color`;
             const val = styles.getPropertyValue(property_name);
             if (val === "")
                 console.error(property_name, " is not defined.");
@@ -133,7 +133,7 @@ export const ThemeManager = (function () {
          * @returns {string}
          */
         getColor(item_name: string): Color {
-            const property_name = `--${ item_name }-color`;
+            const property_name = `--${item_name}-color`;
             const val = styles.getPropertyValue(property_name);
             if (val === "")
                 console.error(property_name, "is not defined.");

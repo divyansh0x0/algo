@@ -1,4 +1,4 @@
-import {ECID, type EntityComponent} from "~/lib/core/engine/scene/components/EntityComponent";
+import { ECID, type EntityComponent } from "~/lib/core/engine/scene/components/EntityComponent";
 
 export class ECText implements EntityComponent {
 

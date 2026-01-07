@@ -80,7 +80,8 @@ canvas {
 input {
     outline: none;
 }
-.iconify{
+
+.iconify {
     display: inline-block;
     width: 1em;
     height: 1em;

@@ -1,4 +1,4 @@
-import {Vector} from "~/lib/core/engine/utils/Size";
+import { Vector } from "~/lib/core/engine/utils/Size";
 
 const isPASSIVE = false;
 
@@ -30,6 +30,21 @@ export class Mouse {
         window.addEventListener("touchmove", this.onTouchMove as EventListener, {passive: isPASSIVE});
         window.addEventListener("touchend", this.onTouchEnd as EventListener);
         window.addEventListener("touchcancel", this.onTouchEnd as EventListener);
+    }
+
+    isButtonDown(button: MouseButton): boolean {
+        return this.buttonsPressed.has(button);
+    }
+
+    dispose() {
+        // Cleanup all listeners
+        window.removeEventListener("mousemove", this.onMouseMove as EventListener);
+        window.removeEventListener("mousedown", this.onMouseDown as EventListener);
+        window.removeEventListener("mouseup", this.onMouseUp as EventListener);
+        window.removeEventListener("touchstart", this.onTouchStart as EventListener);
+        window.removeEventListener("touchmove", this.onTouchMove as EventListener);
+        window.removeEventListener("touchend", this.onTouchEnd as EventListener);
+        window.removeEventListener("touchcancel", this.onTouchEnd as EventListener);
     }
 
     private onMouseMove = (e: MouseEvent) => {
@@ -67,19 +82,4 @@ export class Mouse {
         this.isTouching = this.touches.length > 0;
         if (this.touches.length > 0) this.location = this.touches[0];
     };
-
-    isButtonDown(button: MouseButton): boolean {
-        return this.buttonsPressed.has(button);
-    }
-
-    dispose() {
-        // Cleanup all listeners
-        window.removeEventListener("mousemove", this.onMouseMove as EventListener);
-        window.removeEventListener("mousedown", this.onMouseDown as EventListener);
-        window.removeEventListener("mouseup", this.onMouseUp as EventListener);
-        window.removeEventListener("touchstart", this.onTouchStart as EventListener);
-        window.removeEventListener("touchmove", this.onTouchMove as EventListener);
-        window.removeEventListener("touchend", this.onTouchEnd as EventListener);
-        window.removeEventListener("touchcancel", this.onTouchEnd as EventListener);
-    }
 }

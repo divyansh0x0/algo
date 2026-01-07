@@ -1,6 +1,6 @@
-import {type YASLToken, YASLTokenType} from "../YASLToken";
-import {binarySearch} from "./BinarySearch";
-import type {YASLValueType} from "../tree";
+import type { YASLValueType } from "../tree";
+import { type YASLToken, YASLTokenType } from "../YASLToken";
+import { binarySearch } from "./BinarySearch";
 
 export function parseTypeToken(token: YASLToken): YASLValueType | null {
     switch (token.lexeme) {
@@ -37,32 +37,32 @@ export function isOperator(token: YASLToken) {
     }
 }
 
-export function getBindingPower(token_type: YASLTokenType): [number, number] | null {
+export function getBindingPower(token_type: YASLTokenType): [ number, number ] | null {
     //right associative has lower right power while left associative has lower left power
     switch (token_type) {
         case YASLTokenType.DOT:
-            return [100, 101];
+            return [ 100, 101 ];
 
         case YASLTokenType.LPAREN:
         case YASLTokenType.LBRACKET:
-            return [90, 91];
+            return [ 90, 91 ];
         case YASLTokenType.AND:
         case YASLTokenType.OR:
-            return [80, 81];
+            return [ 80, 81 ];
         case YASLTokenType.INCREMENT:
         case YASLTokenType.DECREMENT:
-            return [80, -1];
+            return [ 80, -1 ];
         case YASLTokenType.POWER:
-            return [30, 29];
+            return [ 30, 29 ];
         case YASLTokenType.MULTIPLY:
         case YASLTokenType.MODULO:
         case YASLTokenType.DIVIDE:
-            return [20, 21];
+            return [ 20, 21 ];
         case YASLTokenType.MINUS:
         case YASLTokenType.PLUS:
-            return [10, 11];
+            return [ 10, 11 ];
         case YASLTokenType.INLINE_ASSIGN:
-            return [1, 0];
+            return [ 1, 0 ];
 
         default:
             return null;
@@ -111,8 +111,8 @@ export function isExpressionTerminator(type: YASLTokenType): boolean {
     }
 }
 
-export function indexToLineCol(offset: number, line_map: number[]): [number, number] {
+export function indexToLineCol(offset: number, line_map: number[]): [ number, number ] {
     let line = binarySearch(offset, line_map);
     let col = offset - line_map[line]!;
-    return [line, col];
+    return [ line, col ];
 }

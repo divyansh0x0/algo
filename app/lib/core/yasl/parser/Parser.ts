@@ -1,11 +1,8 @@
-import {formatter} from "../formatter";
-import {
-    type YASLExpression,
-    YASLProgram,
-    YASLValueType
-} from "../tree";
-import {type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp} from "../YASLToken";
-import type {ParserError} from "./ParserError";
+import { formatter } from "../formatter";
+import { type YASLExpression, YASLProgram, YASLValueType } from "../tree";
+import { YASLNodeFactory } from "../YASLNodeFactory";
+import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
+import { type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp } from "../YASLToken";
 import {
     getBindingPower,
     indexToLineCol,
@@ -15,8 +12,7 @@ import {
     isPostfixOperator,
     parseTypeToken
 } from "./Helpers";
-import {YASLNodeTypeChecker} from "../YASLNodeTypeChecker";
-import {YASLNodeFactory} from "../YASLNodeFactory";
+import type { ParserError } from "./ParserError";
 
 export class Parser {
     private next_index = 0;
@@ -99,8 +95,8 @@ export class Parser {
     private errorToken(msg: string, token: YASLToken | null = null) {
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
         if (error_token != null) {
-            const [line1, col1] = indexToLineCol(error_token.start, this.line_map);
-            const [line2, col2] = indexToLineCol(error_token.end, this.line_map);
+            const [ line1, col1 ] = indexToLineCol(error_token.start, this.line_map);
+            const [ line2, col2 ] = indexToLineCol(error_token.end, this.line_map);
             this.errors.push({
                 message: msg,
                 token: error_token,
@@ -284,8 +280,8 @@ export class Parser {
      * @param left_node
      * @param bp
      */
-    private led(op_token: YASLToken, left_node: YASLExpression, bp: [number, number]): YASLExpression | null {
-        const [, right_bp] = bp;
+    private led(op_token: YASLToken, left_node: YASLExpression, bp: [ number, number ]): YASLExpression | null {
+        const [ , right_bp ] = bp;
         // Postfix operators
         if (isPostfixOperator(op_token.type)) {
             if (!isExpressionTerminator(this.peek().type)) {
@@ -385,7 +381,7 @@ export class Parser {
 
             const bp = getBindingPower(op_token.type);
             if (!bp) break;
-            const [left_binding_power] = bp;
+            const [ left_binding_power ] = bp;
 
             if (left_binding_power < min_binding_power) break;
 

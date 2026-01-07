@@ -1,8 +1,7 @@
-import {type EntitySystem, ESRequirements} from "~/lib/core/engine/scene/systems/EntitySystem";
-import type {Entity} from "../Entity";
-import {ECID} from "../components/EntityComponent";
-import {ECPosition} from "../components/ECPosition";
-import {ECVelocity} from "../components/ECVelocity";
+import { type EntitySystem, ESRequirements } from "~/lib/core/engine/scene/systems/EntitySystem";
+import { ECPosition } from "../components/ECPosition";
+import { ECVelocity } from "../components/ECVelocity";
+import { ECID } from "../components/EntityComponent";
 import type { World } from "../World";
 
 export class KinematicsSystem implements EntitySystem {
@@ -12,11 +11,11 @@ export class KinematicsSystem implements EntitySystem {
         return true;
     }
 
-    update(dt: number,world: World): void {
+    update(dt: number, world: World): void {
         // console.log("KinematicsSystem update with dt=", dt);
         for (const entity of world.getEntities()) {
-            const pos = world.getComponent(entity,ECPosition);
-            const vel = world.getComponent(entity,ECVelocity);
+            const pos = world.getComponent(entity, ECPosition);
+            const vel = world.getComponent(entity, ECVelocity);
             if (pos && vel) {
                 pos.x += vel.x * dt;
                 pos.y += vel.y * dt;

@@ -1,5 +1,5 @@
-import type {Color} from "../../utils/Color";
-import {ECID, type EntityComponent} from "./EntityComponent";
+import type { Color } from "../../utils/Color";
+import { ECID, type EntityComponent } from "./EntityComponent";
 
 
 export class ECBackgroundColor implements EntityComponent {

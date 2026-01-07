@@ -1,5 +1,3 @@
-import type {EntityComponent} from "~/lib/core/engine/scene/components";
-
 /**
  * Stores entities and their components, allowing O(1) addition, removal, and lookup of components.
  *
@@ -15,17 +13,18 @@ export class SparseSet<T> {
     private dense = new Array<number>();   // Stores entity IDs in a contiguous array for cache-friendly iteration
     private components = new Array<T>();   // Stores component data aligned with the dense array
 
-    constructor(maxEntities:number = 10000){
+    constructor(maxEntities: number = 10000) {
         // If an index is not assigned its value defaults to -1
         this.sparse = new Int32Array(maxEntities).fill(-1);
     }
-    add(id: number, component:T){
-        if(id > this.sparse.length){
+
+    add(id: number, component: T) {
+        if (id > this.sparse.length) {
             console.error("Maximum entities exceeded");
             return;
         }
-        if(this.sparse[id] === undefined){
-            console.log("this.sparse[id] was undefined while adding")
+        if (this.sparse[id] === undefined) {
+            console.log("this.sparse[id] was undefined while adding");
             return;
         }
 
@@ -39,11 +38,12 @@ export class SparseSet<T> {
         this.components.push(component);
         this.sparse[id] = this.dense.length - 1;
     }
-    remove(id:number){
-        if(this.sparse[id] === undefined)
+
+    remove(id: number) {
+        if (this.sparse[id] === undefined)
             return;
         const denseIndex = this.sparse[id];
-        if(denseIndex === -1) return;
+        if (denseIndex === -1) return;
 
         const lastIndex = this.dense.length - 1;
         const lastDenseId = this.dense[lastIndex]!;
@@ -64,20 +64,21 @@ export class SparseSet<T> {
         this.sparse[id] = -1;
     }
 
-    contains(id:number):boolean{
-        if(this.sparse[id] === undefined || this.sparse[id] === -1){
+    contains(id: number): boolean {
+        if (this.sparse[id] === undefined || this.sparse[id] === -1) {
             return false;
         }
         return this.dense[this.sparse[id]] === id;
     }
 
-    get(id:number): T|undefined{
-        if(this.sparse[id] === undefined || this.sparse[id] === -1) return undefined;
+    get(id: number): T | undefined {
+        if (this.sparse[id] === undefined || this.sparse[id] === -1) return undefined;
         return this.components[this.sparse[id]];
     }
-     [Symbol.iterator](): Iterator<T> {
+
+    [Symbol.iterator](): Iterator<T> {
         return this.components[Symbol.iterator]();
     }
-    
+
 
 }

@@ -1,4 +1,4 @@
-import {Vmath} from "~/lib/core/engine/utils/vmath";
+import { Vmath } from "~/lib/core/engine/utils/vmath";
 
 function isValidHexColor(color: string) {
     //adding 1 to 3,4,6,8 valid hex lengths to count for # in the beginning
@@ -21,11 +21,11 @@ export class Color {
     constructor(r: number, g: number, b: number, a?: number);
 
     // Implementation
-    constructor(...args: [string] | [number, number, number, number?]) {
+    constructor(...args: [ string ] | [ number, number, number, number? ]) {
         if (typeof args[0] === "string") {
             this.rgba = Color.hexToRgba(args[0]);
         } else {
-            const [r = 0, g = 0, b = 0, a = 1] = args;
+            const [ r = 0, g = 0, b = 0, a = 1 ] = args;
             this.rgba = {
                 r: Vmath.clamp(r, 0, 255),
                 g: Vmath.clamp(g, 0, 255),
@@ -75,7 +75,7 @@ export class Color {
         hex = hex.replace(/^#/, "");
 
         // Validate hex length
-        if (![3, 4, 6, 8].includes(hex.length)) {
+        if (![ 3, 4, 6, 8 ].includes(hex.length)) {
             throw new Error("Invalid hex color code" + hex + ". Must be 3, 4, 6, or 8 digits. but was '" + hex + "'");
         }
 

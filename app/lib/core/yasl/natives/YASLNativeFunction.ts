@@ -1,10 +1,10 @@
-import type {YASLNativeValue} from "./YASLNativeValue";
+import type { YASLNativeValue } from "./YASLNativeValue";
 
 export type YASLNativeFunction = (...args: YASLNativeValue[]) => YASLNativeValue;
 
 export const YASLNativeFunctions: Record<string, YASLNativeFunction> = {
-    print: (...args)=>{
+    print: (...args) => {
         console.log(...args);
         return null;
     }
-}
+};

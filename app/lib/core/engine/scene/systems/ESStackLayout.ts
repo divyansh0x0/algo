@@ -1,12 +1,10 @@
-import { type EntitySystem, ESRequirements } from "~/lib/core/engine/scene/systems/EntitySystem";
-import type { Entity } from "~/lib/core/engine/scene/Entity";
 import { ECID, ECPosition } from "~/lib/core/engine/scene/components";
-import { ECStackLayout, ECStackLayoutDirection } from "~/lib/core/engine/scene/components/ECStackLayout";
 import { ECAxisAlignedBoundingBox } from "~/lib/core/engine/scene/components/ECAxisAlignedBoundingBox";
-import { Vector2D } from "~/lib/core/engine/utils";
-import { ECGroupMember } from "~/lib/core/engine/scene/components/ECGroupMember";
-import { ESMoveTo } from "~/lib/core/engine/scene/systems/ESMoveTo";
 import { ECMoveTo } from "~/lib/core/engine/scene/components/ECMoveTo";
+import { ECStackLayout, ECStackLayoutDirection } from "~/lib/core/engine/scene/components/ECStackLayout";
+import type { Entity } from "~/lib/core/engine/scene/Entity";
+import { type EntitySystem, ESRequirements } from "~/lib/core/engine/scene/systems/EntitySystem";
+import { Vector2D } from "~/lib/core/engine/utils";
 import type { World } from "../World";
 
 export class ESStackLayout implements EntitySystem {
@@ -28,7 +26,7 @@ export class ESStackLayout implements EntitySystem {
             }
             stackHalfWidth += aabb.halfWidth;
         }
-        stackHalfWidth += stackLayout.spacing * (members.length - 1) / 2
+        stackHalfWidth += stackLayout.spacing * (members.length - 1) / 2;
 
         let lastX = layoutCenter.x - stackHalfWidth;
         for (const member of members) {
@@ -44,8 +42,7 @@ export class ESStackLayout implements EntitySystem {
 
             if (!world.entityHas(member, ECMoveTo)) {
                 world.addComponent(member, new ECMoveTo(new Vector2D(lastX, layoutCenter.y), 1000));
-            }
-            else {
+            } else {
                 console.log("Reusing moveTo");
                 const moveTo = world.getComponent(member, ECMoveTo)!;
                 moveTo.finalPos.x = x;
@@ -65,7 +62,7 @@ export class ESStackLayout implements EntitySystem {
             }
             stackHalfHeight += aabb.halfHeight;
         }
-        stackHalfHeight += stackLayout.spacing * (members.length - 1) / 2
+        stackHalfHeight += stackLayout.spacing * (members.length - 1) / 2;
         let lastY = layoutCenter.y - stackHalfHeight;
         for (const member of members) {
             const aabb = world.getComponent(member, ECAxisAlignedBoundingBox);

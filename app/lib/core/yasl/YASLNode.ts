@@ -1,7 +1,7 @@
-import type {Visitor} from "~/lib/core/yasl/visitors/Visitor";
-import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
-import type {YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp} from "~/lib/core/yasl/YASLToken";
-import {type YASLValueType, type YASLExpression, YASLNodeType} from "~/lib/core/yasl/YASLAst";
+import type { YASLNativeValue } from "~/lib/core/yasl/natives/YASLNativeValue";
+import type { Visitor } from "~/lib/core/yasl/visitors/Visitor";
+import { type YASLExpression, YASLNodeType, type YASLValueType } from "~/lib/core/yasl/YASLAst";
+import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp } from "~/lib/core/yasl/YASLToken";
 
 export abstract class YASLNode {
     constructor(
@@ -10,7 +10,8 @@ export abstract class YASLNode {
         public debugId: number,
         public startIndex: number,
         public endIndex: number,
-    ) {}
+    ) {
+    }
 
     abstract accept<T>(visitor: Visitor<T>): T;
 }

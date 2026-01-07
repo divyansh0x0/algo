@@ -1,4 +1,4 @@
-import {keywords, YASLTokenType, type YASLToken} from "./YASLToken";
+import { keywords, type YASLToken, YASLTokenType } from "./YASLToken";
 
 export interface LexerError {
     message: string;
@@ -200,7 +200,7 @@ export class Lexer {
     }
 
     private peek() {
-        return this.isEOF() ? "": this.text[this.next_read_index]!;
+        return this.isEOF() ? "" : this.text[this.next_read_index]!;
     }
 
     private reportError(msg: string, token_value: string | null = null) {

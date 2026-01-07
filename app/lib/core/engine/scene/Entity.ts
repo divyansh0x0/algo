@@ -1,4 +1,4 @@
-import type {ECID, EntityComponent} from "~/lib/core/engine/scene/components/EntityComponent";
+import type { ECID, EntityComponent } from "~/lib/core/engine/scene/components/EntityComponent";
 
 type ComponentClass<T extends EntityComponent = EntityComponent> =
     new (...args: any[]) => T;

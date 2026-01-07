@@ -7,10 +7,10 @@ const props = defineProps({
         type: Number,
         default: 16,
     }
-})
+});
 onMounted(() => {
     if (!divider.value) {
-        return
+        return;
     }
 
     const divider_comp = divider.value;
@@ -35,7 +35,7 @@ onMounted(() => {
             }
         }
     });
-})
+});
 </script>
 
 <template>

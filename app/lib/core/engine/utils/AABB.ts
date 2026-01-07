@@ -1,5 +1,5 @@
-import {Size} from "./Size";
-import {Vector2D} from "./Vector2D";
+import { Size } from "./Size";
+import { Vector2D } from "./Vector2D";
 
 export class AABB {
     public center: Vector2D;

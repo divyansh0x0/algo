@@ -1,5 +1,5 @@
-import {Vector2D} from "~/lib/core/engine/utils/Vector2D";
-import {ECID, type EntityComponent} from "~/lib/core/engine/scene/components/EntityComponent";
+import { ECID, type EntityComponent } from "~/lib/core/engine/scene/components/EntityComponent";
+import { Vector2D } from "~/lib/core/engine/utils/Vector2D";
 
 export class ECPosition extends Vector2D implements EntityComponent {
     readonly id: ECID = ECID.Position as const;

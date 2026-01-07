@@ -9,7 +9,7 @@ import {
 } from "./tree";
 
 export const YASLNodeTypeChecker = {
-    isIdentifier(node?: YASLNode|null): node is IdentifierNode {
+    isIdentifier(node?: YASLNode | null): node is IdentifierNode {
         return node !== null && node !== undefined && node.type === YASLNodeType.IDENTIFIER;
     },
 
@@ -48,4 +48,4 @@ export const YASLNodeTypeChecker = {
     isIndexingOperator(node: YASLNode): node is IndexingOperation {
         return node.type === YASLNodeType.IndexingOperation;
     },
-}
+};

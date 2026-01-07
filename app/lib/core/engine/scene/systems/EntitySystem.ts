@@ -1,5 +1,4 @@
-import type {Entity} from "../Entity";
-import {ECID} from "~/lib/core/engine/scene/components";
+import { ECID } from "~/lib/core/engine/scene/components";
 import type { World } from "../World";
 
 export class ESRequirements {
@@ -35,7 +34,7 @@ export class ESRequirements {
 export interface EntitySystem {
     start(): boolean;
 
-    update(dt: number, world:World): void;
+    update(dt: number, world: World): void;
 
     end(): void;
 }

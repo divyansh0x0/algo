@@ -1,6 +1,6 @@
-import {YASLNativeMethodRegistry} from "../YASLNativeMethodRegistry";
-import type {YASLArrayObj} from "../YASLArrayObj";
-import type {YASLNativeValue} from "../YASLNativeValue";
+import type { YASLArrayObj } from "../YASLArrayObj";
+import { YASLNativeMethodRegistry } from "../YASLNativeMethodRegistry";
+import type { YASLNativeValue } from "../YASLNativeValue";
 
 function assertArgLength(args: YASLNativeValue[], expected: number, name: string): void {
     if (args.length !== expected) {
@@ -14,7 +14,7 @@ export const YASLArrayNativeMethods = new YASLNativeMethodRegistry<YASLArrayObj>
 
 YASLArrayNativeMethods.register("swap", (arr, args, context): YASLNativeValue => {
         assertArgLength(args, 2, "swap");
-        const [i, j] = args;
+        const [ i, j ] = args;
         if (!i || !j) {
             throw new Error("Invalid args");
         }
@@ -35,7 +35,7 @@ YASLArrayNativeMethods.register("swap", (arr, args, context): YASLNativeValue =>
     }
 );
 
-YASLArrayNativeMethods.register("length",(arr, args): YASLNativeValue => {
+YASLArrayNativeMethods.register("length", (arr, args): YASLNativeValue => {
     assertArgLength(args, 0, "length");
     return arr.length();
-})
+});

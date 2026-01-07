@@ -1,32 +1,13 @@
-import {EnvironmentReturnCode, YASLEnvironment} from "../environment/environment";
-import {
-    type ArrayLiteralNode,
-    type BinaryExpression,
-    type CallNode,
-    type DeclarationStatement,
-    type IdentifierNode,
-    type IndexingOperation,
-    type LiteralNode,
-    type PropertyAccessNode,
-    type UnaryExpression,
-    type YASLAssignment,
-    type YASLExpression,
-    type YASLLValue,
-    type YASLNode,
-    YASLNodeType,
-    YASLValueType
-} from "../tree";
-import {YASLTokenType as YASLTokenType} from "../YASLToken";
-import {TraceList} from "./TraceList";
-import {Lexer} from "../lexer";
-import type {YASLNativeValue} from "../natives/YASLNativeValue";
-import {YASLNodeTypeChecker} from "../YASLNodeTypeChecker";
-import {Parser} from "../parser/Parser";
-import {YASLArrayObj} from "../natives/YASLArrayObj";
-import type {YASLMemPointer} from "../environment/YASLMemPointer";
-import {YASLArrayValueMemPointer} from "../environment/YASLArrayValueMemPointer";
-import {YASLNativeFunctions} from "../natives/YASLNativeFunction";
-import {YASLArrayNativeMethods} from "../natives/methods/YASLArrayNativeMethods";
+import { EnvironmentReturnCode, YASLEnvironment } from "../environment/environment";
+import { YASLArrayValueMemPointer } from "../environment/YASLArrayValueMemPointer";
+import type { YASLMemPointer } from "../environment/YASLMemPointer";
+import { YASLArrayNativeMethods } from "../natives/methods/YASLArrayNativeMethods";
+import { YASLArrayObj } from "../natives/YASLArrayObj";
+import { YASLNativeFunctions } from "../natives/YASLNativeFunction";
+import type { YASLNativeValue } from "../natives/YASLNativeValue";
+import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
+import { YASLTokenType as YASLTokenType } from "../YASLToken";
+import { TraceList } from "./TraceList";
 
 interface StatementResult {
     line: number,
@@ -68,6 +49,10 @@ export class ProgramTracer {
         return this.next_node === null;
     }
 
+    getTraces() {
+        return this.tracerList;
+    }
+
     private evalStatement(node: YASLNode) {
         let result: YASLNativeValue | null = null;
         switch (node.type) {
@@ -93,7 +78,6 @@ export class ProgramTracer {
             });
         }
     }
-
 
     private evalExpression(node: YASLExpression): YASLNativeValue {
         switch (node.type) {
@@ -269,7 +253,7 @@ export class ProgramTracer {
     private evalFunction(callNode: CallNode): YASLNativeValue {
         const qualifiedName = callNode.qualifiedName;
         if (YASLNodeTypeChecker.isIdentifier(qualifiedName)) {
-           return this.evalNativeFunctionCall(qualifiedName, callNode);
+            return this.evalNativeFunctionCall(qualifiedName, callNode);
         } else if (YASLNodeTypeChecker.isPropertyAccess(qualifiedName)) {
             return this.evalMethodCall(qualifiedName, callNode);
         }
@@ -293,13 +277,13 @@ export class ProgramTracer {
             // array native functions
             const arr = target as YASLArrayObj;
             const methodNode = qualifiedName.member_node;
-            if(YASLNodeTypeChecker.isIdentifier(methodNode)){
+            if (YASLNodeTypeChecker.isIdentifier(methodNode)) {
                 const methodName = methodNode.name;
-                if(!YASLArrayNativeMethods.has(methodName)){
-                    this.error(`${methodName} does not exist on type array.`, methodNode)
+                if (!YASLArrayNativeMethods.has(methodName)) {
+                    this.error(`${methodName} does not exist on type array.`, methodNode);
                 }
                 const args = this.evalArgs(callNode.args);
-                return YASLArrayNativeMethods.call(methodName, arr,args,{tracer:this.tracerList, line: codeLine});
+                return YASLArrayNativeMethods.call(methodName, arr, args, {tracer: this.tracerList, line: codeLine});
 
             }
         }
@@ -324,7 +308,6 @@ export class ProgramTracer {
         return curr_node;
     }
 
-
     private error(invalidValue: string, exp_node: YASLNode): void {
         throw Error(invalidValue);
     }
@@ -348,11 +331,6 @@ export class ProgramTracer {
                 break;
         }
     }
-
-    getTraces() {
-        return this.tracerList;
-    }
-
 
     private evalLValue(lvalue: YASLExpression): YASLMemPointer | null {
         switch (lvalue.type) {

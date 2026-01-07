@@ -1,5 +1,5 @@
-import {IDE} from "@/lib/core/editor/ide";
-import {YASLKeyboard} from "@/lib/core/editor/keyboard";
+import { IDE } from "@/lib/core/editor/ide";
+import { YASLKeyboard } from "@/lib/core/editor/keyboard";
 import * as YASL from "@/lib/core/yasl";
 import "./yasl-repl.scss";
 

@@ -1,4 +1,4 @@
-import {type YASLNode, YASLNodeType} from "./tree";
+import { type YASLNode, YASLNodeType } from "./tree";
 
 enum Colors {
     Reset = "\x1b[0m",
@@ -42,7 +42,7 @@ export class formatter {
             const result: any = {type: formatter.formatNodeType(node.type)};
 
             const entries = Object.entries(node);
-            for (const [key, value] of entries) {
+            for (const [ key, value ] of entries) {
                 if (key === "type" || key === "next_node") continue;
 
                 if (value && typeof value === "object") {
@@ -93,7 +93,7 @@ export class formatter {
             }
 
             const entries = Object.entries(node);
-            for (const [key, value] of entries) {
+            for (const [ key, value ] of entries) {
                 if (key === "type" || key === "next_node") continue;
 
                 const label = `${Colors.FgBlue}${key}${Colors.Reset}`;
@@ -190,7 +190,7 @@ export class formatter {
             case YASLNodeType.ARRAY:
                 return "Array";
             case YASLNodeType.IndexingOperation:
-                return "Indexing Operation"
+                return "Indexing Operation";
             default:
                 return "Unknown YASLNode Type (" + YASLNodeType + ")";
         }

@@ -1,31 +1,31 @@
-<script setup lang="ts">
-import {nextTick, onBeforeUnmount, onMounted} from "vue";
+<script lang="ts" setup>
+import { nextTick, onBeforeUnmount, onMounted } from "vue";
 
-const algorithm = 'DFS Graph Traversal'
-let updateCanvasSize : () => void;
+const algorithm = "DFS Graph Traversal";
+let updateCanvasSize: () => void;
 const canvas = ref<HTMLCanvasElement | null>(null);
 const container = ref<HTMLDivElement | null>(null);
 let observer: ResizeObserver | null = null;
 let engine: any;
 onMounted(async () => {
     if (!canvas.value || !container.value) {
-        return
+        return;
     }
-    if(!import.meta.client) return;
+    if (!import.meta.client) return;
     const {World, Engine, Visualizer, Graph} = await import("~/lib/core/engine");
-    const ctx = canvas.value.getContext('2d');
-    if(!ctx) return;
-    updateCanvasSize= ()=> {
+    const ctx = canvas.value.getContext("2d");
+    if (!ctx) return;
+    updateCanvasSize = () => {
         if (!canvas.value || !ctx || !container.value) {
-            return
+            return;
         }
-        const ratio = window.devicePixelRatio || 1
-        const rect = container.value.getBoundingClientRect()
+        const ratio = window.devicePixelRatio || 1;
+        const rect = container.value.getBoundingClientRect();
 
-        const prevTransform = ctx.getTransform()
-        ctx.canvas.width = Math.round(rect.width * ratio)
-        ctx.canvas.height = Math.round(rect.height * ratio)
-        ctx.setTransform(prevTransform)
+        const prevTransform = ctx.getTransform();
+        ctx.canvas.width = Math.round(rect.width * ratio);
+        ctx.canvas.height = Math.round(rect.height * ratio);
+        ctx.setTransform(prevTransform);
         // const entity = scene.createEntity();
         // entity.add(new ECPosition(ctx.canvas.width/2,ctx.canvas.height/2));
         // entity.add(new ECVelocity(0,0));
@@ -35,31 +35,31 @@ onMounted(async () => {
         // entity.add(new ECDraggable());
         // scene.addEntity(entity);
 
-    }
+    };
     const scene = new World();
     engine = new Engine();
     engine.attachScene(scene);
     const visualizer = new Visualizer(scene, ctx);
-    visualizer.addArray([1, 2, 3, 4]);
+    visualizer.addArray([ 1, 2, 3, 4 ]);
 
 
-    await nextTick()
-    if (!canvas.value) return
+    await nextTick();
+    if (!canvas.value) return;
 
     if (ctx) {
-        updateCanvasSize()
+        updateCanvasSize();
     }
     // container.value.addEventListener('resize', updateCanvasSize)
     observer = new ResizeObserver(updateCanvasSize);
     observer.observe(container.value);
     engine.start();
-})
+});
 
 onBeforeUnmount(() => {
     if (!container.value) return;
     observer?.unobserve(container.value);
     engine?.stop();
-})
+});
 </script>
 
 <template>

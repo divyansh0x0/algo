@@ -1,6 +1,6 @@
-import type {Color} from "../../utils/Color";
-import {type EasingFunction, Easings} from "../../utils/Easing";
-import {ECID, type EntityComponent} from "./EntityComponent";
+import type { Color } from "../../utils/Color";
+import { type EasingFunction, Easings } from "../../utils/Easing";
+import { ECID, type EntityComponent } from "./EntityComponent";
 
 export enum ECColorTransitionType {
     Fill,
@@ -9,7 +9,7 @@ export enum ECColorTransitionType {
 }
 
 export class ECColorTransition implements EntityComponent {
-    public elaspedTimeMs: number = 0
+    public elaspedTimeMs: number = 0;
     id: ECID = ECID.ColorTransition as const;
 
     constructor(

@@ -1,4 +1,4 @@
-import {IDE} from "@/lib/core/editor/ide";
+import { IDE } from "@/lib/core/editor/ide";
 
 interface IDEPosition {
     line: number,
@@ -94,6 +94,10 @@ export class IDESelection {
     updateBounds() {
     }
 
+    isOneRowSelected(): boolean {
+        return this.single_selected_row >= 0;
+    }
+
     private render() {
         if (this.single_selected_row >= 0) {
             const line_height = this.ide.caret_manager.line_height;
@@ -175,9 +179,5 @@ export class IDESelection {
         this.head_el.style.top = this.head.line * line_height + "px";
         this.head_el.style.height = line_height + "px";
 
-    }
-
-    isOneRowSelected(): boolean {
-        return this.single_selected_row >= 0;
     }
 }

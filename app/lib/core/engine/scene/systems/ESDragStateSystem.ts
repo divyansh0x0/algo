@@ -1,10 +1,9 @@
-import {Entity} from "../Entity";
-import {ECPosition} from "../components/ECPosition";
-import {ECDraggable} from "../components/ECDraggable";
-import {type EntitySystem, ESRequirements} from "./EntitySystem";
-import {ECID, ECMouseListener} from "../components";
-import {ECAxisAlignedBoundingBox} from "../components/ECAxisAlignedBoundingBox";
+import { ECID, ECMouseListener } from "../components";
+import { ECAxisAlignedBoundingBox } from "../components/ECAxisAlignedBoundingBox";
+import { ECDraggable } from "../components/ECDraggable";
+import { ECPosition } from "../components/ECPosition";
 import type { World } from "../World";
+import { type EntitySystem, ESRequirements } from "./EntitySystem";
 
 export class ESDragStateSystem implements EntitySystem {
     requirement = ESRequirements.from(ECID.Draggable, ECID.Position, ECID.AABB, ECID.MouseListener);
@@ -14,14 +13,14 @@ export class ESDragStateSystem implements EntitySystem {
     }
 
     update(_: number, world: World) {
-        for (const entity of world.getEntities() ) {
+        for (const entity of world.getEntities()) {
 
-            const drag = world.getComponent(entity,ECDraggable);
-            const mouse = world.getComponent(entity,ECMouseListener);
-            const pos = world.getComponent(entity,ECPosition);
-            const aabb = world.getComponent(entity,ECAxisAlignedBoundingBox);
-            
-            if(!drag || !mouse|| !pos || !aabb)
+            const drag = world.getComponent(entity, ECDraggable);
+            const mouse = world.getComponent(entity, ECMouseListener);
+            const pos = world.getComponent(entity, ECPosition);
+            const aabb = world.getComponent(entity, ECAxisAlignedBoundingBox);
+
+            if (!drag || !mouse || !pos || !aabb)
                 continue;
             if (!mouse.mouseDown) {
                 drag.offsetX = 0;
@@ -41,7 +40,7 @@ export class ESDragStateSystem implements EntitySystem {
     }
 
     end(): void {
-        throw new Error('Method not implemented.');
+        throw new Error("Method not implemented.");
     }
 
 }

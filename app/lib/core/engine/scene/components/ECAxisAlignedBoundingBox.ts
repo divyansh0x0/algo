@@ -1,7 +1,7 @@
-import type {ECRectangle} from "./ECDrawable";
-import {ECID, type EntityComponent} from "./EntityComponent";
-import {Vector2D} from "~/lib/core/engine/utils";
-import type {ECPosition} from "~/lib/core/engine/scene/components/ECPosition";
+import type { ECPosition } from "~/lib/core/engine/scene/components/ECPosition";
+import { Vector2D } from "~/lib/core/engine/utils";
+import type { ECRectangle } from "./ECDrawable";
+import { ECID, type EntityComponent } from "./EntityComponent";
 
 export class ECAxisAlignedBoundingBox implements EntityComponent {
     id: ECID = ECID.AABB;
@@ -16,11 +16,11 @@ export class ECAxisAlignedBoundingBox implements EntityComponent {
     };
 
     static fromRectangle(width: number, height: number, relX: number = 0, relY: number = 0) {
-        return new ECAxisAlignedBoundingBox(width / 2, height / 2, relX, relY)
+        return new ECAxisAlignedBoundingBox(width / 2, height / 2, relX, relY);
     }
 
     static fromECRectangle(rect: ECRectangle, relX: number = 0, relY: number = 0) {
-        return new ECAxisAlignedBoundingBox(rect.width / 2, rect.height / 2, relX, relY)
+        return new ECAxisAlignedBoundingBox(rect.width / 2, rect.height / 2, relX, relY);
     }
 
     static containsPoint(pos: ECPosition, rect: ECAxisAlignedBoundingBox, point: Vector2D) {

@@ -1,4 +1,4 @@
-import type {YASLToken} from "../YASLToken";
+import type { YASLToken } from "../YASLToken";
 
 export interface ParserError {
     message: string;

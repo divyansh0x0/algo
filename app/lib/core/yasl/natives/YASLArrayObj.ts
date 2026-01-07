@@ -1,4 +1,4 @@
-import type {YASLNativeValue} from "./YASLNativeValue";
+import type { YASLNativeValue } from "./YASLNativeValue";
 
 export class YASLArrayObj {
     private readonly internal: YASLNativeValue[];
@@ -20,15 +20,18 @@ export class YASLArrayObj {
         this.assertIndex(index);
         this.internal[index] = value;
     }
-    push(value:YASLNativeValue){
+
+    push(value: YASLNativeValue) {
         this.internal.push(value);
     }
-    pop(): YASLNativeValue{
-        if(this.internal.length === 0)
+
+    pop(): YASLNativeValue {
+        if (this.internal.length === 0)
             throw new Error("Pop from empty array is not possible");
 
         return this.internal.pop()!;
     }
+
     private assertIndex(index: number): void {
         if (index < 0 || index >= this.internal.length) {
             throw new Error(`Index ${index} out of bounds`);

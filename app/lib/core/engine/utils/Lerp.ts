@@ -1,7 +1,7 @@
-import type {Color} from "./Color";
-import { Easings, type EasingFunction } from "./Easing";
+import type { Color } from "./Color";
+import { type EasingFunction, Easings } from "./Easing";
 
-export function lerp(start: number, end: number, t: number, easing:EasingFunction = Easings.linear): number {
+export function lerp(start: number, end: number, t: number, easing: EasingFunction = Easings.linear): number {
     return start + (end - start) * easing(t);
 }
 

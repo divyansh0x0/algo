@@ -1,5 +1,5 @@
-import type {YASLNativeValue} from "./YASLNativeValue";
-import type {TraceList} from "../tracer/TraceList";
+import type { TraceList } from "../tracer/TraceList";
+import type { YASLNativeValue } from "./YASLNativeValue";
 
 export interface YASLNativeMethodContext {
     line: number;

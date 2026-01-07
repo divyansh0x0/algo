@@ -1,11 +1,10 @@
-import {type EntitySystem, ESRequirements} from "./EntitySystem";
-import type {Entity} from "../Entity";
-import {ECID} from "../components/EntityComponent";
-import {ECMouseListener} from "../components/ECMouseListener";
-import {Vector2D} from "../../utils/Vector2D";
-import {ECAxisAlignedBoundingBox} from "../components/ECAxisAlignedBoundingBox";
-import {ECPosition} from "../components";
+import { Vector2D } from "../../utils/Vector2D";
+import { ECPosition } from "../components";
+import { ECAxisAlignedBoundingBox } from "../components/ECAxisAlignedBoundingBox";
+import { ECMouseListener } from "../components/ECMouseListener";
+import { ECID } from "../components/EntityComponent";
 import type { World } from "../World";
+import { type EntitySystem, ESRequirements } from "./EntitySystem";
 
 // filepath: e:\Projects\Algo\app\lib\engine\scene\systems\ESMouseListener.ts
 
@@ -42,19 +41,19 @@ export class ESMouseListener implements EntitySystem {
         canvas.addEventListener("click", (e) => {
             this.mousePosition.set(e.clientX, e.clientY);
             this.mouseClicked = true;
-        })
+        });
         return true;
     }
 
-    update(_: number,world: World): void {
+    update(_: number, world: World): void {
         for (const entity of world.getEntities()) {
-            const mouseListener = world.getComponent(entity,ECMouseListener);
+            const mouseListener = world.getComponent(entity, ECMouseListener);
             // Reset frame-specific states
 
-            const aabb = world.getComponent(entity,ECAxisAlignedBoundingBox);
-            const center = world.getComponent(entity,ECPosition);
+            const aabb = world.getComponent(entity, ECAxisAlignedBoundingBox);
+            const center = world.getComponent(entity, ECPosition);
 
-            if(!aabb || !center || !mouseListener)
+            if (!aabb || !center || !mouseListener)
                 continue;
             //check intersection
             const isIntersecting = aabb && center &&

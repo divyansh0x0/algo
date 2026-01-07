@@ -1,17 +1,55 @@
-import type { YASLVisitorReturnValue} from "~/lib/core/yasl/YASLAst";
-import type {Visitor} from "~/lib/core/yasl/visitors/Visitor";
-import {
-    type DefArrayNode, StmtBlockNode,
-    type ExpCallNode, type StmtElseIfNode, type StmtElseNode,
-    type DefFunctionNode, type ExpIdentifierNode, type OpIndexingNode,
-    type ExpLiteralNode, type ExpPropertyAccessNode, type StmtCaseNode, type ExpTernaryNode, type StmtThenNode,
-    type ExpAssignNode, type OpPostfixNode
-} from "~/lib/core/yasl/YASLNode";
-import type {BinaryExpression, BreakStatement, ContinueStatement, UnaryExpression} from "typescript";
+import type { YASLNativeValue } from "~/lib/core/yasl";
+import { YASLEnvironment } from "~/lib/core/yasl/environment/environment";
+import { YASLArrayObj } from "~/lib/core/yasl/natives/YASLArrayObj";
+import { TraceList } from "~/lib/core/yasl/tracer/TraceList";
+import type { Visitor } from "~/lib/core/yasl/visitors/Visitor";
+import type { YASLVisitorReturnValue } from "~/lib/core/yasl/YASLAst";
+import type {
+    DefArrayNode,
+    DefFunctionNode,
+    ExpAssignNode,
+    ExpBinaryNode,
+    ExpCallNode,
+    ExpIdentifierNode,
+    ExpLiteralNode,
+    ExpPropertyAccessNode,
+    ExpTernaryNode,
+    ExpUnaryNode,
+    OpIndexingNode,
+    OpPostfixNode,
+    StmtBlockNode,
+    StmtBreakNode,
+    StmtCaseNode,
+    StmtContinueNode,
+    StmtDeclarationNode,
+    StmtElseIfNode,
+    StmtElseNode,
+    StmtForNode,
+    StmtIfNode,
+    StmtReturnNode,
+    StmtSwitchNode,
+    StmtThenNode,
+    StmtWhileNode,
+    YASLNode
+} from "../YASLNode";
 
-class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
+export class TracerVisitor implements Visitor<YASLVisitorReturnValue> {
+    private next_node: YASLNode | null = null;
+    private rootScope: YASLEnvironment;
+    private currentScope: YASLEnvironment;
+    private statement_callback: null | StatementResultCallback = null;
+    private line: number = 0;
+    private tracerList: TraceList = new TraceList();
+
+
     visitDefArray(node: DefArrayNode): YASLVisitorReturnValue {
-        return null;
+        const values: YASLNativeValue[] = [];
+        for (const element of node.elements) {
+            const val = element.accept(this);
+            if ()
+                values.push(val);
+        }
+        return new YASLArrayObj(values);
     }
 
     visitDefFunction(node: DefFunctionNode): YASLVisitorReturnValue {
@@ -22,7 +60,7 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitExpBinary(node: BinaryExpression): YASLVisitorReturnValue {
+    visitExpBinary(node: ExpBinaryNode): YASLVisitorReturnValue {
         return null;
     }
 
@@ -42,7 +80,7 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitExpUnary(node: UnaryExpression): YASLVisitorReturnValue {
+    visitExpUnary(node: ExpUnaryNode): YASLVisitorReturnValue {
         return null;
     }
 
@@ -62,7 +100,7 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitStmtBreak(node: BreakStatement): YASLVisitorReturnValue {
+    visitStmtBreak(node: StmtBreakNode): YASLVisitorReturnValue {
         return null;
     }
 
@@ -70,11 +108,11 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitStmtContinue(node: ContinueStatement): YASLVisitorReturnValue {
+    visitStmtContinue(node: StmtContinueNode): YASLVisitorReturnValue {
         return null;
     }
 
-    visitStmtDeclaration(node: DeclarationStatement): YASLVisitorReturnValue {
+    visitStmtDeclaration(node: StmtDeclarationNode): YASLVisitorReturnValue {
         return null;
     }
 
@@ -82,11 +120,11 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitStmtFor(node: ForStatement): YASLVisitorReturnValue {
+    visitStmtFor(node: StmtForNode): YASLVisitorReturnValue {
         return null;
     }
 
-    visitStmtIf(node: IfStatement): YASLVisitorReturnValue {
+    visitStmtIf(node: StmtIfNode): YASLVisitorReturnValue {
         return null;
     }
 
@@ -94,11 +132,11 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitStmtReturn(node: ReturnStatement): YASLVisitorReturnValue {
+    visitStmtReturn(node: StmtReturnNode): YASLVisitorReturnValue {
         return null;
     }
 
-    visitStmtSwitch(node: SwitchStatement): YASLVisitorReturnValue {
+    visitStmtSwitch(node: StmtSwitchNode): YASLVisitorReturnValue {
         return null;
     }
 
@@ -106,7 +144,7 @@ class TracerVisitor implements Visitor<YASLVisitorReturnValue>{
         return null;
     }
 
-    visitStmtWhile(node: WhileStatement): YASLVisitorReturnValue {
+    visitStmtWhile(node: StmtWhileNode): YASLVisitorReturnValue {
         return null;
     }
 

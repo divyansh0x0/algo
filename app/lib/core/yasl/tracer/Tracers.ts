@@ -2,13 +2,13 @@
  * A tracer interface and enum for different tracer types. These tracers are used to
  * monitor the execution of YASL code, capturing events such as function calls,
  * returns, line executions, and exceptions.
- * 
- * 
+ *
+ *
  * Each tracer will be used for visualization purpose.
  */
-import type { YASLTokenUnaryOp, YASLTokenBinaryOp } from "../YASLToken";
-import type {YASLNativeValue} from "~/lib/core/yasl/natives/YASLNativeValue";
-import type {YASLArrayObj} from "../natives/YASLArrayObj";
+import type { YASLNativeValue } from "~/lib/core/yasl/natives/YASLNativeValue";
+import type { YASLArrayObj } from "../natives/YASLArrayObj";
+import type { YASLTokenBinaryOp, YASLTokenUnaryOp } from "../YASLToken";
 
 export enum TracerType {
     DECLARE_VARIABLE,
@@ -33,6 +33,7 @@ export enum TracerType {
     CONDITION_EVALUATION,
     COMPARE,
 }
+
 export interface YASLTracer {
     type: TracerType;
     line: number;
@@ -45,30 +46,32 @@ export interface YASLTracerDeclareVariable extends YASLTracer {
     variable_name: string;
     assigned_value?: YASLNativeValue;
 }
+
 export interface YASLTracerAssignVariable extends YASLTracer {
     type: TracerType.ASSIGN_VARIABLE;
     variable_name: string;
-    value: YASLNativeValue ;
+    value: YASLNativeValue;
 }
+
 export interface YASLTracerBinaryOperation extends YASLTracer {
     type: TracerType.BINARY_OPERATION;
     operator: YASLTokenBinaryOp;
-    left: YASLNativeValue ;
-    right: YASLNativeValue ;
-    result: YASLNativeValue ;
-}   
+    left: YASLNativeValue;
+    right: YASLNativeValue;
+    result: YASLNativeValue;
+}
 
 export interface YASLTracerUnaryOperation extends YASLTracer {
     type: TracerType.UNARY_OPERATION;
     operator: YASLTokenUnaryOp;
-    operand: YASLNativeValue ;
-    result: YASLNativeValue ;
+    operand: YASLNativeValue;
+    result: YASLNativeValue;
 }
 
 export interface YASLTracerArrayWrite extends YASLTracer {
     type: TracerType.ARRAY_WRITE;
     array_name: YASLArrayObj;
-    value: YASLNativeValue ;
+    value: YASLNativeValue;
 }
 
 export interface YASLTracerArrayRead extends YASLTracer {
@@ -88,7 +91,8 @@ export interface YASLTracerJump extends YASLTracer {
     type: TracerType.JUMP;
     target_line: number;
 }
+
 export interface YASLTracerConditionEvaluation extends YASLTracer {
     type: TracerType.CONDITION_EVALUATION;
     condition_value: boolean;
-};
+}

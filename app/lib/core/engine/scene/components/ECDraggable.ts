@@ -1,4 +1,4 @@
-import {ECID, type EntityComponent} from "./EntityComponent";
+import { ECID, type EntityComponent } from "./EntityComponent";
 
 export class ECDraggable implements EntityComponent {
     isDragging: boolean = false;

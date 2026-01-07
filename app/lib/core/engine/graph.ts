@@ -1,46 +1,4 @@
 export class Graph {
-    private adjacency_mapping: Map<string, Set<string>> = new Map();
-
-    constructor(public start_node: string, private bidirectional: boolean = true) {
-        this.addNode(start_node);
-    }
-
-    addNode(node: string): this {
-        if (!this.adjacency_mapping.has(node))
-            this.adjacency_mapping.set(node, new Set());
-        return this;
-    }
-
-    attach(parent_node: string, toList: string[]) {
-        this.addNode(parent_node);
-        let neighbours_set = this.adjacency_mapping.get(parent_node);
-        for (const to of toList) {
-            this.addNode(to);
-
-            neighbours_set?.add(to);
-
-            if (this.bidirectional)
-                this.adjacency_mapping.get(to)?.add(parent_node);
-
-        }
-        return this;
-    }
-
-    getNeighbors(node: string): string[] {
-        return Array.from(this.adjacency_mapping.get(node) ?? []);
-    }
-
-    getNodes(): string[] {
-        return Array.from(this.adjacency_mapping.keys());
-    }
-
-    toString(): string {
-        let str = "";
-        for (const [ node, neighbors ] of this.adjacency_mapping.entries()) {
-            str += `${ node } → ${ [ ...neighbors ].join(", ") }`;
-        }
-        return str;
-    }
     public static simple_graph =
         new Graph("A")
             .attach("A", [ "B", "C", "D" ])
@@ -58,7 +16,6 @@ export class Graph {
             .attach("C3B", [ "C3C" ])
             .attach("Cluster1", [ "Cluster2" ])
             .attach("Cluster2", [ "Cluster3" ]);
-
 //console.log("clustered", clustered_graph);
     public static spider_web_graph =
         new Graph("Center")
@@ -69,7 +26,6 @@ export class Graph {
             .attach("N4", [ "N3", "N5" ])
             .attach("N5", [ "N4", "N6" ])
             .attach("N6", [ "N5", "N1" ]);
-
     public static large_graph =
         new Graph("C1N1")
             // Cluster 1
@@ -132,6 +88,48 @@ export class Graph {
             .attach("C7N1", [ "C8N1" ])
             .attach("C8N1", [ "C9N1" ])
             .attach("C9N1", [ "C10N1" ]);
+    private adjacency_mapping: Map<string, Set<string>> = new Map();
+
+    constructor(public start_node: string, private bidirectional: boolean = true) {
+        this.addNode(start_node);
+    }
+
+    addNode(node: string): this {
+        if (!this.adjacency_mapping.has(node))
+            this.adjacency_mapping.set(node, new Set());
+        return this;
+    }
+
+    attach(parent_node: string, toList: string[]) {
+        this.addNode(parent_node);
+        let neighbours_set = this.adjacency_mapping.get(parent_node);
+        for (const to of toList) {
+            this.addNode(to);
+
+            neighbours_set?.add(to);
+
+            if (this.bidirectional)
+                this.adjacency_mapping.get(to)?.add(parent_node);
+
+        }
+        return this;
+    }
+
+    getNeighbors(node: string): string[] {
+        return Array.from(this.adjacency_mapping.get(node) ?? []);
+    }
+
+    getNodes(): string[] {
+        return Array.from(this.adjacency_mapping.keys());
+    }
+
+    toString(): string {
+        let str = "";
+        for (const [ node, neighbors ] of this.adjacency_mapping.entries()) {
+            str += `${node} → ${[ ...neighbors ].join(", ")}`;
+        }
+        return str;
+    }
 
 }
 

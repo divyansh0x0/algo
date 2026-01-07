@@ -1,9 +1,9 @@
-<script setup lang="ts">
-import { Lexer, Parser, ProgramTracer } from "./lib/core/yasl";
+<script lang="ts" setup>
+import { Lexer, Parser } from "./lib/core/yasl";
 
 onMounted(() => {
     const code = `
-let a = 5`
+let a = 5`;
     const lexer = new Lexer(code);
     const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
     console.log("Tokens:", lexer.getTokens());
@@ -18,9 +18,9 @@ let a = 5`
 
 </script>
 <template>
-    <ButtonTheme />
+    <ButtonTheme/>
     <main :class="$colorMode.value" class="h-screen w-screen overflow-hidden">
-        <NuxtPage />
+        <NuxtPage/>
     </main>
 </template>
 <style scoped></style>

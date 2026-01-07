@@ -3,7 +3,7 @@ defineProps({
     loading: Boolean,
     hint: {
         type: String,
-        default: 'Loading',
+        default: "Loading",
     },
 });
 </script>

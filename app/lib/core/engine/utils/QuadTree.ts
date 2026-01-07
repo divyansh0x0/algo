@@ -1,7 +1,7 @@
 //Axis Aligned Bounding Box
-import {Size} from "~/lib/core/engine/utils/Size";
-import {Vector2D} from "./Vector2D";
-import {AABB} from "./AABB";
+import { Size } from "~/lib/core/engine/utils/Size";
+import { AABB } from "./AABB";
+import { Vector2D } from "./Vector2D";
 
 const FLOAT_ERROR = 0.01;
 

@@ -1,8 +1,8 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 const isIDELoaded = ref(false);
 onMounted(() => {
     isIDELoaded.value = true;
-})
+});
 </script>
 
 <template>

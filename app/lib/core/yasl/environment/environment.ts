@@ -1,6 +1,6 @@
-import type {YASLNativeValue} from "../natives/YASLNativeValue";
-import type {YASLMemPointer} from "./YASLMemPointer";
-import {YASLNativeValuePointer} from "./YASLNativeValuePointer";
+import type { YASLNativeValue } from "../natives/YASLNativeValue";
+import type { YASLMemPointer } from "./YASLMemPointer";
+import { YASLNativeValuePointer } from "./YASLNativeValuePointer";
 
 export enum EnvironmentReturnCode {
     AlreadyDefined,

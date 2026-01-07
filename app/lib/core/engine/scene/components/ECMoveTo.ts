@@ -1,6 +1,6 @@
-import {ECID, type EntityComponent} from "~/lib/core/engine/scene/components/EntityComponent";
-import {Vector2D} from "~/lib/core/engine/utils";
-import {type EasingFunction, Easings} from "~/lib/core/engine/utils/Easing";
+import { ECID, type EntityComponent } from "~/lib/core/engine/scene/components/EntityComponent";
+import { Vector2D } from "~/lib/core/engine/utils";
+import { type EasingFunction, Easings } from "~/lib/core/engine/utils/Easing";
 
 export class ECMoveTo implements EntityComponent {
     id: ECID = ECID.MoveTo;

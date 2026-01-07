@@ -8,10 +8,10 @@ const props = defineProps({
         type: Number,
         default: 100,
     }
-})
+});
 onMounted(() => {
     if (!divider.value || !container.value) {
-        return
+        return;
     }
 
     const divider_comp = divider.value;
@@ -29,7 +29,7 @@ onMounted(() => {
     window.addEventListener("mousemove", (e: MouseEvent) => {
         if (dragging) {
             if (!divider.value || !container.value) {
-                return
+                return;
             }
             const container_bounds = container.value.getBoundingClientRect();
             const divider_bounds = divider_comp.getBoundingClientRect();
@@ -47,8 +47,8 @@ onMounted(() => {
     });
     window.addEventListener("resize", () => {
         divider_comp.style.left = `${left.value?.clientWidth}px`;
-    })
-})
+    });
+});
 </script>
 
 <template>
