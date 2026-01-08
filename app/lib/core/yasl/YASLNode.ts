@@ -1,7 +1,7 @@
-import type { YASLNativeValue } from "~/lib/core/yasl/natives/YASLNativeValue";
-import type { Visitor } from "~/lib/core/yasl/visitors/Visitor";
-import { type YASLExpression, YASLNodeType, type YASLValueType } from "~/lib/core/yasl/YASLAst";
-import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp } from "~/lib/core/yasl/YASLToken";
+import type { YASLNativeValue } from "./natives/YASLNativeValue";
+import type { Visitor } from "./visitors/Visitor";
+import { type YASLExpression, YASLNodeType, type YASLValueType } from "./YASLAst";
+import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp } from "./YASLToken";
 
 export abstract class YASLNode {
     constructor(
@@ -34,8 +34,8 @@ export class OpPostfixNode extends YASLNode {
 
 export class ExpPropertyAccessNode extends YASLNode {
     constructor(
-        public curr_node: YASLExpression,
-        public member_node: YASLExpression | undefined,
+        public objectNode: YASLExpression,
+        public propertyNode: YASLExpression | undefined,
         debugId: number,
         startIndex: number,
         endIndex: number,
@@ -117,7 +117,6 @@ export class ExpTernaryNode extends YASLNode {
 export class ExpLiteralNode extends YASLNode {
     constructor(
         public value: YASLNativeValue,
-        public valueType: YASLValueType,
         debugId: number,
         startIndex: number,
         endIndex: number,
@@ -244,7 +243,27 @@ export class StmtDeclarationNode extends YASLNode {
         return visitor.visitStmtDeclaration(this);
     }
 }
+export class StmtExpressionNode extends YASLNode {
+    constructor(
+        public exp: YASLExpression | null,
+        public types: Set<YASLValueType> | null,
+        debugId: number,
+        startIndex: number,
+        endIndex: number,
+    ) {
+        super(
+            YASLNodeType.STMT_EXPRESSION,
+            null,
+            debugId,
+            startIndex,
+            endIndex,
+        );
+    }
 
+    accept<T>(visitor: Visitor<T>): T {
+        return visitor.visitStmtDeclaration(this);
+    }
+}
 export class ExpAssignNode extends YASLNode {
     constructor(
         public assignmentOperator: YASLToken,

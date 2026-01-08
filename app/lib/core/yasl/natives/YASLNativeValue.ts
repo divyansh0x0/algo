@@ -26,10 +26,6 @@ export class YASLNativeValue {
         return this.value instanceof YASLArrayObj;
     }
 
-    get(): YASLPossibleNativeValue {
-        return this.value;
-    }
-
     isBoolean(): this is {value: boolean} {
         return typeof this.value === "boolean";
     }

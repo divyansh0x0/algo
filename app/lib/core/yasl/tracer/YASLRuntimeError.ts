@@ -1,4 +1,4 @@
-import { ExpCallNode, type YASLNode } from "../YASLNode";
+import type { ExpCallNode, YASLNode } from "../YASLNode";
 
 export class YASLRuntimeError {
     constructor(

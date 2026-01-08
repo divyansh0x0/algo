@@ -1,5 +1,5 @@
-import type { YASLMemPointer } from "~/lib/core/yasl/environment/YASLMemPointer";
-import type { YASLNativeValue } from "~/lib/core/yasl/natives/YASLNativeValue";
+import type { YASLMemPointer } from "./environment/YASLMemPointer";
+import type { YASLNativeValue } from "./natives/YASLNativeValue";
 import type {
     DefArrayNode,
     ExpAssignNode,
@@ -12,7 +12,7 @@ import type {
     OpIndexingNode,
     OpPostfixNode,
     YASLNode
-} from "~/lib/core/yasl/YASLNode";
+} from "./YASLNode";
 
 export type YASLExpression =
     | ExpUnaryNode
@@ -47,13 +47,14 @@ export enum YASLNodeType {
     STMT_ELSE_IF,
     STMT_SWITCH,
     STMT_CASE,
+    STMT_BLOCK,
+    STMT_EXPRESSION,
     EXP_BINARY,
     EXP_UNARY,
     EXP_PROPERTY_ACCESS,
     OP_TERNARY,
     OP_POSTFIX,
     OP_INDEXING,
-    STMT_BLOCK,
     DEF_ARRAY,
     DEF_FUNCTION,
 }

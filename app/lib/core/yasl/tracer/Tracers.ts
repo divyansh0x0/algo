@@ -64,7 +64,7 @@ export interface YASLTracerBinaryOperation extends YASLTracer {
 export interface YASLTracerUnaryOperation extends YASLTracer {
     type: TracerType.UNARY_OPERATION;
     operator: YASLTokenUnaryOp;
-    operand: YASLNativeValue;
+    operand: YASLTokenUnaryOp;
     result: YASLNativeValue;
 }
 

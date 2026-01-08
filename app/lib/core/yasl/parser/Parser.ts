@@ -1,5 +1,6 @@
 import { formatter } from "../formatter";
-import { type YASLExpression, YASLProgram, YASLValueType } from "../tree";
+import { YASLNativeValue } from "../natives/YASLNativeValue";
+import { type YASLExpression, YASLProgram, YASLValueType } from "../YASLAst";
 import { YASLNodeFactory } from "../YASLNodeFactory";
 import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
 import { type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp } from "../YASLToken";
@@ -197,7 +198,7 @@ export class Parser {
 
         this.expect(YASLTokenType.ASSIGN, "Invalid token");
         const value_node = this.consumeExpression();
-        const node = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.end_index : identifier.end);
+        const node = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.endIndex : identifier.end);
         this.program.addStatement(node);
     }
 
@@ -229,11 +230,11 @@ export class Parser {
             case YASLTokenType.NOT: {
                 const right_node = this.consumeExpression(0);
                 if (right_node && YASLNodeTypeChecker.isExpression(right_node))
-                    return this.node_factory.getUnaryExpression(token.type as YASLTokenUnaryOp, right_node, token.start, right_node.end_index);
+                    return this.node_factory.getUnaryExpression(token.type as YASLTokenUnaryOp, right_node, token.start, right_node.endIndex);
                 break;
             }
             case YASLTokenType.NUMBER:
-                return this.node_factory.getLiteralNode(token.literal as number, YASLValueType.number, token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as number),token.start, token.end);
             case YASLTokenType.IDENTIFIER:
                 return this.node_factory.getIdentifierNode(token);
             case YASLTokenType.LPAREN: {
@@ -266,8 +267,12 @@ export class Parser {
 
                 return this.node_factory.getArrayLiteral(values);
             }
+            case YASLTokenType.TRUE:
+                return this.node_factory.getLiteralNode(new YASLNativeValue(true), token.start, token.end);
+            case YASLTokenType.FALSE:
+                return this.node_factory.getLiteralNode(new YASLNativeValue(false),  token.start, token.end);
             case YASLTokenType.STRING:
-                return this.node_factory.getLiteralNode(token.literal as string, YASLValueType.string, token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as string), token.start, token.end);
             default:
                 this.errorToken(`Unexpected token in nud: ${token.lexeme}`, token);
                 break;

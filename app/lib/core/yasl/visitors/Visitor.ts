@@ -1,29 +1,29 @@
-import type {
-  DefArrayNode,
-  DefFunctionNode,
-  ExpAssignNode,
-  ExpBinaryNode,
-  ExpCallNode,
-  ExpIdentifierNode,
-  ExpLiteralNode,
-  ExpPropertyAccessNode,
-  ExpTernaryNode,
-  ExpUnaryNode,
-  OpIndexingNode,
-  OpPostfixNode,
-  StmtBlockNode,
-  StmtBreakNode,
-  StmtCaseNode,
-  StmtContinueNode,
-  StmtDeclarationNode,
-  StmtElseIfNode,
-  StmtElseNode,
-  StmtForNode,
-  StmtIfNode,
-  StmtReturnNode,
-  StmtSwitchNode,
-  StmtThenNode,
-  StmtWhileNode
+import {
+    type DefArrayNode,
+    type DefFunctionNode,
+    type ExpAssignNode,
+    type ExpBinaryNode,
+    type ExpCallNode,
+    type ExpIdentifierNode,
+    type ExpLiteralNode,
+    type ExpPropertyAccessNode,
+    type ExpTernaryNode,
+    type ExpUnaryNode,
+    type OpIndexingNode,
+    type OpPostfixNode,
+    type StmtBlockNode,
+    type StmtBreakNode,
+    type StmtCaseNode,
+    type StmtContinueNode,
+    type StmtDeclarationNode,
+    type StmtElseIfNode,
+    type StmtElseNode, StmtExpressionNode,
+    type StmtForNode,
+    type StmtIfNode,
+    type StmtReturnNode,
+    type StmtSwitchNode,
+    type StmtThenNode,
+    type StmtWhileNode
 } from "../YASLNode";
 
 export interface Visitor<T> {
@@ -60,7 +60,7 @@ export interface Visitor<T> {
     visitStmtContinue(node: StmtContinueNode): T;
 
     visitStmtDeclaration(node: StmtDeclarationNode): T;
-
+    visitStmtExpression(node:StmtExpressionNode):T;
     visitStmtElse(node: StmtElseNode): T;
 
     visitStmtFor(node: StmtForNode): T;

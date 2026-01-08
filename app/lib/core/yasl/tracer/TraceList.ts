@@ -1,4 +1,4 @@
-import type { YASLNativeValue } from "~/lib/core/yasl/natives/YASLNativeValue";
+import type { YASLNativeValue } from "../natives/YASLNativeValue";
 import type { YASLArrayObj } from "../natives/YASLArrayObj";
 import type { YASLTokenBinaryOp, YASLTokenUnaryOp } from "../YASLToken";
 import {

@@ -4,7 +4,7 @@ import type { ExpIdentifierNode,ExpCallNode, ExpPropertyAccessNode, OpIndexingNo
 
 export const YASLNodeTypeChecker = {
     isIdentifier(node?: YASLNode | null): node is ExpIdentifierNode {
-        return node !== null && node !== undefined && node.type === YASLNodeType.IDENTIFIER;
+        return node !== null && node !== undefined && node.type === YASLNodeType.EXP_IDENTIFIER;
     },
 
     isPropertyAccess(node: YASLNode): node is ExpPropertyAccessNode {

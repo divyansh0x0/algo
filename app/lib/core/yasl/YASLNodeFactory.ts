@@ -1,3 +1,6 @@
+import type {
+    YASLNode
+} from "./YASLNode";
 import {
     DefArrayNode,
     DefFunctionNode,
@@ -22,11 +25,10 @@ import {
     StmtReturnNode,
     StmtSwitchNode,
     StmtThenNode,
-    StmtWhileNode,
-    YASLNode
-} from "~/lib/core/yasl/YASLNode";
+    StmtWhileNode
+} from "./YASLNode";
 import type { YASLNativeValue } from "./natives/YASLNativeValue";
-import { type YASLExpression, type YASLValueType, } from "./YASLAst";
+import type { YASLExpression, YASLValueType, } from "./YASLAst";
 import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp, } from "./YASLToken";
 
 export class YASLNodeFactory {
@@ -42,8 +44,8 @@ export class YASLNodeFactory {
             expression_left,
             expression_right,
             this.getDebugId(),
-            expression_left.start_index,
-            expression_right.end_index,
+            expression_left.startIndex,
+            expression_right.endIndex,
         );
     }
 
@@ -66,14 +68,14 @@ export class YASLNodeFactory {
             true_statement,
             false_statement,
             this.getDebugId(),
-            condition.start_index,
-            condition.end_index,
+            condition.startIndex,
+            condition.endIndex,
         );
     }
 
     getArrayLiteral(elements: YASLExpression[]): DefArrayNode {
-        const startIndex = elements[0]?.start_index ?? 0;
-        const endIndex = elements[elements.length - 1]?.end_index ?? 0;
+        const startIndex = elements[0]?.startIndex ?? 0;
+        const endIndex = elements[elements.length - 1]?.endIndex ?? 0;
         return new DefArrayNode(
             elements,
             this.getDebugId(),
@@ -90,23 +92,21 @@ export class YASLNodeFactory {
             index,
             operand,
             this.getDebugId(),
-            operand.start_index,
-            operand.end_index,
+            operand.startIndex,
+            operand.endIndex,
         );
     }
 
     getLiteralNode(
         value: YASLNativeValue,
-        valueType: YASLValueType,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): ExpLiteralNode {
         return new ExpLiteralNode(
             value,
-            valueType,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
@@ -125,8 +125,8 @@ export class YASLNodeFactory {
             callee,
             args,
             this.getDebugId(),
-            callee.start_index,
-            callee.end_index,
+            callee.startIndex,
+            callee.endIndex,
         );
     }
 
@@ -146,16 +146,16 @@ export class YASLNodeFactory {
         identifier_name: string,
         value: YASLExpression | null,
         types: Set<YASLValueType> | null,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtDeclarationNode {
         return new StmtDeclarationNode(
             identifier_name,
             value,
             types,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
@@ -169,23 +169,23 @@ export class YASLNodeFactory {
             lvalue,
             rvalue,
             this.getDebugId(),
-            lvalue.start_index,
-            rvalue.end_index,
+            lvalue.startIndex,
+            rvalue.endIndex,
         );
     }
 
     getFunctionDefinition(
         identifier_name: string,
         params: YASLNode[],
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): DefFunctionNode {
         return new DefFunctionNode(
             identifier_name,
             params,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
@@ -193,89 +193,89 @@ export class YASLNodeFactory {
         statement_1: YASLNode,
         statement_2: YASLNode,
         statement_3: YASLNode,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtForNode {
         return new StmtForNode(
             statement_1,
             statement_2,
             statement_3,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
     getWhileStatement(
         expression_inside: YASLNode,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtWhileNode {
         return new StmtWhileNode(
             expression_inside,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
     getIfStatement(
         expression_inside: YASLNode,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtIfNode {
         return new StmtIfNode(
             expression_inside,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
     getElseIfStatement(
         expression_inside: YASLNode,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtElseIfNode {
         return new StmtElseIfNode(
             expression_inside,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
-    getElseStatement(start_index: number, end_index: number): StmtElseNode {
-        return new StmtElseNode(this.getDebugId(), start_index, end_index);
+    getElseStatement(startIndex: number, endIndex: number): StmtElseNode {
+        return new StmtElseNode(this.getDebugId(), startIndex, endIndex);
     }
 
-    getThenStatement(start_index: number, end_index: number): StmtThenNode {
-        return new StmtThenNode(this.getDebugId(), start_index, end_index);
+    getThenStatement(startIndex: number, endIndex: number): StmtThenNode {
+        return new StmtThenNode(this.getDebugId(), startIndex, endIndex);
     }
 
     getSwitchStatement(
         expression_inside: YASLNode,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtSwitchNode {
         return new StmtSwitchNode(
             expression_inside,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
     getSwitchCaseStatement(
         expression_inside: YASLNode,
-        start_index: number,
-        end_index: number,
+        startIndex: number,
+        endIndex: number,
     ): StmtCaseNode {
         return new StmtCaseNode(
             expression_inside,
             this.getDebugId(),
-            start_index,
-            end_index,
+            startIndex,
+            endIndex,
         );
     }
 
@@ -287,8 +287,8 @@ export class YASLNodeFactory {
             curr,
             child,
             this.getDebugId(),
-            curr.start_index,
-            child ? child.end_index : curr.end_index,
+            curr.startIndex,
+            child ? child.endIndex : curr.endIndex,
         );
     }
 
@@ -300,7 +300,7 @@ export class YASLNodeFactory {
             operatorToken,
             operandNode,
             this.getDebugId(),
-            operandNode.start_index,
+            operandNode.startIndex,
             operatorToken.end,
         );
     }
