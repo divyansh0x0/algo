@@ -1,17 +1,18 @@
 import type { YASLMemPointer } from "./environment/YASLMemPointer";
 import type { YASLNativeValue } from "./natives/YASLNativeValue";
-import type {
-    DefArrayNode,
-    ExpAssignNode,
-    ExpBinaryNode,
-    ExpCallNode,
-    ExpIdentifierNode,
-    ExpLiteralNode,
-    ExpPropertyAccessNode,
-    ExpUnaryNode,
-    OpIndexingNode,
-    OpPostfixNode,
-    YASLNode
+import {
+    type DefArrayNode,
+    type ExpAssignNode,
+    type ExpBinaryNode,
+    type ExpCallNode,
+    type ExpIdentifierNode,
+    type ExpLiteralNode,
+    type ExpPropertyAccessNode,
+    type ExpUnaryNode,
+    type OpIndexingNode,
+    type OpPostfixNode, StmtBlockNode, StmtBreakNode, StmtCaseNode,
+    StmtContinueNode, StmtDeclarationNode, StmtElseIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode,
+    type YASLNode
 } from "./YASLNode";
 
 export type YASLExpression =
@@ -57,6 +58,7 @@ export enum YASLNodeType {
     OP_INDEXING,
     DEF_ARRAY,
     DEF_FUNCTION,
+    STMT_ASSIGN,
 }
 
 export enum YASLValueType {
@@ -74,21 +76,25 @@ export interface YASLReturnValue {
     value: YASLNativeValue | YASLMemPointer;
 }
 
-export class YASLProgram {
-    private curr?: YASLNode | null = null;
-    private _root: YASLNode | null = null;
+export type YASLStatement =
+    | StmtExpressionNode
+    | StmtBlockNode
+    | StmtDeclarationNode
+    | StmtBreakNode
+    | StmtCaseNode
+    | StmtContinueNode
+    | StmtElseIfNode
+    | StmtIfNode
+    | StmtElseNode;
 
-    get root() {
-        return this._root;
+export class YASLProgram {
+    private statements: YASLStatement[] = [];
+
+    getStatements() {
+        return this.statements;
     }
 
-    addStatement(node: YASLNode) {
-        if (this._root === null) {
-            this._root = node;
-            this.curr = node;
-        } else {
-            this.curr!.next_node = node;
-            this.curr = node;
-        }
+    addStatement(node: YASLStatement) {
+        this.statements.push(node);
     }
 }

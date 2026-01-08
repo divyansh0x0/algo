@@ -1,5 +1,7 @@
-import type {
-    YASLNode
+import {
+    StmtAssignNode,
+    StmtExpressionNode,
+    type YASLNode
 } from "./YASLNode";
 import {
     DefArrayNode,
@@ -160,12 +162,10 @@ export class YASLNodeFactory {
     }
 
     getAssignmentExpression(
-        assignmentOperatorToken: YASLToken,
         lvalue: YASLExpression,
         rvalue: YASLExpression,
     ): ExpAssignNode {
         return new ExpAssignNode(
-            assignmentOperatorToken,
             lvalue,
             rvalue,
             this.getDebugId(),
@@ -173,7 +173,18 @@ export class YASLNodeFactory {
             rvalue.endIndex,
         );
     }
-
+    getAssignmentStatement(
+        lvalue: YASLExpression,
+        rvalue: YASLExpression,
+    ): StmtAssignNode {
+        return new StmtAssignNode(
+            lvalue,
+            rvalue,
+            this.getDebugId(),
+            lvalue.startIndex,
+            rvalue.endIndex,
+        );
+    }
     getFunctionDefinition(
         identifier_name: string,
         params: YASLNode[],
@@ -307,5 +318,9 @@ export class YASLNodeFactory {
 
     private getDebugId() {
         return ++this.node_index;
+    }
+
+    getStatementExpression(exp: YASLExpression): StmtExpressionNode {
+        return new StmtExpressionNode(exp, this.getDebugId(), exp.startIndex, exp.endIndex);
     }
 }

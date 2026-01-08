@@ -12,33 +12,34 @@ import type { Visitor } from "./Visitor";
 import type { YASLMemPointer } from "../environment/YASLMemPointer";
 import { YASLArrayNativeMethods } from "../natives/methods/YASLArrayNativeMethods";
 import { YASLRuntimeContext } from "../tracer/YASLRuntimeError";
-import type {
-    DefArrayNode,
-    DefFunctionNode,
-    ExpAssignNode,
-    ExpBinaryNode,
-    ExpCallNode,
-    ExpIdentifierNode,
-    ExpLiteralNode,
-    ExpPropertyAccessNode,
-    ExpTernaryNode,
-    ExpUnaryNode,
-    OpIndexingNode,
-    OpPostfixNode,
-    StmtBlockNode,
-    StmtBreakNode,
-    StmtCaseNode,
-    StmtContinueNode,
-    StmtDeclarationNode,
-    StmtElseIfNode,
-    StmtElseNode,
-    StmtForNode,
-    StmtIfNode,
-    StmtReturnNode,
-    StmtSwitchNode,
-    StmtThenNode,
-    StmtWhileNode,
-    YASLNode
+import {
+    type DefArrayNode,
+    type DefFunctionNode,
+    type ExpAssignNode,
+    type ExpBinaryNode,
+    type ExpCallNode,
+    type ExpIdentifierNode,
+    type ExpLiteralNode,
+    type ExpPropertyAccessNode,
+    type ExpTernaryNode,
+    type ExpUnaryNode,
+    type OpIndexingNode,
+    type OpPostfixNode, StmtAssignNode,
+    type StmtBlockNode,
+    type StmtBreakNode,
+    type StmtCaseNode,
+    type StmtContinueNode,
+    type StmtDeclarationNode,
+    type StmtElseIfNode,
+    type StmtElseNode,
+    type StmtExpressionNode,
+    type StmtForNode,
+    type StmtIfNode,
+    type StmtReturnNode,
+    type StmtSwitchNode,
+    type StmtThenNode,
+    type StmtWhileNode,
+    type YASLNode
 } from "../YASLNode";
 import { YASLError } from "./YASLError";
 import { YASLNull, type YASLRuntimeValue } from "./YASLRuntimeValue";
@@ -64,6 +65,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         this.currentScope = this.rootScope;
     }
 
+
     private expectRef(
         node: YASLNode,
     ): { kind: "ref"; ref: YASLMemPointer } {
@@ -72,7 +74,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             this.ctx.raise({
                 node,
                 kind: "ReferenceError",
-                message: "Expected reference"
+                message: "Expected reference but got a value"
             });
             throw new YASLError("TypeError");
         }
@@ -113,6 +115,12 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             }
         );
     }
+    private doAssignment(leftNode:YASLNode, rightNode:YASLNode) {
+        const lvalue = this.expectRef(leftNode);
+        const rvalue = this.expectValue(rightNode);
+        lvalue.ref.set(rvalue.value);
+        return rvalue;
+    }
 
     visitDefArray(node: DefArrayNode): YASLRuntimeValue {
         const arr: YASLArrayObj = new YASLArrayObj();
@@ -128,13 +136,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     }
 
     visitExpAssign(node: ExpAssignNode): YASLRuntimeValue {
-        const lvalue = this.expectRef(node.lvalue);
-        // const rvalue = node.rvalue;
-        const rvalue = this.expectValue(node.rvalue);
-
-
-        lvalue.ref.set(rvalue.value);
-        return rvalue;
+        return this.doAssignment(node.lvalue,node.rvalue);
     }
 
     visitExpBinary(node: ExpBinaryNode): YASLRuntimeValue {
@@ -252,7 +254,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                     for (const runtimeVal of runtimeVals) {
                         if (runtimeVal.kind === "value")
                             nativeVals.push(runtimeVal.value.value);
-                        else{
+                        else {
                             const val = runtimeVal.ref.get();
                             nativeVals.push(val.value);
                         }
@@ -261,19 +263,19 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                 }
             }
         }
-        if(YASLNodeTypeChecker.isPropertyAccess(node.qualifiedName)) {
+        if (YASLNodeTypeChecker.isPropertyAccess(node.qualifiedName)) {
             const obj = node.qualifiedName.objectNode;
             const prop = node.qualifiedName.propertyNode;
-            if(!prop)
-                throw new YASLError("Invalid state achieved. Prop was undefined of obj")
+            if (!prop)
+                throw new YASLError("Invalid state achieved. Prop was undefined of obj");
 
-            if(YASLNodeTypeChecker.isIdentifier(obj) && YASLNodeTypeChecker.isIdentifier(prop)) {
+            if (YASLNodeTypeChecker.isIdentifier(obj) && YASLNodeTypeChecker.isIdentifier(prop)) {
                 const objRef = this.expectRef(obj);
                 const nativeVal = objRef.ref.get();
-                if(!nativeVal.isArray())
+                if (!nativeVal.isArray())
                     throw new YASLError("Object methods not implemented");
                 else
-                    this.callArrayMethod(nativeVal.value, prop, node.args)
+                    this.callArrayMethod(nativeVal.value, prop, node.args);
             }
         }
         return node.qualifiedName.accept(this);
@@ -309,97 +311,77 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     }
 
     visitOpIndexing(node: OpIndexingNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
     }
 
     visitOpPostfix(node: OpPostfixNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
     }
-
+    visitStmtAssign(node: StmtAssignNode): YASLRuntimeValue {
+        this.doAssignment(node.lvalue,node.rvalue);
+        return YASLNull;
+    }
     visitStmtBlock(node: StmtBlockNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
     }
 
     visitStmtBreak(node: StmtBreakNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
     }
 
     visitStmtCase(node: StmtCaseNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
     }
 
     visitStmtContinue(node: StmtContinueNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
     }
 
     visitStmtDeclaration(node: StmtDeclarationNode): YASLRuntimeValue {
         const lvalue = node.lvalue;
         if (!node.rvalue) {
-            this.currentScope.define(lvalue,YASLNativeValue.NULL);
+            this.currentScope.define(lvalue, YASLNativeValue.NULL);
             return YASLNull;
         }
         const rvalue = this.expectValue(node.rvalue);
-        this.currentScope.define(lvalue,rvalue.value);
-        this.handleStmtEnd(node);
+        this.currentScope.define(lvalue, rvalue.value);
         return rvalue;
     }
 
-    visitStmtElse(node: StmtElseNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
-        return YASLNull;
+    visitStmtExpression(node: StmtExpressionNode): YASLRuntimeValue {
+        return node.exp.accept(this);
+    }
 
+    visitStmtElse(node: StmtElseNode): YASLRuntimeValue {
+        return YASLNull;
     }
 
     visitStmtFor(node: StmtForNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
     }
 
     visitStmtIf(node: StmtIfNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
     }
 
     visitStmtIfElse(node: StmtElseIfNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
     }
 
     visitStmtReturn(node: StmtReturnNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
     }
 
     visitStmtSwitch(node: StmtSwitchNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
     }
 
     visitStmtThen(node: StmtThenNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
     }
 
     visitStmtWhile(node: StmtWhileNode): YASLRuntimeValue {
-        this.handleStmtEnd(node);
         return YASLNull;
-
-    }
-
-    private handleStmtEnd(node: YASLNode): void {
-        node.next_node?.accept(this);
     }
 }
 
@@ -407,15 +389,17 @@ const code = `
 let a = "hi"
 print(a)
 a = "bye"
-print(b)
+print(a)
 `;
 const lexer = new Lexer(code);
 const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
 const visitor = new TracerVisitor();
-const ast = parser.getProgram().root;
-if(ast){
+const statements = parser.getProgram().getStatements();
+if (statements) {
     // console.log(formatter.formatAst(ast));
-    ast.accept(visitor);
-}else {
-    console.error("Couldnt build ast")
+    for (const statement of statements) {
+        statement.accept(visitor);
+    }
+} else {
+    console.error("Couldnt build ast");
 }

@@ -1,6 +1,7 @@
 import { formatter } from "../formatter";
 import { YASLNativeValue } from "../natives/YASLNativeValue";
-import { type YASLExpression, YASLProgram, YASLValueType } from "../YASLAst";
+import { type YASLExpression, YASLProgram,type YASLValueType } from "../YASLAst";
+import { ExpLiteralNode } from "../YASLNode";
 import { YASLNodeFactory } from "../YASLNodeFactory";
 import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
 import { type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp } from "../YASLToken";
@@ -56,28 +57,30 @@ export class Parser {
                     break;
                 }
 
-                const next_token = this.peek();
-                if (next_token.type === YASLTokenType.INLINE_ASSIGN) {
+                const inlineAssign = this.peek();
+                if (inlineAssign.type === YASLTokenType.INLINE_ASSIGN) {
                     this.errorToken("Inline assignment used as normal assignment, use '=' for assignments in a statement");
                     break;
                 }
-                if (isAssignmentOperator(next_token.type)) {
+                if (isAssignmentOperator(inlineAssign.type)) {
                     this.consume();
                     const rvalue = this.consumeExpression();
                     if (!rvalue) {
                         this.errorToken("Invalid RValue");
                         break;
                     }
-                    this.program.addStatement(this.node_factory.getAssignmentExpression(next_token, lvalue, rvalue));
-
-                } else {
-                    this.program.addStatement(lvalue);
+                    this.program.addStatement(this.node_factory.getAssignmentStatement(lvalue, rvalue));
+                    break;
                 }
+                this.program.addStatement(this.node_factory.getStatementExpression(lvalue));
                 break;
             }
-            default:
-                this.parseExpression();
+            default: {
+                const exp = this.parseExpression();
+                if (exp)
+                    this.program.addStatement(this.node_factory.getStatementExpression(exp));
                 break;
+            }
 
 
         }
@@ -171,8 +174,7 @@ export class Parser {
                 break;
         }
 
-        if (node)
-            this.program.addStatement(node);
+        return node;
 
     }
 
@@ -234,7 +236,7 @@ export class Parser {
                 break;
             }
             case YASLTokenType.NUMBER:
-                return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as number),token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as number), token.start, token.end);
             case YASLTokenType.IDENTIFIER:
                 return this.node_factory.getIdentifierNode(token);
             case YASLTokenType.LPAREN: {
@@ -270,7 +272,7 @@ export class Parser {
             case YASLTokenType.TRUE:
                 return this.node_factory.getLiteralNode(new YASLNativeValue(true), token.start, token.end);
             case YASLTokenType.FALSE:
-                return this.node_factory.getLiteralNode(new YASLNativeValue(false),  token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValue(false), token.start, token.end);
             case YASLTokenType.STRING:
                 return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as string), token.start, token.end);
             default:
@@ -354,7 +356,7 @@ export class Parser {
 
         //Assignment
         if (op_token.type === YASLTokenType.INLINE_ASSIGN) {
-            return this.node_factory.getAssignmentExpression(op_token, left_node, right_node);
+            return this.node_factory.getAssignmentExpression(left_node, right_node);
         }
         //Property access
         if (op_token.type === YASLTokenType.DOT) {
