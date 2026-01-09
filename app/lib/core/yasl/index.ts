@@ -1,6 +1,5 @@
 export * from "./parser/Parser";
 export * from "./lexer";
-export * from "./tracer/ProgramTracer";
 export * from "./YASLAst";
 export * from "./YASLToken";
 export * from "./natives/YASLNativeValue";

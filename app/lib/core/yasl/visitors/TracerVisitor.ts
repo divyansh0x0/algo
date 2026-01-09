@@ -5,9 +5,11 @@ import {
     type YASLPossibleNativeValue,
     YASLTokenType
 } from "../";
+import type { LineMap } from "../../LineMap";
 import { YASLEnvironment } from "../environment/environment";
 import { YASLArrayObj } from "../natives/YASLArrayObj";
 import { TraceList } from "../tracer/TraceList";
+import type { YASLTracer } from "../tracer/Tracers";
 import type { Visitor } from "./Visitor";
 import type { YASLMemPointer } from "../environment/YASLMemPointer";
 import { YASLArrayNativeMethods } from "../natives/methods/YASLArrayNativeMethods";
@@ -59,13 +61,13 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     private tracerList: TraceList = new TraceList();
     private ctx = new YASLRuntimeContext();
 
-    constructor(map:) {
+    constructor(private readonly map:LineMap) {
         this.rootScope = new YASLEnvironment();
         this.currentScope = this.rootScope;
     }
 
     private getLine(node:YASLNode){
-        node.startIndex
+        return this.map.getLine(node.startIndex)
     }
     private expectRef(
         node: YASLNode,
@@ -112,7 +114,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             valueArgs,
             {
                 tracer: this.tracerList,
-                line: this.line
+                line: this.getLine(identifierNode)
             }
         );
     }
@@ -351,12 +353,12 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         const lvalue = node.lvalue;
         if (!node.rvalue) {
             this.currentScope.define(lvalue, YASLNativeValue.NULL);
-            this.tracerList.emitDeclareVariable(lvalue, this.line, YASLNativeValue.NULL );
+            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YASLNativeValue.NULL );
             return YASLNull;
         }
         const rvalue = this.expectValue(node.rvalue);
         this.currentScope.define(lvalue, rvalue.value);
-        this.tracerList.emitDeclareVariable(lvalue, this.line, rvalue.value );
+        this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), rvalue.value );
         return rvalue;
     }
 
@@ -402,6 +404,10 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     getTracers() {
         return this.tracerList
     }
+
+    addTraceListener(param: (trace:YASLTracer) => void): void {
+        this.tracerList.setListener(param);
+    }
 }
 
 const code = `
@@ -413,6 +419,9 @@ print(a)
 const lexer = new Lexer(code);
 const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
 const visitor = new TracerVisitor(lexer.getLineMap());
+visitor.addTraceListener((trace)=>{
+    console.log("GOT TRACER",trace)
+})
 const statements = parser.getProgram().getStatements();
 if (statements) {
     // console.log(formatter.formatAst(ast));

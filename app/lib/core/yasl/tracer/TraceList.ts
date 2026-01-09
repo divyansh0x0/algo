@@ -17,7 +17,9 @@ import {
 
 export class TraceList {
     traces: YASLTracer[] = [];
-    get last(){
+    listener: ((trace: YASLTracer) => void) | null = null;
+
+    get last() {
         return this.traces[this.traces.length - 1];
     }
 
@@ -106,5 +108,11 @@ export class TraceList {
 
     private emit(trace: YASLTracer) {
         this.traces.push(trace);
+        if (this.listener)
+            this.listener(trace);
+    }
+
+    setListener(param: (trace: YASLTracer) => void): void {
+        this.listener = param;
     }
 }

@@ -1,4 +1,4 @@
-import type { LineMap } from "../LineMap";
+import { LineMap } from "../LineMap";
 import { keywords, type YASLToken, YASLTokenType } from "./YASLToken";
 
 export interface LexerError {
@@ -9,7 +9,7 @@ export interface LexerError {
 }
 
 export class Lexer {
-    private lineMap: LineMap = [];
+    private lineMap: LineMap = new LineMap();
     private tokens_list = Array<YASLToken>();
     private curr_line = 0;
     private curr_col = 0;

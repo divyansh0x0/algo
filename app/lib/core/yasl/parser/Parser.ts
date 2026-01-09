@@ -7,7 +7,6 @@ import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
 import { type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp } from "../YASLToken";
 import {
     getBindingPower,
-    indexToLineCol,
     isAssignmentOperator,
     isExpressionTerminator,
     isOperator,
@@ -402,9 +401,5 @@ export class Parser {
         }
 
         return left_node;
-    }
-
-    private consumeBlock(): YASLExpression {
-
     }
 }

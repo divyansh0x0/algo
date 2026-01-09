@@ -1,6 +1,5 @@
 import type { YASLValueType } from "../tree";
 import { type YASLToken, YASLTokenType } from "../YASLToken";
-import { binarySearch } from "./BinarySearch";
 
 export function parseTypeToken(token: YASLToken): YASLValueType | null {
     switch (token.lexeme) {
