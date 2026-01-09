@@ -1,14 +1,18 @@
-import type { YASLValueType } from "../tree";
+import { YASLValueType } from "../YASLAst";
 import { type YASLToken, YASLTokenType } from "../YASLToken";
 
 export function parseTypeToken(token: YASLToken): YASLValueType | null {
     switch (token.lexeme) {
         case "string":
+            return YASLValueType.string;
         case "int":
+            return YASLValueType.number;
         case "Set":
+            return YASLValueType.set;
         case "Queue":
+            return YASLValueType.queue;
         case "Function":
-            return token.lexeme as YASLValueType;
+            return YASLValueType.function_signature;
         default:
             return null;
     }

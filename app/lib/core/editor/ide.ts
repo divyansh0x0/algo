@@ -46,7 +46,7 @@ function getMonospaceCharBox(el: HTMLElement) {
 }
 
 
-function isInBounds(x: number, y: number, rect: DOMRect): any {
+function isInBounds(x: number, y: number, rect: DOMRect): boolean {
     return x > rect.x
         && x < rect.x + rect.width
         && y > rect.y
@@ -87,15 +87,12 @@ export class IDERow {
         let rendered_text = "";
         if (this.tokens.length > 0) {
             for (const token of this.tokens) {
-                if (token.type === YASL.YASLTokenType.EOF)
-                    break;
                 const text = raw_text.slice(token.start, token.end);
                 rendered_text += `<span class='${YASL.StringifyTokenType(token.type)}'>${text}</span>`;
             }
         } else {
             rendered_text = raw_text;
         }
-        let x = 1000;
         this.row_el.innerHTML = rendered_text;
         this._tokens = this.tokens;
 
@@ -674,6 +671,7 @@ export class IDE {
                 if (Editor.isPrintableKey(key)) {
                     this.appendChar(key);
                 } else {
+                    console.error("Invalid key for key '" + key + "'");
                 }
                 break;
         }
