@@ -1,7 +1,7 @@
+import type { LineMap } from "../../LineMap";
 import { formatter } from "../formatter";
 import { YASLNativeValue } from "../natives/YASLNativeValue";
 import { type YASLExpression, YASLProgram,type YASLValueType } from "../YASLAst";
-import { ExpLiteralNode } from "../YASLNode";
 import { YASLNodeFactory } from "../YASLNodeFactory";
 import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
 import { type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp } from "../YASLToken";
@@ -25,7 +25,7 @@ export class Parser {
 
     private errors = Array<ParserError>();
 
-    constructor(private tokens: YASLToken[], private line_map: number[]) {
+    constructor(private tokens: YASLToken[], private line_map: LineMap) {
 
     }
 
@@ -99,8 +99,8 @@ export class Parser {
     private errorToken(msg: string, token: YASLToken | null = null) {
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
         if (error_token != null) {
-            const [ line1, col1 ] = indexToLineCol(error_token.start, this.line_map);
-            const [ line2, col2 ] = indexToLineCol(error_token.end, this.line_map);
+            const [ line1, col1 ] = this.line_map.indexToLineCol(error_token.start);
+            const [ line2, col2 ] = this.line_map.indexToLineCol(error_token.end);
             this.errors.push({
                 message: msg,
                 token: error_token,
@@ -168,6 +168,9 @@ export class Parser {
             case YASLTokenType.IDENTIFIER:
                 node = this.consumeExpression();
                 break;
+            // case YASLTokenType.LBRACE:
+            //     node = this.consumeBlock();
+            //     break
             default:
 
                 this.errorToken(`Invalid token in parseExpression`, token);
@@ -399,5 +402,9 @@ export class Parser {
         }
 
         return left_node;
+    }
+
+    private consumeBlock(): YASLExpression {
+
     }
 }

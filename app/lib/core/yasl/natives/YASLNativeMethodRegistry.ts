@@ -1,5 +1,5 @@
 import type { YASLNativeMethod, YASLNativeMethodContext } from "./YASLNativeMethod";
-import type { YASLNativeValue } from "./YASLNativeValue";
+import  { YASLNativeValue } from "./YASLNativeValue";
 
 export class YASLNativeMethodRegistry<T> {
     private readonly methods = new Map<string, YASLNativeMethod<T>>();
@@ -14,7 +14,7 @@ export class YASLNativeMethodRegistry<T> {
     call(name: string, target: T, args: YASLNativeValue[], context: YASLNativeMethodContext): YASLNativeValue {
         const method = this.methods.get(name);
         if (!method)
-            return null;
+            return YASLNativeValue.NULL;
 
         return method(target, args, context);
     }

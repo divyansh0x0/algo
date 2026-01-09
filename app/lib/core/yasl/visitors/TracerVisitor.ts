@@ -12,34 +12,34 @@ import type { Visitor } from "./Visitor";
 import type { YASLMemPointer } from "../environment/YASLMemPointer";
 import { YASLArrayNativeMethods } from "../natives/methods/YASLArrayNativeMethods";
 import { YASLRuntimeContext } from "../tracer/YASLRuntimeError";
-import {
-    type DefArrayNode,
-    type DefFunctionNode,
-    type ExpAssignNode,
-    type ExpBinaryNode,
-    type ExpCallNode,
-    type ExpIdentifierNode,
-    type ExpLiteralNode,
-    type ExpPropertyAccessNode,
-    type ExpTernaryNode,
-    type ExpUnaryNode,
-    type OpIndexingNode,
-    type OpPostfixNode, StmtAssignNode,
-    type StmtBlockNode,
-    type StmtBreakNode,
-    type StmtCaseNode,
-    type StmtContinueNode,
-    type StmtDeclarationNode,
-    type StmtElseIfNode,
-    type StmtElseNode,
-    type StmtExpressionNode,
-    type StmtForNode,
-    type StmtIfNode,
-    type StmtReturnNode,
-    type StmtSwitchNode,
-    type StmtThenNode,
-    type StmtWhileNode,
-    type YASLNode
+import type {
+    DefArrayNode,
+    DefFunctionNode,
+    ExpAssignNode,
+    ExpBinaryNode,
+    ExpCallNode,
+    ExpIdentifierNode,
+    ExpLiteralNode,
+    ExpPropertyAccessNode,
+    ExpTernaryNode,
+    ExpUnaryNode,
+    OpIndexingNode,
+    OpPostfixNode, StmtAssignNode,
+    ExpBlockNode,
+    StmtBreakNode,
+    StmtCaseNode,
+    StmtContinueNode,
+    StmtDeclarationNode,
+    StmtElseIfNode,
+    StmtElseNode,
+    StmtExpressionNode,
+    StmtForNode,
+    StmtIfNode,
+    StmtReturnNode,
+    StmtSwitchNode,
+    StmtThenNode,
+    StmtWhileNode,
+    YASLNode
 } from "../YASLNode";
 import { YASLError } from "./YASLError";
 import { YASLNull, type YASLRuntimeValue } from "./YASLRuntimeValue";
@@ -56,16 +56,17 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     private next_node: YASLNode | null = null;
     private rootScope: YASLEnvironment;
     private currentScope: YASLEnvironment;
-    private line: number = 0;
     private tracerList: TraceList = new TraceList();
     private ctx = new YASLRuntimeContext();
 
-    constructor() {
+    constructor(map:) {
         this.rootScope = new YASLEnvironment();
         this.currentScope = this.rootScope;
     }
 
-
+    private getLine(node:YASLNode){
+        node.startIndex
+    }
     private expectRef(
         node: YASLNode,
     ): { kind: "ref"; ref: YASLMemPointer } {
@@ -321,7 +322,16 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         this.doAssignment(node.lvalue,node.rvalue);
         return YASLNull;
     }
-    visitStmtBlock(node: StmtBlockNode): YASLRuntimeValue {
+    expBlockNode(node: ExpBlockNode): YASLRuntimeValue {
+        for (let i = 0; i < node.statements.length; i++){
+            const statement = node.statements[i];
+            if(i === node.statements.length - 1){ // Last statement
+                return statement?.accept(this) ?? YASLNull;
+            }
+            else{
+                statement?.accept(this);
+            }
+        }
         return YASLNull;
     }
 
@@ -341,10 +351,12 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         const lvalue = node.lvalue;
         if (!node.rvalue) {
             this.currentScope.define(lvalue, YASLNativeValue.NULL);
+            this.tracerList.emitDeclareVariable(lvalue, this.line, YASLNativeValue.NULL );
             return YASLNull;
         }
         const rvalue = this.expectValue(node.rvalue);
         this.currentScope.define(lvalue, rvalue.value);
+        this.tracerList.emitDeclareVariable(lvalue, this.line, rvalue.value );
         return rvalue;
     }
 
@@ -383,17 +395,24 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     visitStmtWhile(node: StmtWhileNode): YASLRuntimeValue {
         return YASLNull;
     }
+
+
+    //**
+    //Utility
+    getTracers() {
+        return this.tracerList
+    }
 }
 
 const code = `
-let a = "hi"
+let a = [1,2,3]
 print(a)
-a = "bye"
+a.swap(1,2)
 print(a)
 `;
 const lexer = new Lexer(code);
 const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
-const visitor = new TracerVisitor();
+const visitor = new TracerVisitor(lexer.getLineMap());
 const statements = parser.getProgram().getStatements();
 if (statements) {
     // console.log(formatter.formatAst(ast));

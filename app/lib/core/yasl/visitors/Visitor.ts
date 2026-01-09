@@ -11,7 +11,7 @@ import {
     type ExpUnaryNode,
     type OpIndexingNode,
     type OpPostfixNode, StmtAssignNode,
-    type StmtBlockNode,
+    type ExpBlockNode,
     type StmtBreakNode,
     type StmtCaseNode,
     type StmtContinueNode,
@@ -52,7 +52,7 @@ export interface Visitor<T> {
     visitOpPostfix(node: OpPostfixNode): T;
 
     visitStmtAssign(node: StmtAssignNode):T;
-    visitStmtBlock(node: StmtBlockNode): T;
+    expBlockNode(node: ExpBlockNode): T;
 
     visitStmtBreak(node: StmtBreakNode): T;
 

@@ -6,7 +6,7 @@
 Program                         <- StatementList
 StatementList                   <- (Statement EOL?)*
 EOL                             <- ";" | [\n\r]+
-Statement                       <- FunctionDeclarationStmt | ConditionStmt | IterationStmt | ClassDeclarationStmt | DeclarationStmt | ExpressionStmt | BlockStmt
+Statement                       <- FunctionDeclarationStmt | ExpressionStmt | ConditionStmt | IterationStmt | ClassDeclarationStmt | DeclarationStmt | ExpressionStmt | BlockStmt
 ExpressionStmt                  <- Expression
 
 FunctionDeclarationStmt         <- "fn" Identifier "(" ParameterList? ")" (":" Type)? BlockStmt
@@ -21,10 +21,11 @@ FunctionCall                    <- Identifier "(" ArgumentList? ")"
 ObjectCreationCall              <- "new" Identifier "(" ArgumentList? ")"
 ArgumentList                    <- Identifier ("," Identifier)*
 
-Identifier                <- [a-zA-Z_][a-zA-Z0-9_]*
-LValue                      <- PropertyAccess | Identifier
+Identifier                      <- [a-zA-Z_][a-zA-Z0-9_]*
+LValue                          <- PropertyAccess | Identifier
 PropertyAccess                  <- Identifier "." Identifier ("." Identifier)*
 
+ExpressionStmt                  <- Expression EOL
 Expression                      <- InlineCondition
 InlineCondition                 <- BooleanOr ("?" Expression ":" Expression)?
 BooleanOr                       <- BooleanAnd ("or" BooleanAnd)*
@@ -50,7 +51,7 @@ ConditionStmt                   <- "if" "(" Expression ")" Statement
 IterationStmt                   <- ("while" "(" Expression ")" Statement ) |
                                    ("for" "(" Expression ";" Expression ";" Expression ")" Statement)
 
-BlockStmt                       <- "{" StatementList? "}"
+BlockExp                       <- "{" StatementList? "}"
 
 ClassDeclarationStmt            <- "class" Identifier "{" ClassStatement*  "}" ("implements" Identifier)?
 ClassStatement                  <-  FieldDeclarationStmt | ConstructorStmt  | MethodDeclarationStmt
@@ -67,7 +68,7 @@ StringLiteral       <- ("\"" [^"]* "\"") | ("'" [^']* "'")
 
 ### Expressions:
 
-- For assignment in expression the assignment must be wrapped in parenthesis. Meaning
+- For assignment in expression the assignment must be wrapped in parentheses. Meaning
   `while (x = getInput()) return true` is invalid and should be `if( (x = getInput()) ) return true`.
   This is to make assignment expressions explicit.
 -
@@ -85,7 +86,6 @@ or
 | * %
 + -
 ?:
-
 ```
 
 in case of similar precedence, the expression is parsed left to right

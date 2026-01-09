@@ -1,3 +1,4 @@
+import type { LineMap } from "../LineMap";
 import { keywords, type YASLToken, YASLTokenType } from "./YASLToken";
 
 export interface LexerError {
@@ -8,7 +9,7 @@ export interface LexerError {
 }
 
 export class Lexer {
-    private LineMap: number[] = [];
+    private lineMap: LineMap = [];
     private tokens_list = Array<YASLToken>();
     private curr_line = 0;
     private curr_col = 0;
@@ -48,7 +49,7 @@ export class Lexer {
             case ";":
             case "\n":
                 this.addToken(YASLTokenType.STATEMENT_END, null);
-                this.LineMap.push(this.curr_read_index);
+                this.lineMap.push(this.curr_read_index);
                 break;
 
             case "(":
@@ -174,7 +175,7 @@ export class Lexer {
                 }
                 break;
             case "\"":
-            case "\'":
+            case "'":
                 this.consume_string(c);
                 break;
 
@@ -195,8 +196,8 @@ export class Lexer {
         return this.next_read_index >= this.text.length;
     }
 
-    getLineMap(): number[] {
-        return this.LineMap;
+    getLineMap(): LineMap {
+        return this.lineMap;
     }
 
     private peek() {

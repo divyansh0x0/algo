@@ -110,9 +110,3 @@ export function isExpressionTerminator(type: YASLTokenType): boolean {
 
     }
 }
-
-export function indexToLineCol(offset: number, line_map: number[]): [ number, number ] {
-    let line = binarySearch(offset, line_map);
-    let col = offset - line_map[line]!;
-    return [ line, col ];
-}

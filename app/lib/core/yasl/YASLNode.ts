@@ -1,6 +1,6 @@
 import type { YASLNativeValue } from "./natives/YASLNativeValue";
 import type { Visitor } from "./visitors/Visitor";
-import { type YASLExpression, YASLNodeType, type YASLValueType } from "./YASLAst";
+import { type YASLExpression, YASLNodeType, type YASLStatement, type YASLValueType } from "./YASLAst";
 import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp } from "./YASLToken";
 
 export abstract class YASLNode {
@@ -86,13 +86,13 @@ export class ExpUnaryNode extends YASLNode {
     }
 }
 
-export class StmtBlockNode extends YASLNode {
-    constructor(debugId: number, startIndex: number, endIndex: number) {
+export class ExpBlockNode extends YASLNode {
+    constructor(public statements:YASLStatement[], debugId: number, startIndex: number, endIndex: number) {
         super(YASLNodeType.STMT_BLOCK, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtBlock(this);
+        return visitor.expBlockNode(this);
     }
 }
 

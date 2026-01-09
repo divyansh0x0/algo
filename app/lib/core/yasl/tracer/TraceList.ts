@@ -17,6 +17,9 @@ import {
 
 export class TraceList {
     traces: YASLTracer[] = [];
+    get last(){
+        return this.traces[this.traces.length - 1];
+    }
 
     emitDeclareVariable(variable_name: string, line: number, assigned_value?: YASLNativeValue) {
         this.emit({

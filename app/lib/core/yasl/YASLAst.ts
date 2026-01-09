@@ -10,7 +10,7 @@ import {
     type ExpPropertyAccessNode,
     type ExpUnaryNode,
     type OpIndexingNode,
-    type OpPostfixNode, StmtBlockNode, StmtBreakNode, StmtCaseNode,
+    type OpPostfixNode, ExpBlockNode, StmtBreakNode, StmtCaseNode,
     StmtContinueNode, StmtDeclarationNode, StmtElseIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode,
     type YASLNode
 } from "./YASLNode";
@@ -78,7 +78,7 @@ export interface YASLReturnValue {
 
 export type YASLStatement =
     | StmtExpressionNode
-    | StmtBlockNode
+    | ExpBlockNode
     | StmtDeclarationNode
     | StmtBreakNode
     | StmtCaseNode
