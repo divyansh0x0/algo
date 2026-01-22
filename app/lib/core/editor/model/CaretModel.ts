@@ -1,16 +1,28 @@
-export class CaretModel{
+interface Caret{
+    row:number;
+    col:number;
+}
 
-    constructor(private row = 0, private col = 0) {}
+export class CaretModel {
+    private defaultCaret: Caret = {row:0, col:0};
 
-    getRow():number{
-        return this.row;
-    }
-    getColumn():number{
-        return this.col;
+    getDefaultCaret(): Caret {
+        return this.defaultCaret;
     }
 
     incrementColumn(): void {
         // console.log("sad")
-        this.col+=1;
+        this.defaultCaret.col += 1;
+    }
+
+    moveColBy(length: number): void {
+        this.defaultCaret.col += length;
+    }
+
+    setCol(col:number):void {
+        this.defaultCaret.col = col;
+    }
+    incrementRow(): void {
+        this.defaultCaret.row += 1;
     }
 }

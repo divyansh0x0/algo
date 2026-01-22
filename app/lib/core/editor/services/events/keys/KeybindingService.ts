@@ -1,42 +1,42 @@
-import type { DocumentModel } from "../../../model/DocumentModel";
-import type { EditorModel } from "../../../model/EditorModel";
-import type EditorOperation from "../../../operations/EditorOperation";
-import { EOpInsertText } from "../../../operations/EOpInsertText";
-import  { OperationDispatcher } from "../../../operations/OperationDispatcher";
-import { Keymap } from "./Keymap";
+type EditorIntent = { type: "command", command: string }
+    | { type: "insertChar", text: string }
+    | { type: "deleteLeft" }
+    | { type: "deleteRight" };
+
+function parseKey(key: string) {
+    switch (key) {
+        case "Enter":
+        case "enter":
+            return "\n";
+        default:
+            return key;
+    }
+}
 
 export class KeybindingService {
-    private keymap = new Keymap();
-    private lastCmd:string ="";
-    private model? : EditorModel;
 
-    setEditorModel(model : EditorModel) : void {
-        this.model = model;
-    }
-
-    handle(ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, code: string, key: string): void {
-        if(!this.model)
-            return;
-        const isShortcut =  ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey);
+    resolve(ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, code: string, key: string): EditorIntent | undefined {
+        const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey);
         if (!isShortcut) {
-            this.model.getOpDispatcher().execute(new EOpInsertText(key))
-            return;
+            switch (key) {
+                case "Backspace":
+                    return {type: "deleteLeft"};
+                case "Delete":
+                    return {type: "deleteRight"};
+                default:
+                    return {type: "insertChar", text: parseKey(key)};
+            }
         }
         let cmd = "";
-        if(metaKey)
+        if (metaKey)
             cmd += "meta+";
-        if(ctrlKey)
+        if (ctrlKey)
             cmd += "ctrl+";
-        if(altKey)
+        if (altKey)
             cmd += "alt+";
-        if(shiftKey)
+        if (shiftKey)
             cmd += "shift+";
         cmd += code;
-
-        if(this.lastCmd !== cmd){
-            this.keymap.handle(cmd);
-            this.lastCmd = cmd;
-        }
-
+        return {type: "command", command: cmd};
     }
 }

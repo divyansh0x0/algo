@@ -4,16 +4,13 @@ import type { DocumentModel } from "./DocumentModel";
 
 export class EditorModel {
     // readonly document: DocumentModel;
-    private carets: CaretModel[] = [];
+    private caret: CaretModel= new CaretModel();
     private selection: Selection[] = [];
     private opDispatcher = new OperationDispatcher(this);
     constructor(private readonly doc: DocumentModel) {}
 
-    getCaret(): CaretModel {
-        if(this.carets.length== 0){
-            this.carets.push(new CaretModel())
-        }
-        return this.carets[0]!;
+    getCarets(): CaretModel {
+        return this.caret;
     }
 
     getOpDispatcher(): OperationDispatcher {

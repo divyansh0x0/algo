@@ -1,14 +1,11 @@
 import type { CaretModel } from "../model/CaretModel";
-import type { DocumentModel } from "../model/DocumentModel";
 import type { EditorModel } from "../model/EditorModel";
 import type EditorOperation from "./EditorOperation";
 
 export class EOpInsertText implements EditorOperation {
-    constructor(private str:string) {}
+    constructor(private str:string, private col:number, private row:number) {}
     apply(model:EditorModel): void {
-        const caret: CaretModel = model.getCaret();
-        model.document.insertText(this.str, caret.getColumn(), caret.getRow())
-        caret.incrementColumn();
+        model.document.insertText(this.str, this.col, this.row);
     }
 
     invert(): EditorOperation {

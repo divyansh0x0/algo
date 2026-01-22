@@ -1,26 +1,26 @@
 import type { DocumentModel } from "../../../model/DocumentModel";
-import { CopyCommand } from "./commands/CopyCommand";
-import type { EditorCommand } from "./commands/EditorCommand";
+import type EditorOperation from "../../../operations/EditorOperation";
+
 
 type CommandID = string;
-export class Keymap{
-    private bindings = new Map<CommandID, ()=> EditorCommand>(
-        [
-            ["ctrl+c", ()=> new CopyCommand()],
-        ]
-    )
-    private model?:  DocumentModel;
 
-    setDocument(model?:DocumentModel):void{
+export class Keymap {
+    private bindings = new Map<CommandID, () => EditorOperation>(
+        [
+        ]
+    );
+    private model?: DocumentModel;
+
+    setDocument(model?: DocumentModel): void {
         this.model = model;
     }
 
-    handle(cmd: string): void {
-        if(!this.model) return;
+    resolve(cmd: string): EditorOperation | undefined {
+        if (!this.model) return;
 
-       const binding =  this.bindings.get(cmd);
-       if(!binding) return;
-       binding().execute(this.model);
+        const binding = this.bindings.get(cmd);
+        if (!binding) return;
+        return binding();
 
     }
 }
