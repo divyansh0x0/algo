@@ -12,8 +12,15 @@ export class DocumentModel {
         }
     }
 
-    deleteRange(col: number, row: number, start: number, end: number): void {
+    deleteRange(col: number, row: number, end: number): string {
         // raw deletion
+        const line = this.lines[row];
+        if (!line)
+            return "";
+
+        this.lines[row] = line.substring(0, col) + line.substring(end);
+
+        return line.substring(col, end);
     }
 
     getText(): string {

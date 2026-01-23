@@ -4,6 +4,7 @@ import EOpDeleteText from "../operations/EOpDeleteText";
 import { EOpInsertText } from "../operations/EOpInsertText";
 import { KeybindingService } from "../services/events/keys/KeybindingService";
 import { Keymap } from "../services/events/keys/Keymap";
+
 import type { EditorView } from "../view/EditorView";
 
 class EditorPresenter {
@@ -11,7 +12,6 @@ class EditorPresenter {
     private model:EditorModel;
     private keybindingService=new KeybindingService();
     private keymap = new Keymap();
-
     constructor(private view:EditorView) {
         view.onKeyUp(this.onKeyUp.bind(this));
         view.onKeyDown(this.onKeyDown.bind(this));
@@ -20,6 +20,7 @@ class EditorPresenter {
 
         this.doc = new DocumentModel();
         this.model = new EditorModel(this.doc);
+
     }
     private onKeyDown(event:KeyboardEvent){
         event.preventDefault();

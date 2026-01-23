@@ -19,26 +19,27 @@ function onRunBtnClick() {
 
 
 <template>
-    <div class="wrapper">
+    <div class="ide-wrapper">
         <div>
             <ButtonIcon ref="runBtn" icon="mdi:play" @click="onRunBtnClick"/>
         </div>
-        <div id="editor-container" ref="ide_container"/>
+        <div ref="ide_container" class="container"/>
     </div>
 </template>
 
 <style scoped lang="scss">
-#editor-container {
+.container {
     height: fit-content;
     min-height: 30px;
     background-color: rgba(255, 255, 255, 0.18);
     border-radius: var(--border-radius);
+    padding: var(--padding-sm);
     &:focus{
         border: 1px solid rgba(255, 255, 255, 0.12);
     }
 }
 
-.wrapper {
+.ide-wrapper {
     height: 100%;
     width: 100%;
     padding: var(--padding-md);

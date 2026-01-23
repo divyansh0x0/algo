@@ -1,16 +1,19 @@
-import { start } from "node:repl";
-import type { DocumentModel } from "../model/DocumentModel";
 import type { EditorModel } from "../model/EditorModel";
 import type EditorOperation from "./EditorOperation";
+import { EOpInsertText } from "./EOpInsertText";
 
 export default class EOpDeleteText implements EditorOperation {
-    constructor(private col:number, private row:number,private start:number, private end:number) {}
-    apply(model:EditorModel): void {
-        model.document.deleteRange(this.col,this.row, this.start, this.end);
+    private deletedStr: string = "";
+
+    constructor(private col: number, private row: number, private end: number) {
     }
 
-    invert(model:EditorModel): EditorOperation {
-        return undefined;
+    apply(model: EditorModel): void {
+        this.deletedStr = model.document.deleteRange(this.col, this.row, this.end);
+    }
+
+    invert(): EditorOperation {
+        return new EOpInsertText(this.deletedStr, this.col, this.row);
     }
 
 }
