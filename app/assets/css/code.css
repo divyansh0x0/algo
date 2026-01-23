@@ -65,11 +65,12 @@
     font-family: "JetBrains Mono", monospace;
 }
 .yl-editor-wrapper *  {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains \Mono", monospace;
 }
 .yl-document-wrapper{
     background-color: rgba(255, 255, 255, 0.04);
     min-height: 1em;
+    height: fit-content;
     width: 100%;
 }
 .yl-caret{
@@ -79,4 +80,28 @@
     height:1em;
     width:1px;
     background-color: var(--yasl-caret-color);
+}
+.yl-document-row{
+    background-color: rgba(255, 255, 255, 0.04);
+    min-height: 1.2em;
+    width: 100%;
+}
+.yl-document-wrapper .keyword{
+    color: var(--yasl-keyword-color);
+}
+
+.yl-document-wrapper .identifier{
+    color: var(--yasl-identifier-color);
+}
+.yl-document-wrapper .string{
+    color: var(--yasl-string-color);
+}
+.yl-document-wrapper .symbol{
+    color: var(--yasl-symbol-color);
+}
+.yl-document-wrapper .comment{
+    color: var(--yasl-comment-color);
+}
+.yl-document-wrapper .operator{
+    color: var(--yasl-operator-color);
 }

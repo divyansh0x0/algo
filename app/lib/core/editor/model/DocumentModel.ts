@@ -6,9 +6,11 @@ export class DocumentModel {
             this.lines.push(text);
         else {
             const line = this.lines[row];
-            if (!line)
+            if (line === undefined)
                 return;
             this.lines[row] = line.substring(0, col) + text + line.substring(col);
+            // console.log(text, line, col, row,this.lines,line.substring(0, col) + text + line.substring(col));
+
         }
     }
 
@@ -23,7 +25,17 @@ export class DocumentModel {
         return line.substring(col, end);
     }
 
+    getLines(): string[] {
+        return this.lines;
+    }
+
     getText(): string {
         return this.lines.join("\n");
+    }
+
+    getLine(row: number): string {
+        if (row >= this.lines.length)
+            return "";
+        return this.lines[row]!;
     }
 }

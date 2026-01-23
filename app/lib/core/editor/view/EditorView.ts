@@ -1,3 +1,4 @@
+import { Lexer, StringifyTokenType } from "../../yasl";
 import type { EditorModel } from "../model/EditorModel";
 import EditorPresenter from "../presenter/EditorPresenter";
 import { FontService } from "../services/FontService";
@@ -6,7 +7,7 @@ type MouseEventHandler = (event: MouseEvent) => void;
 type KeyboardEventHandler = (event: KeyboardEvent) => void;
 export class EditorView {
     private presenter: EditorPresenter;
-
+    // private lexer = new Lexer();
     private textLayer:HTMLElement;
     private caretEl:HTMLElement;
     private charWidth: number = 10;
@@ -51,7 +52,17 @@ export class EditorView {
     }
 
     render(model: EditorModel): void {
-        this.textLayer.innerText = (model.document.getText());
+        const lines = model.document.getLines();
+        this.textLayer.innerHTML = "";
+        for (const line of lines) {
+            const lexer = new Lexer(line, true);
+            let text = ""
+            for (const token of lexer.getTokens()) {
+                text +=  `<span class="${StringifyTokenType(token.type)}">${token.lexeme}</span>`;
+            }
+            this.textLayer.innerHTML += "<div class='yl-document-row'>"+ text +"</div>";
+        }
+        // this.textLayer.innerText = (model.document.getText());
         this.caretEl.style.left = `${this.fontservice.getCharWidth() * model.getCarets().getDefaultCaret().col}px`;
         this.caretEl.style.top = `${this.fontservice.getCharHeight()* model.getCarets().getDefaultCaret().row}px`;
 

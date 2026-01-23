@@ -1,17 +1,9 @@
 type EditorIntent = { type: "command", command: string }
     | { type: "insertChar", text: string }
     | { type: "deleteLeft" }
+    | { type: "newline" }
     | { type: "deleteRight" };
 
-function parseKey(key: string) {
-    switch (key) {
-        case "Enter":
-        case "enter":
-            return "\n";
-        default:
-            return key;
-    }
-}
 
 export class KeybindingService {
 
@@ -19,12 +11,14 @@ export class KeybindingService {
         const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey);
         if (!isShortcut) {
             switch (key) {
+                case "Enter":
+                    return {type: "newline"};
                 case "Backspace":
                     return {type: "deleteLeft"};
                 case "Delete":
                     return {type: "deleteRight"};
                 default:
-                    return {type: "insertChar", text: parseKey(key)};
+                    return {type: "insertChar", text: key};
             }
         }
         let cmd = "";

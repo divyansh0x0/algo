@@ -7,6 +7,18 @@ import { Keymap } from "../services/events/keys/Keymap";
 
 import type { EditorView } from "../view/EditorView";
 
+function CountChars(line: string, s: string): number {
+    let count = 0;
+    for (let i = 0; i < line.length; i++) {
+        const char = line.charAt(i);
+        if (char === s)
+            count++;
+        else
+            break;
+    }
+    return count;
+}
+
 class EditorPresenter {
     private doc: DocumentModel;
     private model:EditorModel;
@@ -40,7 +52,9 @@ class EditorPresenter {
             case "deleteLeft":
                 this.deleteCharLeft();
                 break;
-
+            case "newline":
+                this.createNewLine();
+                break
             default:
                 console.error("Unknown editor operation");
                 break;
@@ -55,6 +69,7 @@ class EditorPresenter {
     private insertChar(text:string){
         const carets = this.model.getCarets();
         const defaultCaret = carets.getDefaultCaret();
+        console.log("Insert char: ", defaultCaret.col,defaultCaret.row);
         this.model.getOpDispatcher().execute(new EOpInsertText(text,defaultCaret.col,defaultCaret.row));
 
         if(text === "\n"){
@@ -74,7 +89,17 @@ class EditorPresenter {
     private deleteCharLeft(): void {
         const carets = this.model.getCarets();
         const defaultCaret = carets.getDefaultCaret();
-        this.model.getOpDispatcher().execute(new EOpDeleteText(defaultCaret.col,defaultCaret.row, defaultCaret.col - 1, defaultCaret.col));
+        this.model.getOpDispatcher().execute(new EOpDeleteText(defaultCaret.col,defaultCaret.row, defaultCaret.col - 1));
+    }
+
+    private createNewLine(): void {
+        const carets = this.model.getCarets();
+        const col = CountChars(this.model.document.getLine(carets.getDefaultCaret().row), " ");
+        const row = carets.getDefaultCaret().row + 1;
+        console.log("New line: ", col, row);
+        this.model.getOpDispatcher().execute(new EOpInsertText(" ".repeat(col), 0,row))
+        this.model.getCarets().incrementRow();
+        this.model.getCarets().setCol(col);
     }
 }
 
