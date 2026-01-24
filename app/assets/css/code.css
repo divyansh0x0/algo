@@ -34,7 +34,7 @@
     --yasl-operator-color: var(--yasl-text-color);
     --yasl-comment-color: #616161;
     --yasl-keyword-color: #e4ab85;
-    --yasl-whitespace-color: #fff;
+    --yasl-whitespace-color: rgba(255, 255, 255, 0.16);
     --yasl-string-color: #a8ff8d;
     --yasl-error-color: #ef4848;
     --yasl-ide-indent-color: rgba(255, 255, 255, 0.23);
@@ -85,6 +85,7 @@
     background-color: rgba(255, 255, 255, 0.04);
     min-height: 1.2em;
     width: 100%;
+    white-space: pre;
 }
 .yl-document-wrapper .keyword{
     color: var(--yasl-keyword-color);
@@ -104,4 +105,17 @@
 }
 .yl-document-wrapper .operator{
     color: var(--yasl-operator-color);
+}
+
+.yl-document-wrapper .whitespace{
+    position: relative;
+}
+.yl-document-wrapper .whitespace::before{
+    color: var(--yasl-whitespace-color);
+    position: absolute;
+    display: inline;
+    content: "•";
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }

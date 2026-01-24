@@ -20,7 +20,7 @@ export class CaretModel {
     }
 
     moveColBy(length: number): void {
-        this.defaultCaret.col += length;
+            this.defaultCaret.col = Math.max(0,this.defaultCaret.col + length);
     }
 
     setCol(col: number): void {

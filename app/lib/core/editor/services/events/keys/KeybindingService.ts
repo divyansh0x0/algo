@@ -35,7 +35,6 @@ export class KeybindingService {
         const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey);
         if (!isShortcut) {
             const keymapBinding = this.keymap.resolve(key);
-            console.log("keymapBinding", keymapBinding);
             if(keymapBinding === undefined) return {type: "insertChar", text: key};
             return keymapBinding;
         }

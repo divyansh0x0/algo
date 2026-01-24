@@ -2,6 +2,7 @@ export class DocumentModel {
     private lines: string[] = [];
 
     insertSubstr(text: string, col: number, row: number): void {
+        // console.log(`inserting char "${text}" at line ${col}:${row}`);
         if (row >= this.lines.length)
             this.lines.push(text);
         else {
@@ -9,8 +10,6 @@ export class DocumentModel {
             if (line === undefined)
                 return;
             this.lines[row] = line.substring(0, col) + text + line.substring(col);
-            // console.log(text, line, col, row,this.lines,line.substring(0, col) + text + line.substring(col));
-
         }
     }
 
@@ -21,11 +20,11 @@ export class DocumentModel {
             return "";
 
         if(count > 0)
-            this.lines[row] = line.substring(0, col+1) + line.substring(count+1);
+            this.lines[row] = line.substring(0, col) + line.substring(col+count);
         else
-            this.lines[row] = line.substring(0, col + count);
-        console.log("deleting",line.substring(0, col + count) + line.substring(col + count), col,row,count)
+            this.lines[row] = line.substring(0, col + count) + line.substring(col);
 
+        console.log("deleteRange",col + ":" + line, this.lines);
         return line.substring(col, count);
     }
 
@@ -53,5 +52,13 @@ export class DocumentModel {
         for (let i = 0; i < lines.length; i++) {
             this.insertSubstr(lines[i]!,0,i);
         }
+    }
+
+    deleteLine(currRowIndex: number): void {
+        this.lines.splice(currRowIndex, 1);
+    }
+
+    replaceLineContent(newContent: string, row: number): void {
+        this.lines[row] = newContent;
     }
 }

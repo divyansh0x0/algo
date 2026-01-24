@@ -15,31 +15,28 @@ export class FontService {
         this.span.style.lineHeight = computedStyles.lineHeight;
         // this.span.style.opacity = "0";
         this.span.style.position = "fixed";
-        this.span.style.top = "0px";
-        this.span.style.left = "0px";
+        this.span.style.whiteSpace = "pre";
+        this.span.style.top = "-99999px";
+        this.span.style.left = "-99999px";
         this.span.style.padding = "0";
         this.span.style.border = "none";
-        this.span.style.margin = "none";
+        this.span.style.margin = "0";
+        this.span.style.visibility = "hidden";
 
         this.span.innerText = FontService.testString;
     }
 
     init(){
-        console.log(this.span.style.fontFamily);
-
         this.charWidth = this.span.offsetWidth / FontService.testString.length;
         this.charHeight = this.span.offsetHeight ;
 
     }
 
     getCharHeight(): number  {
-        console.log(this.charHeight)
-
         return this.charHeight;
     }
 
     getCharWidth(): number {
-        console.log(this.charWidth)
         return this.charWidth;
     }
 }
