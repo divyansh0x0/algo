@@ -6,7 +6,7 @@ import EOpDeleteText from "./EOpDeleteText";
 export class EOpInsertText implements EditorOperation {
     constructor(private str:string, private col:number, private row:number) {}
     apply(model:EditorModel): void {
-        model.document.insertText(this.str, this.col, this.row);
+        model.document.insertSubstr(this.str, this.col, this.row);
     }
 
     invert(): EditorOperation {
