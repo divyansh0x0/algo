@@ -23,7 +23,7 @@ import {
     type StmtReturnNode,
     type StmtSwitchNode,
     type StmtThenNode,
-    type StmtWhileNode
+    type StmtWhileNode, YASLNode
 } from "../YASLNode";
 
 export interface Visitor<T> {

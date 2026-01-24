@@ -32,19 +32,6 @@ class EditorPresenter {
         view.onMouseDown(this.onMouseDown.bind(this));
 
         this.doc = new DocumentModel();
-        this.doc.insertText(`let x = 100;
-let y = 1000;
-print(x+y);
-if(x > y){
-    print("x is greater than y");
-}
-else if (x == y){
-    print("x is equal to y");
-}
-else{
-    print("x is smaller than y");
-}
-`);
         this.model = new EditorModel(this.doc);
 
         window.requestAnimationFrame(() => {
@@ -90,7 +77,7 @@ else{
                 break;
 
         }
-        this.view.render(this.model);
+        this.renderView();
     }
 
     private onKeyUp(event: KeyboardEvent) {
@@ -209,6 +196,18 @@ else{
         const newColumnIndex = Math.max(Math.min(currColIndex, newRowLine.length), 0);
         carets.setRow(newRowIndex);
         carets.setCol(newColumnIndex);
+    }
+
+    getCode(): string {
+        return this.model.document.getLines().join('\n');
+    }
+    setCode(code: string): void {
+        this.model.document.insertText(code);
+        this.renderView();
+    }
+
+    private renderView(): void {
+        this.view.render(this.model);
     }
 }
 

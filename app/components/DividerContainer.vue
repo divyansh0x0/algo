@@ -52,26 +52,23 @@ onMounted(() => {
 </script>
 
 <template>
-    <div ref="container" style="display: flex; position: relative" v-bind="$attrs">
-        <div ref="left" style="flex: 1">
+    <div ref="container" class="container" v-bind="$attrs">
+        <div ref="left" class="left">
             <slot name="left"/>
         </div>
         <div ref="divider" class="slider" style="">
             <Icon class="icon" name="material-symbols:drag-indicator" width="24"/>
         </div>
-        <div ref="right" style="flex: 1">
+        <div ref="right" class="right">
             <slot name="right"/>
-            <label for="fruits">Choose a fruit:</label>
-            <!--            <select style="position: fixed; top: 0; left:0" name="fruits" id="fruits">-->
-            <!--                <option value="apple">Apple</option>-->
-            <!--                <option value="banana">Banana</option>-->
-            <!--                <option value="orange">Orange</option>-->
-            <!--                <option value="grape" selected>Grape</option>-->
-            <!--            </select>-->
         </div>
     </div>
 </template>
 <style lang="scss" scoped>
+.container {
+    display: flex;
+    position: relative
+}
 .slider {
     z-index: 1;
     width: 30px;
@@ -109,5 +106,10 @@ onMounted(() => {
         color: var(--color-on-tertiary);
         z-index: 1;
     }
+}
+.right, .left{
+    flex: 1;
+    background-color: var(--color-background);
+    overflow: auto;
 }
 </style>

@@ -1,7 +1,7 @@
-import type { YASLNativeValue } from "../natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 
 export interface YASLMemPointer {
-    set(value: YASLNativeValue): void;
+    set(value: YASLNativeValueWrapper): void;
 
-    get(): YASLNativeValue;
+    get(): YASLNativeValueWrapper;
 }

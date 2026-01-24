@@ -1,5 +1,5 @@
 import type { YASLMemPointer } from "./environment/YASLMemPointer";
-import type { YASLNativeValue } from "./natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "./natives/YASLNativeValueWrapper";
 import {
     type DefArrayNode,
     type ExpAssignNode,
@@ -73,7 +73,7 @@ export enum YASLValueType {
 }
 
 export interface YASLReturnValue {
-    value: YASLNativeValue | YASLMemPointer;
+    value: YASLNativeValueWrapper | YASLMemPointer;
 }
 
 export type YASLStatement =

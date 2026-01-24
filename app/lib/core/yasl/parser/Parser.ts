@@ -1,6 +1,6 @@
 import type { LineMap } from "../../LineMap";
 import { formatter } from "../formatter";
-import { YASLNativeValue } from "../natives/YASLNativeValue";
+import { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 import { type YASLExpression, YASLProgram,type YASLValueType } from "../YASLAst";
 import { YASLNodeFactory } from "../YASLNodeFactory";
 import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
@@ -109,7 +109,7 @@ export class Parser {
                 start_line: line1,
                 end_line: line2
             });
-            throw Error(msg);
+            // throw Error(msg);
         }
 
         this.synchronize();
@@ -238,7 +238,7 @@ export class Parser {
                 break;
             }
             case YASLTokenType.NUMBER:
-                return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as number), token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(token.literal as number), token.start, token.end);
             case YASLTokenType.IDENTIFIER:
                 return this.node_factory.getIdentifierNode(token);
             case YASLTokenType.LPAREN: {
@@ -272,11 +272,11 @@ export class Parser {
                 return this.node_factory.getArrayLiteral(values);
             }
             case YASLTokenType.TRUE:
-                return this.node_factory.getLiteralNode(new YASLNativeValue(true), token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(true), token.start, token.end);
             case YASLTokenType.FALSE:
-                return this.node_factory.getLiteralNode(new YASLNativeValue(false), token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(false), token.start, token.end);
             case YASLTokenType.STRING:
-                return this.node_factory.getLiteralNode(new YASLNativeValue(token.literal as string), token.start, token.end);
+                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(token.literal as string), token.start, token.end);
             default:
                 this.errorToken(`Unexpected token in nud: ${token.lexeme}`, token);
                 break;

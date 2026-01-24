@@ -5,13 +5,15 @@ import { FontService } from "../services/FontService";
 
 type MouseEventHandler = (event: MouseEvent) => void;
 type KeyboardEventHandler = (event: KeyboardEvent) => void;
+
 export class EditorView {
     private presenter: EditorPresenter;
     // private lexer = new Lexer();
-    private textLayer:HTMLElement;
-    private caretEl:HTMLElement;
+    private textLayer: HTMLElement;
+    private caretEl: HTMLElement;
     private charWidth: number = 10;
-    private fontservice:FontService;
+    private fontservice: FontService;
+
     constructor(private container: HTMLElement) {
         this.presenter = new EditorPresenter(this);
 
@@ -23,7 +25,7 @@ export class EditorView {
         this.textLayer = document.createElement("div");
 
         this.container.tabIndex = 1;
-        documentWrapper.append(this.textLayer,this.caretEl);
+        documentWrapper.append(this.textLayer, this.caretEl);
         this.container.appendChild(documentWrapper);
 
 
@@ -36,35 +38,50 @@ export class EditorView {
     }
 
     onKeyDown(handler: KeyboardEventHandler): void {
-        this.container.addEventListener('keydown', handler);
+        this.container.addEventListener("keydown", handler);
     }
 
     onKeyUp(handler: KeyboardEventHandler): void {
-        this.container.addEventListener('keyup', handler);
+        this.container.addEventListener("keyup", handler);
     }
 
     onMouseDown(handler: MouseEventHandler): void {
-        this.container.addEventListener('mousedown', handler);
+        this.container.addEventListener("mousedown", handler);
     }
 
     onMouseUp(handler: MouseEventHandler): void {
-        this.container.addEventListener('mouseup', handler);
+        this.container.addEventListener("mouseup", handler);
     }
 
     render(model: EditorModel): void {
         const lines = model.document.getLines();
         this.textLayer.innerHTML = "";
-        for (const line of lines) {
+        const charHeight: number = this.fontservice.getCharHeight();
+        for (let i = 0; i < lines.length; i++){
+            const line = lines[i];
+            if(line === undefined)
+                continue;
             const lexer = new Lexer(line, true);
-            let text = ""
+            let text = "";
             for (const token of lexer.getTokens()) {
-                text +=  `<span class="${StringifyTokenType(token.type)}">${token.lexeme}</span>`;
+                text += `<span class="${StringifyTokenType(token.type)}">${token.lexeme}</span>`;
             }
-            this.textLayer.innerHTML += "<div class='yl-document-row'>"+ text +"</div>";
+            let active = false;
+            if (i === model.getCarets().getDefaultCaret().row)
+                active = true;
+            this.textLayer.innerHTML += `<div class='yl-document-row ${active ? "active" : ""}' style='height:${charHeight}px;'>` + text + "</div>";
         }
         // this.textLayer.innerText = (model.document.getText());
         this.caretEl.style.left = `${this.fontservice.getCharWidth() * model.getCarets().getDefaultCaret().col}px`;
-        this.caretEl.style.top = `${this.fontservice.getCharHeight()* model.getCarets().getDefaultCaret().row}px`;
+        this.caretEl.style.top = `${charHeight * model.getCarets().getDefaultCaret().row}px`;
+        this.caretEl.style.height = `${charHeight}px`;
+    }
 
+    getCode() {
+        return this.presenter.getCode();
+    }
+
+    setCode(code: string) {
+        this.presenter.setCode(code);
     }
 }

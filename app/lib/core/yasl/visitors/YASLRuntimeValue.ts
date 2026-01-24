@@ -1,11 +1,11 @@
 import type { YASLMemPointer } from "../environment/YASLMemPointer";
-import  { YASLNativeValue } from "../natives/YASLNativeValue";
+import  { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 
 export type YASLRuntimeValue =
-    | {kind: "value", value:YASLNativeValue }
+    | {kind: "value", value:YASLNativeValueWrapper }
     | {kind: "ref", ref: YASLMemPointer};
 
 export const YASLNull:YASLRuntimeValue = {
     kind:"value",
-    value:YASLNativeValue.NULL,
+    value:YASLNativeValueWrapper.NULL,
 }

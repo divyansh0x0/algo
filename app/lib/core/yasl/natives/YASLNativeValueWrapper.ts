@@ -1,12 +1,12 @@
 import type { YASLMemPointer } from "../environment/YASLMemPointer";
 import { YASLArrayObj } from "./YASLArrayObj";
 
-export type YASLPossibleNativeValue = string | boolean | number | YASLArrayObj | null;
+export type YASLNativeValue = string | boolean | number | YASLArrayObj | null;
 
-export class YASLNativeValue {
-    public static NULL = new YASLNativeValue(null);
+export class YASLNativeValueWrapper {
+    public static NULL = new YASLNativeValueWrapper(null);
 
-    constructor(public readonly value: YASLPossibleNativeValue) {
+    constructor(public readonly value: YASLNativeValue) {
 
     }
 

@@ -1,5 +1,5 @@
 import type { YASLArrayObj } from "../natives/YASLArrayObj";
-import type { YASLNativeValue } from "../natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 import type { YASLMemPointer } from "./YASLMemPointer";
 
 export class YASLArrayValueMemPointer implements YASLMemPointer {
@@ -8,7 +8,7 @@ export class YASLArrayValueMemPointer implements YASLMemPointer {
     }
 
 
-    set(value: YASLNativeValue) {
+    set(value: YASLNativeValueWrapper) {
         const arr = this.value as YASLArrayObj;
         arr.set(this.index, value);
     }

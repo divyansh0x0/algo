@@ -9,12 +9,12 @@ onMounted(() => {
 
 
     <DividerContainer class="divider" style="height: 100vh; width: 100vw; overflow: hidden;">
-        <template v-slot:left>
+        <template #left>
             <VisualizerCanvas/>
         </template>
-        <template v-slot:right>
+        <template #right>
             <OverlayLoader :loading="!isIDELoaded">
-                <IDEContainer class="ide-container"/>
+                <EditorContainer/>
             </OverlayLoader>
         </template>
     </DividerContainer>

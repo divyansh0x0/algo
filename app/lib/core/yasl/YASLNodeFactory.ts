@@ -29,7 +29,7 @@ import {
     StmtThenNode,
     StmtWhileNode
 } from "./YASLNode";
-import type { YASLNativeValue } from "./natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "./natives/YASLNativeValueWrapper";
 import type { YASLExpression, YASLValueType, } from "./YASLAst";
 import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp, } from "./YASLToken";
 
@@ -100,7 +100,7 @@ export class YASLNodeFactory {
     }
 
     getLiteralNode(
-        value: YASLNativeValue,
+        value: YASLNativeValueWrapper,
         startIndex: number,
         endIndex: number,
     ): ExpLiteralNode {

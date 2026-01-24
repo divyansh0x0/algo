@@ -1,6 +1,6 @@
-import type { YASLNativeValue } from "./YASLNativeValue";
+import type { YASLNativeValueWrapper } from "./YASLNativeValueWrapper";
 
-export type YASLNativeFunction = (...args: YASLNativeValue[]) => YASLNativeValue;
+export type YASLNativeFunction = (...args: YASLNativeValueWrapper[]) => YASLNativeValueWrapper;
 
 export const YASLNativeFunctions: Record<string, YASLNativeFunction> = {
     print: (...args) => {

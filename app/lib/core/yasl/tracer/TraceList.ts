@@ -1,4 +1,4 @@
-import type { YASLNativeValue } from "../natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 import type { YASLArrayObj } from "../natives/YASLArrayObj";
 import type { YASLTokenBinaryOp, YASLTokenUnaryOp } from "../YASLToken";
 import {
@@ -23,7 +23,7 @@ export class TraceList {
         return this.traces[this.traces.length - 1];
     }
 
-    emitDeclareVariable(variable_name: string, line: number, assigned_value?: YASLNativeValue) {
+    emitDeclareVariable(variable_name: string, line: number, assigned_value?: YASLNativeValueWrapper) {
         this.emit({
             type: TracerType.DECLARE_VARIABLE,
             line,
@@ -32,7 +32,7 @@ export class TraceList {
         } as YASLTracerDeclareVariable);
     }
 
-    emitAssignVariable(variable_name: string, value: YASLNativeValue, line: number) {
+    emitAssignVariable(variable_name: string, value: YASLNativeValueWrapper, line: number) {
         this.emit({
             type: TracerType.ASSIGN_VARIABLE,
             line,
@@ -41,7 +41,7 @@ export class TraceList {
         } as YASLTracerAssignVariable);
     }
 
-    emitBinaryOperation(operator: YASLTokenBinaryOp, left: YASLNativeValue, right: YASLNativeValue, result: YASLNativeValue, line: number) {
+    emitBinaryOperation(operator: YASLTokenBinaryOp, left: YASLNativeValueWrapper, right: YASLNativeValueWrapper, result: YASLNativeValueWrapper, line: number) {
         this.emit({
             type: TracerType.BINARY_OPERATION,
             line,
@@ -52,7 +52,7 @@ export class TraceList {
         } as YASLTracerBinaryOperation);
     }
 
-    emitUnaryOperation(operator: YASLTokenBinaryOp, operand: YASLTokenUnaryOp, result: YASLNativeValue, line: number) {
+    emitUnaryOperation(operator: YASLTokenBinaryOp, operand: YASLTokenUnaryOp, result: YASLNativeValueWrapper, line: number) {
         this.emit({
             type: TracerType.UNARY_OPERATION,
             line,
@@ -62,7 +62,7 @@ export class TraceList {
         } as YASLTracerUnaryOperation);
     }
 
-    emitArrayWrite(array_name: YASLArrayObj, value: YASLNativeValue, line: number) {
+    emitArrayWrite(array_name: YASLArrayObj, value: YASLNativeValueWrapper, line: number) {
         this.emit({
             type: TracerType.ARRAY_WRITE,
             array_name,

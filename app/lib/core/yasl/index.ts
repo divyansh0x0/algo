@@ -2,7 +2,7 @@ export * from "./parser/Parser";
 export * from "./lexer";
 export * from "./YASLAst";
 export * from "./YASLToken";
-export * from "./natives/YASLNativeValue";
+export * from "./natives/YASLNativeValueWrapper";
 export * from "./parser/ParserError";
 export * from "./parser/Helpers";
 export * from "./parser/Helpers";

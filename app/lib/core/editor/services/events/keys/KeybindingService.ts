@@ -34,6 +34,15 @@ export class KeybindingService {
     resolve(ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, code: string, key: string): EditorIntent | undefined {
         const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey);
         if (!isShortcut) {
+            switch (key) {
+                case "Shift":
+                case "Meta":
+                case "Alt":
+                case "CapsLock":
+
+                    return undefined;
+
+            }
             const keymapBinding = this.keymap.resolve(key);
             if(keymapBinding === undefined) return {type: "insertChar", text: key};
             return keymapBinding;

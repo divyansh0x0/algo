@@ -6,7 +6,7 @@
  *
  * Each tracer will be used for visualization purpose.
  */
-import type { YASLNativeValue } from "~/lib/core/yasl/natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 import type { YASLArrayObj } from "../natives/YASLArrayObj";
 import type { YASLTokenBinaryOp, YASLTokenUnaryOp } from "../YASLToken";
 
@@ -44,34 +44,34 @@ export interface YASLTracerDeclareVariable extends YASLTracer {
     type: TracerType.DECLARE_VARIABLE;
     line: number;
     variable_name: string;
-    assigned_value?: YASLNativeValue;
+    assigned_value?: YASLNativeValueWrapper;
 }
 
 export interface YASLTracerAssignVariable extends YASLTracer {
     type: TracerType.ASSIGN_VARIABLE;
     variable_name: string;
-    value: YASLNativeValue;
+    value: YASLNativeValueWrapper;
 }
 
 export interface YASLTracerBinaryOperation extends YASLTracer {
     type: TracerType.BINARY_OPERATION;
     operator: YASLTokenBinaryOp;
-    left: YASLNativeValue;
-    right: YASLNativeValue;
-    result: YASLNativeValue;
+    left: YASLNativeValueWrapper;
+    right: YASLNativeValueWrapper;
+    result: YASLNativeValueWrapper;
 }
 
 export interface YASLTracerUnaryOperation extends YASLTracer {
     type: TracerType.UNARY_OPERATION;
     operator: YASLTokenUnaryOp;
     operand: YASLTokenUnaryOp;
-    result: YASLNativeValue;
+    result: YASLNativeValueWrapper;
 }
 
 export interface YASLTracerArrayWrite extends YASLTracer {
     type: TracerType.ARRAY_WRITE;
     array_name: YASLArrayObj;
-    value: YASLNativeValue;
+    value: YASLNativeValueWrapper;
 }
 
 export interface YASLTracerArrayRead extends YASLTracer {

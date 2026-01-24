@@ -28,4 +28,8 @@ export class YASLRuntimeContext {
     raiseMethodNotFound(node: ExpCallNode): void {
 
     }
+
+    getError() {
+        return this.error;
+    }
 }

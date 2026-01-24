@@ -24,7 +24,7 @@
 
 [theme="dark"] {
     --yasl-editor-bg: rgba(255, 255, 255, 0.02);
-    --yasl-row-active-bg: rgba(255, 255, 255, 0.03);
+    --yasl-row-active-bg: rgba(221, 235, 255, 0.06);
     --yasl-text-color: #a6a6a6;
 
     --yasl-editor-selection-color: rgba(70, 136, 255, 0.42);
@@ -49,68 +49,67 @@
 /***********************************************************************************************************************
 ************************************************ Code ****************************************************************
 /**********************************************************************************************************************/
-.code-wrapper {
-    height: 100%;
-}
-
-#code-area {
-    border: 1px var(--border-color) solid;
-    width: 100%;
-    overflow: scroll;
-    height: fit-content;
-}
-
-
-.yl-editor-wrapper{
+.yl-editor-wrapper {
     font-family: "JetBrains Mono", monospace;
 }
-.yl-editor-wrapper *  {
+
+.yl-editor-wrapper * {
     font-family: "JetBrains \Mono", monospace;
 }
-.yl-document-wrapper{
-    background-color: rgba(255, 255, 255, 0.04);
+
+.yl-document-wrapper {
     min-height: 1em;
     height: fit-content;
     width: 100%;
 }
-.yl-caret{
-    position:absolute;
-    top:0;
-    left:0;
-    height:1em;
-    width:1px;
+
+.yl-caret {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1lh;
+    width: 2px;
     background-color: var(--yasl-caret-color);
+    animation: blink 0.5s infinite ease alternate forwards;
 }
-.yl-document-row{
-    background-color: rgba(255, 255, 255, 0.04);
-    min-height: 1.2em;
+
+.yl-document-row {
     width: 100%;
     white-space: pre;
+    overflow: hidden;
 }
-.yl-document-wrapper .keyword{
+.yl-document-row.active {
+    background-color: var(--yasl-row-active-bg);
+}
+.yl-document-wrapper .keyword {
     color: var(--yasl-keyword-color);
 }
 
-.yl-document-wrapper .identifier{
+.yl-document-wrapper .identifier {
     color: var(--yasl-identifier-color);
 }
-.yl-document-wrapper .string{
+
+.yl-document-wrapper .string {
     color: var(--yasl-string-color);
 }
-.yl-document-wrapper .symbol{
+
+.yl-document-wrapper .symbol {
     color: var(--yasl-symbol-color);
 }
-.yl-document-wrapper .comment{
+
+.yl-document-wrapper .comment {
     color: var(--yasl-comment-color);
 }
-.yl-document-wrapper .operator{
+
+.yl-document-wrapper .operator {
     color: var(--yasl-operator-color);
 }
 
-.yl-document-wrapper .whitespace{
+.yl-document-wrapper .whitespace {
     position: relative;
 }
-.yl-document-wrapper .whitespace::before{
+
+.yl-document-wrapper .whitespace::before {
     color: var(--yasl-whitespace-color);
     position: absolute;
     display: inline;
@@ -118,4 +117,13 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+}
+
+@keyframes blink {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }

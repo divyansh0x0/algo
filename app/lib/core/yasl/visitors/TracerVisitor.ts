@@ -1,8 +1,8 @@
 import {
     Lexer, Parser, type YASLExpression,
-    YASLNativeValue,
+    YASLNativeValueWrapper,
     YASLNodeTypeChecker,
-    type YASLPossibleNativeValue,
+    type YASLNativeValue,
     YASLTokenType
 } from "../";
 import type { LineMap } from "../../LineMap";
@@ -46,12 +46,44 @@ import type {
 import { YASLError } from "./YASLError";
 import { YASLNull, type YASLRuntimeValue } from "./YASLRuntimeValue";
 
-function CreateYaslValue(val: YASLPossibleNativeValue): YASLRuntimeValue {
-    return {kind: "value", value: new YASLNativeValue(val)};
+function CreateYaslValue(val: YASLNativeValue): YASLRuntimeValue {
+    return {kind: "value", value: new YASLNativeValueWrapper(val)};
 }
 
 function CreateYaslRef(ref: YASLMemPointer): YASLRuntimeValue {
     return {kind: "ref", ref: ref};
+}
+
+function StringifyNativeValues(nativeVals: YASLNativeValue[]): string {
+    let str = ""
+
+    for (let i = 0; i < nativeVals.length; i++){
+        const nativeVal = nativeVals[i];
+        if(nativeVal === null){
+            str += "null";
+            continue;
+        }
+        switch (typeof nativeVal){
+            case "object":
+                str += nativeVal.toString();
+                break;
+            case "function":
+            case "symbol":
+            case "bigint":
+            case "string":
+            case "boolean":
+            case "number":
+                str += nativeVal.toString();
+                break;
+            default:
+                str += "[unknown]"
+                break;
+        }
+        if(i < nativeVals.length - 1){
+            str += " "
+        }
+    }
+    return str;
 }
 
 export class TracerVisitor implements Visitor<YASLRuntimeValue> {
@@ -60,10 +92,16 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     private currentScope: YASLEnvironment;
     private tracerList: TraceList = new TraceList();
     private ctx = new YASLRuntimeContext();
-
+    private stdOut = (output:string)=>{
+        console.log(output);
+    }
     constructor(private readonly map:LineMap) {
         this.rootScope = new YASLEnvironment();
         this.currentScope = this.rootScope;
+    }
+
+    setStdOut(listener:(arg:string) =>void): void {
+        this.stdOut = listener;
     }
 
     private getLine(node:YASLNode){
@@ -86,13 +124,13 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
 
     private expectValue(
         node: YASLNode
-    ): { kind: "value"; value: YASLNativeValue } {
+    ): { kind: "value"; value: YASLNativeValueWrapper } {
         const rv = node.accept(this);
         if (rv.kind !== "value") {
             this.ctx.raise({
                 node,
                 kind: "TypeError",
-                message: "Expected value"
+                message: "Expected value but got a reference",
             });
             throw new YASLError("TypeError");
         }
@@ -131,7 +169,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             const val = this.expectValue(element).value;
             arr.push(val);
         }
-        return {kind: "value", value: new YASLNativeValue(arr)};
+        return {kind: "value", value: new YASLNativeValueWrapper(arr)};
     }
 
     visitDefFunction(node: DefFunctionNode): YASLRuntimeValue {
@@ -152,8 +190,10 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         }
 
         // For normal binary operations
-        const operand1 = this.expectValue(node.expLeft).value;
-        const operand2 = this.expectValue(node.expRight).value;
+        const expLeft = node.expLeft.accept(this);
+        const expRight = node.expRight.accept(this);
+        const operand1 = expLeft.kind == "ref" ? expLeft.ref.get() : expLeft.value;
+        const operand2 = expRight.kind == "ref" ? expRight.ref.get() : expRight.value;
         switch (node.op) {
             case YASLTokenType.PLUS: {
                 // Number addition
@@ -253,7 +293,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             switch (node.qualifiedName.name) {
                 case "print": {
                     const runtimeVals = node.args.map((arg) => arg.accept(this));
-                    const nativeVals: YASLPossibleNativeValue[] = [];
+                    const nativeVals: YASLNativeValue[] = [];
                     for (const runtimeVal of runtimeVals) {
                         if (runtimeVal.kind === "value")
                             nativeVals.push(runtimeVal.value.value);
@@ -262,7 +302,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                             nativeVals.push(val.value);
                         }
                     }
-                    console.log("YASL:", ...nativeVals);
+                    this.stdOut(StringifyNativeValues(nativeVals));
                 }
             }
         }
@@ -352,8 +392,8 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     visitStmtDeclaration(node: StmtDeclarationNode): YASLRuntimeValue {
         const lvalue = node.lvalue;
         if (!node.rvalue) {
-            this.currentScope.define(lvalue, YASLNativeValue.NULL);
-            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YASLNativeValue.NULL );
+            this.currentScope.define(lvalue, YASLNativeValueWrapper.NULL);
+            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YASLNativeValueWrapper.NULL );
             return YASLNull;
         }
         const rvalue = this.expectValue(node.rvalue);
@@ -408,26 +448,30 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     addTraceListener(param: (trace:YASLTracer) => void): void {
         this.tracerList.setListener(param);
     }
+
+    getError() {
+        return this.ctx.getError();
+    }
 }
 
-const code = `
-let a = [1,2,3]
-print(a)
-a.swap(1,2)
-print(a)
-`;
-const lexer = new Lexer(code);
-const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
-const visitor = new TracerVisitor(lexer.getLineMap());
-visitor.addTraceListener((trace)=>{
-    console.log("GOT TRACER",trace)
-})
-const statements = parser.getProgram().getStatements();
-if (statements) {
-    // console.log(formatter.formatAst(ast));
-    for (const statement of statements) {
-        statement.accept(visitor);
-    }
-} else {
-    console.error("Couldnt build ast");
-}
+// const code = `
+// let a = [1,2,3]
+// print(a)
+// a.swap(1,2)
+// print(a)
+// `;
+// const lexer = new Lexer(code);
+// const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
+// const visitor = new TracerVisitor(lexer.getLineMap());
+// visitor.addTraceListener((trace)=>{
+//     console.log("GOT TRACER",trace)
+// })
+// const statements = parser.getProgram().getStatements();
+// if (statements) {
+//     // console.log(formatter.formatAst(ast));
+//     for (const statement of statements) {
+//         statement.accept(visitor);
+//     }
+// } else {
+//     console.error("Couldnt build ast");
+// }

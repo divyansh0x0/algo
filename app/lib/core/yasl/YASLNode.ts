@@ -1,4 +1,4 @@
-import type { YASLNativeValue } from "./natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "./natives/YASLNativeValueWrapper";
 import type { Visitor } from "./visitors/Visitor";
 import { type YASLExpression, YASLNodeType, type YASLStatement, type YASLValueType } from "./YASLAst";
 import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp } from "./YASLToken";
@@ -115,7 +115,7 @@ export class ExpTernaryNode extends YASLNode {
 
 export class ExpLiteralNode extends YASLNode {
     constructor(
-        public value: YASLNativeValue,
+        public value: YASLNativeValueWrapper,
         debugId: number,
         startIndex: number,
         endIndex: number,

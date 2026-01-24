@@ -24,10 +24,9 @@ button {
     box-shadow: var(--box-shadow);
     color: var(--color-on-primary);
     cursor: pointer;
-    font-size: 1.1em;
     /*transition: background-color 200ms ease-in-out;*/
     height: fit-content;
-    padding: var(--padding-md);
+    padding: 0.1em 0.5em;
     transition: filter var(--transition-speed) linear;
     width: fit-content;
 }
@@ -79,6 +78,7 @@ input {
 }
 
 .iconify {
+    vertical-align: -0.125em;
     display: inline-block;
     width: 1em;
     height: 1em;

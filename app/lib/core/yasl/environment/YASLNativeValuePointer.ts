@@ -1,15 +1,15 @@
-import type { YASLNativeValue } from "../natives/YASLNativeValue";
+import type { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
 import type { YASLMemPointer } from "./YASLMemPointer";
 
 export class YASLNativeValuePointer implements YASLMemPointer {
-    constructor(private value: YASLNativeValue) {
+    constructor(private value: YASLNativeValueWrapper) {
     }
 
-    get(): YASLNativeValue {
+    get(): YASLNativeValueWrapper {
         return this.value;
     }
 
-    set(value: YASLNativeValue): void {
+    set(value: YASLNativeValueWrapper): void {
         this.value = value;
     }
 

@@ -1,5 +1,5 @@
 import type { TraceList } from "../tracer/TraceList";
-import type { YASLNativeValue } from "./YASLNativeValue";
+import type { YASLNativeValueWrapper } from "./YASLNativeValueWrapper";
 
 export interface YASLNativeMethodContext {
     line: number;
@@ -7,4 +7,4 @@ export interface YASLNativeMethodContext {
     error?: string;
 }
 
-export type YASLNativeMethod<T> = (target: T, args: YASLNativeValue[], context: YASLNativeMethodContext) => YASLNativeValue;
+export type YASLNativeMethod<T> = (target: T, args: YASLNativeValueWrapper[], context: YASLNativeMethodContext) => YASLNativeValueWrapper;
