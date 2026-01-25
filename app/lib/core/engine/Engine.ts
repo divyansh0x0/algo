@@ -5,9 +5,7 @@ export class Engine {
     private scene: World | null = null;
     private is_running: boolean = false;
 
-    constructor() {
-
-    }
+    constructor() {}
 
     attachScene(scene: World): void {
         this.scene = scene;

@@ -1,32 +1,47 @@
 <script lang="ts" setup>
 
 
-import type { EditorView } from "../lib/core/editor/view/EditorView";
 import { Lexer, Parser } from "../lib/core/yasl";
+import type { YASLTracer } from "../lib/core/yasl/tracer/Tracers";
 import { TracerVisitor } from "../lib/core/yasl/visitors/TracerVisitor";
 
 const editorEl = ref<HTMLDivElement | null>(null);
-const yaslOutput = ref<HTMLDivElement | null>(null);
-let ide: unknown = null;
-const code = `let x = 100
-let y = 100
-print(x+y)
-`;
+const outputEl = ref<HTMLDivElement | null>(null);
+let editorView: any = null;
+
+const props = defineProps({
+    traceReceiver: {
+        type: Function as PropType<(trace: YASLTracer) => void>,
+        required: false,
+        default: undefined,
+    },
+    code: {
+        type: String,
+        required: false,
+        default: "// Write your code here",
+    }
+});
+
+
 onMounted(async () => {
     const editor = await import("@/lib/core/editor/view/EditorView");
     if (editorEl.value) {
-        const view = new editor.EditorView(editorEl.value);
-        view.setCode(code);
-        ide = view;
+        editorView = new editor.EditorView(editorEl.value);
     }
-
+    setCode(props.code);
 });
 
+function setCode(newCode: string) {
+    if(editorView) {
+        editorView.setCode(newCode);
+    }
+}
+watch(() => props.code, setCode);
 function onRunBtnClick() {
-    console.log(ide);
+    console.log(editorView);
 
-    if (ide && typeof ide == "object" && "getCode" in ide && typeof ide["getCode"] === "function") {
-        const code = ide.getCode();
+    if (editorView && typeof editorView == "object" && "getCode" in editorView && typeof editorView["getCode"] === "function") {
+        const code = editorView.getCode();
         const lexer = new Lexer(code);
 
         const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
@@ -38,12 +53,12 @@ function onRunBtnClick() {
             console.error("PARSING ERROR", error);
         }
         const statements = parser.getProgram().getStatements();
+        if (props.traceReceiver)
+            visitor.addTraceListener(props.traceReceiver);
 
-        visitor.addTraceListener((trace) => {
-            console.log("Trace:", trace);
-        });
+
         visitor.setStdOut((outputStr) => {
-            const out = yaslOutput.value;
+            const out = outputEl.value;
             if (out == null) {
                 return;
             }
@@ -51,17 +66,15 @@ function onRunBtnClick() {
             const time = new Date().toLocaleTimeString();
             out.innerHTML += `<div class="yasl-std-output">[${time}] ${outputStr}</div>`;
         });
+
         try {
             for (const statement of statements) {
                 statement.accept(visitor);
-
             }
         } catch (error) {
             console.log("ERROR", error);
             console.log(visitor.getError());
         }
-
-
     }
 }
 </script>
@@ -77,7 +90,7 @@ function onRunBtnClick() {
         </div>
         <div class="yasl-console">
             <h3> Terminal </h3>
-            <div ref="yaslOutput" class="yasl-std-output"></div>
+            <div ref="outputEl" class="yasl-std-output"></div>
         </div>
     </div>
 </template>
@@ -114,13 +127,16 @@ function onRunBtnClick() {
         border: 1px solid var(--color-secondary);
     }
 }
-.editor-wrapper{
+
+.editor-wrapper {
     flex: 0.7 0;
 }
-.yasl-console{
+
+.yasl-console {
     flex: 0.3 0;
 }
-.yasl-console,.editor-wrapper{
+
+.yasl-console, .editor-wrapper {
     display: flex;
     flex-direction: column;
     justify-content: stretch;
@@ -133,6 +149,7 @@ function onRunBtnClick() {
     font-family: "JetBrains Mono", monospace;
     overflow-x: auto;
 }
+
 h3 {
     padding: 0 var(--padding-sm);
 }
@@ -147,6 +164,7 @@ h3 {
     border-radius: var(--border-radius);
     padding: var(--padding-sm);
 }
+
 .yasl-std-output {
     min-width: max-content;
 }

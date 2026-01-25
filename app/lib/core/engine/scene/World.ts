@@ -32,7 +32,7 @@ export class World {
     }
 
     removeComponent<T extends EntityComponent>(entity: Entity, componentClass: ComponentClass<T>) {
-        let sparseSet = this.components.get(componentClass);
+        const sparseSet = this.components.get(componentClass);
         if (sparseSet) {
             sparseSet.remove(entity.id);
         }
@@ -69,5 +69,11 @@ export class World {
 
     getEntities() {
         return this.entities;
+    }
+
+    clearAll(): void {
+        this.components.clear();
+        this.entities.clear();
+        this.systems.length = 0;
     }
 }

@@ -19,23 +19,29 @@ import { TransitionSystem } from "~/lib/core/engine/scene/systems/ESTransition";
 import type { World } from "~/lib/core/engine/scene/World";
 import { Color } from "~/lib/core/engine/utils/Color";
 
+type VValueTypes = null | string | number | Array<unknown>;
+
 //Visual array
-class VArray {
-    constructor(private internalArr: number[]) {
+interface VObject {
+    spawn(world: World): void;
+}
+
+class VArray implements VObject {
+    constructor(private internalArr: number[], private name="unknown") {
     }
 
-    spawn(scene: World, name: string) {
+    spawn(world: World) {
 
-        const stacklayout = new ECStackLayout(name, ECStackLayoutDirection.Horizontal, 10);
-        const layoutEntity = scene.createEntity();
-        scene.addComponent(layoutEntity, new ECPosition(0, 0))
+        const stacklayout = new ECStackLayout(this.name, ECStackLayoutDirection.Horizontal, 10);
+        const layoutEntity = world.createEntity();
+        world.addComponent(layoutEntity, new ECPosition(0, 0))
             .addComponent(layoutEntity, stacklayout)
             .addComponent(layoutEntity, new ECBorderColor(new Color("#00f")));
 
         for (let i = 0; i < this.internalArr.length; i++) {
             const el = this.internalArr[i]!;
-            const elEntity = scene.createEntity();
-            scene.addComponent(elEntity, new ECPosition(0, 0))
+            const elEntity = world.createEntity();
+            world.addComponent(elEntity, new ECPosition(0, 0))
                 .addComponent(elEntity, new ECRectangle(100, 100, ECDrawableStyle.Stroke))
                 .addComponent(elEntity, new ECAxisAlignedBoundingBox(50, 50))
                 .addComponent(elEntity, new ECText(el.toString()))
@@ -50,25 +56,45 @@ class VArray {
     }
 }
 
-export class Visualizer {
-    private readonly scene: World;
-
-    constructor(scene: World, ctx: CanvasRenderingContext2D) {
-        this.scene = scene;
-        scene.addSystem(new RenderSystem(ctx));
-        scene.addSystem(new KinematicsSystem());
-        scene.addSystem(new TransitionSystem());
-        scene.addSystem(new ESMouseListener(ctx));
-        scene.addSystem(new ESDragStateSystem());
-        scene.addSystem(new ESDragMoveSystem());
-        scene.addSystem(new ESStackLayout());
-        // console.log(new ESStackLayout());
-        scene.addSystem(new ESMoveTo());
-
+class VValue implements VObject{
+    constructor(private value: VValueTypes) {
 
     }
 
+    spawn(world: World):void {
+    }
+}
+
+export class Visualizer {
+    private world?: World;
+    private vobjects = new Map<string, VValue>();
+
+    setScene(world: World, ctx: CanvasRenderingContext2D) {
+        this.world = world;
+        this.world.clearAll();
+        console.log("world set", this.world);
+
+        world.addSystem(new RenderSystem(ctx));
+        world.addSystem(new KinematicsSystem());
+        world.addSystem(new TransitionSystem());
+        world.addSystem(new ESMouseListener(ctx));
+        world.addSystem(new ESDragStateSystem());
+        world.addSystem(new ESDragMoveSystem());
+        world.addSystem(new ESStackLayout());
+        world.addSystem(new ESMoveTo());
+    }
+
     addArray(arr: number[]) {
-        new VArray(arr).spawn(this.scene, "arr");
+        if (!this.world) {
+            console.error("Scene not set before adding content to visualizer", arr);
+            return;
+        }
+        console.log("Array added", arr);
+        new VArray(arr).spawn(this.world);
+
+    }
+
+    createValue(name: string, value: VValueTypes): void {
+
     }
 }

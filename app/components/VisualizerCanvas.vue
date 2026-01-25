@@ -1,21 +1,30 @@
 <script lang="ts" setup>
 import { nextTick, onBeforeUnmount, onMounted } from "vue";
-
-const algorithm = "DFS Graph Traversal";
-let updateCanvasSize: () => void;
+import { Engine, World } from "../lib/core/engine";
 const canvas = ref<HTMLCanvasElement | null>(null);
 const container = ref<HTMLDivElement | null>(null);
 let observer: ResizeObserver | null = null;
-let engine: any;
-onMounted(async () => {
-    if (!canvas.value || !container.value) {
-        return;
+const engine = new Engine();
+const scene = new World();
+engine.attachScene(scene);
+
+
+const props = defineProps({
+    onInitialized:{
+       type: Function as PropType<(world:World,ctx:CanvasRenderingContext2D) => void>,
+       required: true
     }
+});
+onMounted(async () => {
     if (!import.meta.client) return;
-    const {World, Engine, Visualizer, Graph} = await import("~/lib/core/engine");
+    if (!canvas.value || !container.value) return;
     const ctx = canvas.value.getContext("2d");
     if (!ctx) return;
-    updateCanvasSize = () => {
+
+    await nextTick();
+    engine.start();
+    props.onInitialized?.call(window,scene,ctx);
+    const updateCanvasSize = () => {
         if (!canvas.value || !ctx || !container.value) {
             return;
         }
@@ -26,33 +35,12 @@ onMounted(async () => {
         ctx.canvas.width = Math.round(rect.width * ratio);
         ctx.canvas.height = Math.round(rect.height * ratio);
         ctx.setTransform(prevTransform);
-        // const entity = scene.createEntity();
-        // entity.add(new ECPosition(ctx.canvas.width/2,ctx.canvas.height/2));
-        // entity.add(new ECVelocity(0,0));
-        // entity.add(ECAxisAlignedBoundingBox.fromRectangle(100,100));
-        // entity.add(new ECRectangle(100,100, ECDrawableStyle.Fill));
-        // entity.add(new ECBackgroundColor(new Color(255,255,255,0.05)));
-        // entity.add(new ECDraggable());
-        // scene.addEntity(entity);
-
     };
-    const scene = new World();
-    engine = new Engine();
-    engine.attachScene(scene);
-    const visualizer = new Visualizer(scene, ctx);
-    visualizer.addArray([ 1, 2, 3, 4 ]);
+    updateCanvasSize();
 
-
-    await nextTick();
-    if (!canvas.value) return;
-
-    if (ctx) {
-        updateCanvasSize();
-    }
-    // container.value.addEventListener('resize', updateCanvasSize)
+    if(observer !== null) return;
     observer = new ResizeObserver(updateCanvasSize);
     observer.observe(container.value);
-    engine.start();
 });
 
 onBeforeUnmount(() => {
@@ -67,7 +55,7 @@ onBeforeUnmount(() => {
         <canvas
             ref="canvas"
             v-bind="$attrs"
-        ></canvas>
+        />
         <OverlayToolbar class="overlay-toolbar"/>
 
     </div>
