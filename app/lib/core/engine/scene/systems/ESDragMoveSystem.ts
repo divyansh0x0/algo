@@ -2,7 +2,7 @@ import { ECGroupMember } from "~/lib/core/engine/scene/components/ECGroupMember"
 import { ECID, ECMouseListener } from "../components";
 import { ECDraggable } from "../components/ECDraggable";
 import { ECPosition } from "../components/ECPosition";
-import { Entity } from "../Entity";
+import type {Entity} from "../Entity";
 import type { World } from "../World";
 import { type EntitySystem, ESRequirements } from "./EntitySystem";
 

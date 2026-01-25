@@ -1,4 +1,3 @@
-import type { YASLMemPointer } from "../environment/YASLMemPointer";
 import { YASLArrayObj } from "./YASLArrayObj";
 
 export type YASLNativeValue = string | boolean | number | YASLArrayObj | null;
@@ -26,7 +25,14 @@ export class YASLNativeValueWrapper {
         return this.value instanceof YASLArrayObj;
     }
 
-    isBoolean(): this is {value: boolean} {
+    isBoolean(): this is { value: boolean } {
         return typeof this.value === "boolean";
+    }
+
+    copy(): YASLNativeValueWrapper {
+        if (!this.isArray())
+            return new YASLNativeValueWrapper(this.value);
+        else
+            return new YASLNativeValueWrapper(this.value.copy());
     }
 }

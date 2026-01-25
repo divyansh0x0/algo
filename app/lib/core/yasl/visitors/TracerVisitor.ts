@@ -138,11 +138,12 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
     }
 
     private callArrayMethod(
+        objIdentifierNode: ExpIdentifierNode,
         arrayValue: YASLArrayObj,
-        identifierNode: ExpIdentifierNode,
+        methodIdentifierNode: ExpIdentifierNode,
         args: YASLExpression[],
     ): void {
-        const methodName = identifierNode.name;
+        const methodName = methodIdentifierNode.name;
 
         const valueArgs = args.map(arg => this.expectValue(arg).value);
 
@@ -152,7 +153,8 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             valueArgs,
             {
                 tracer: this.tracerList,
-                line: this.getLine(identifierNode)
+                line: this.getLine(methodIdentifierNode),
+                identifier:objIdentifierNode.name
             }
         );
     }
@@ -318,7 +320,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                 if (!nativeVal.isArray())
                     throw new YASLError("Object methods not implemented");
                 else
-                    this.callArrayMethod(nativeVal.value, prop, node.args);
+                    this.callArrayMethod(obj, nativeVal.value, prop, node.args);
             }
         }
         return node.qualifiedName.accept(this);

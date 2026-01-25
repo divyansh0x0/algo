@@ -28,7 +28,7 @@ export class TraceList {
             type: TracerType.DECLARE_VARIABLE,
             line,
             variable_name,
-            assigned_value,
+            assigned_value: assigned_value?.copy(),
         } as YASLTracerDeclareVariable);
     }
 
@@ -80,7 +80,7 @@ export class TraceList {
         } as YASLTracerArrayRead);
     }
 
-    emitArraySwap(array_name: YASLArrayObj, index1: number, index2: number, line: number) {
+    emitArraySwap(array_name: string, index1: number, index2: number, line: number) {
         this.emit({
             type: TracerType.ARRAY_SWAP,
             array_name,

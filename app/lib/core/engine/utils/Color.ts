@@ -1,4 +1,4 @@
-import { Vmath } from "~/lib/core/engine/utils/vmath";
+import { clamp } from "~/lib/core/engine/utils";
 
 function isValidHexColor(color: string) {
     //adding 1 to 3,4,6,8 valid hex lengths to count for # in the beginning
@@ -27,10 +27,10 @@ export class Color {
         } else {
             const [ r = 0, g = 0, b = 0, a = 1 ] = args;
             this.rgba = {
-                r: Vmath.clamp(r, 0, 255),
-                g: Vmath.clamp(g, 0, 255),
-                b: Vmath.clamp(b, 0, 255),
-                a: Vmath.clamp(a, 0, 1)
+                r: clamp(r, 0, 255),
+                g: clamp(g, 0, 255),
+                b: clamp(b, 0, 255),
+                a: clamp(a, 0, 1)
             };
         }
     }

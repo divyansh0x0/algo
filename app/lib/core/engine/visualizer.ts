@@ -18,60 +18,101 @@ import { ESStackLayout } from "~/lib/core/engine/scene/systems/ESStackLayout";
 import { TransitionSystem } from "~/lib/core/engine/scene/systems/ESTransition";
 import type { World } from "~/lib/core/engine/scene/World";
 import { Color } from "~/lib/core/engine/utils/Color";
+import type { YASLNativeValueWrapper } from "../yasl";
+import type { Entity } from "./scene/Entity";
 
-type VValueTypes = null | string | number | Array<unknown>;
+type VValueType = null | boolean | string | number | VValueType[];
 
 //Visual array
 interface VObject {
-    spawn(world: World): void;
+    spawn(): void;
+
+    kill(): void;
 }
 
 class VArray implements VObject {
-    constructor(private internalArr: number[], private name="unknown") {
+    private layout?: Entity;
+    private children?: Entity[];
+    private stackLayout?: ECStackLayout;
+    constructor(private internalArr: VValueType[], private world: World, private name = "unknown") {
     }
 
-    spawn(world: World) {
+    spawn() {
 
-        const stacklayout = new ECStackLayout(this.name, ECStackLayoutDirection.Horizontal, 10);
-        const layoutEntity = world.createEntity();
-        world.addComponent(layoutEntity, new ECPosition(0, 0))
-            .addComponent(layoutEntity, stacklayout)
-            .addComponent(layoutEntity, new ECBorderColor(new Color("#00f")));
+        this.stackLayout = new ECStackLayout(this.name, ECStackLayoutDirection.Horizontal, 10);
+        this.layout = this.world.createEntity();
+        this.world.addComponent(this.layout, new ECPosition(0, 0))
+            .addComponent(this.layout, this.stackLayout)
+            .addComponent(this.layout, new ECBorderColor(new Color("#00f")));
 
         for (let i = 0; i < this.internalArr.length; i++) {
             const el = this.internalArr[i]!;
-            const elEntity = world.createEntity();
-            world.addComponent(elEntity, new ECPosition(0, 0))
+            const elEntity = this.world.createEntity();
+            this.world.addComponent(elEntity, new ECPosition(0, 0))
                 .addComponent(elEntity, new ECRectangle(100, 100, ECDrawableStyle.Stroke))
                 .addComponent(elEntity, new ECAxisAlignedBoundingBox(50, 50))
                 .addComponent(elEntity, new ECText(el.toString()))
                 .addComponent(elEntity, new ECTextColor(new Color("#fff")));
-            stacklayout.add(elEntity);
+            this.stackLayout.add(elEntity);
+
+            this.children?.push(elEntity);
         }
-        setInterval(() => {
-            stacklayout.swap(2, 3);
-        }, 2000);
-        // console.log(stacklayout);
+    }
+
+    kill(): void {
+        if (this.layout)
+            this.world.deleteEntity(this.layout);
+        if (this.children)
+            this.world.deleteEntities(...this.children);
+    }
+
+    swap(index1: number, index2: number): void {
+        this.stackLayout?.swap(index1, index2);
+    }
+}
+
+class VValue implements VObject {
+    constructor(private value: VValueType, private world: World, private name = "unknown") {
+
+    }
+
+    private stringify() {
+        return JSON.stringify(this.value);
+    }
+
+    spawn(): void {
+        const entity = this.world.createEntity();
+        this.world.addComponent(entity, new ECPosition(0, 0))
+            .addComponent(entity, new ECRectangle(100, 100, ECDrawableStyle.Stroke))
+            .addComponent(entity, new ECAxisAlignedBoundingBox(50, 50))
+            .addComponent(entity, new ECText(this.stringify()))
+            .addComponent(entity, new ECTextColor(new Color("#fff")));
+    }
+
+    kill(): void {
 
     }
 }
 
-class VValue implements VObject{
-    constructor(private value: VValueTypes) {
+function resolveYASLArray(arr: YASLNativeValueWrapper[]): VValueType[] {
+    const resolvedArr: VValueType[] = [];
 
+    // console.log(arr);
+    for (const el of arr) {
+        if(!el.isArray())
+            resolvedArr.push(el.value as VValueType);
+        else
+            resolvedArr.push(resolveYASLArray(el.value.getArray()));
     }
-
-    spawn(world: World):void {
-    }
+    return resolvedArr;
 }
 
 export class Visualizer {
     private world?: World;
-    private vobjects = new Map<string, VValue>();
+    private vobjects = new Map<string, VObject>();
 
     setScene(world: World, ctx: CanvasRenderingContext2D) {
         this.world = world;
-        this.world.clearAll();
         console.log("world set", this.world);
 
         world.addSystem(new RenderSystem(ctx));
@@ -84,17 +125,45 @@ export class Visualizer {
         world.addSystem(new ESMoveTo());
     }
 
-    addArray(arr: number[]) {
+    addArray(name: string, arr: YASLNativeValueWrapper[]) {
         if (!this.world) {
             console.error("Scene not set before adding content to visualizer", arr);
             return;
         }
         console.log("Array added", arr);
-        new VArray(arr).spawn(this.world);
+        const vArr:VValueType[] = resolveYASLArray(arr);
 
+        const vArrObj = new VArray(vArr, this.world, name);
+        this.insertObj(name, vArrObj);
     }
 
-    createValue(name: string, value: VValueTypes): void {
+    private insertObj(name: string, obj: VObject) {
+        if (this.vobjects.has(name)) {
+            this.vobjects.get(name)?.kill();
+        }
+        this.vobjects.set(name, obj);
+        obj.spawn();
+    }
 
+    // createValue(name: string, value: VValueTypes): void {
+    //
+    // }
+    resetScene(): void {
+        for(const value of this.vobjects.values()) {
+            value.kill();
+        }
+
+        this.vobjects.clear();
+        this.world?.clearAllEntities();
+    }
+
+    swapArrayElements(name: string, index1: number, index2: number): void {
+        const varr = this.vobjects.get(name);
+        console.log("Swapping", index1, index2, name, varr,this.vobjects);
+        if(!varr) return;
+
+        if(varr instanceof VArray){
+            varr.swap(index1,index2);
+        }
     }
 }

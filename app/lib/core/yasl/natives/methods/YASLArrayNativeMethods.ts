@@ -30,7 +30,7 @@ YASLArrayNativeMethods.register("swap", (arr, args, context): YASLNativeValueWra
         arr.set(j.value, a);
         arr.set(i.value, b);
 
-        context.tracer.emitArraySwap(arr, i.value, j.value, context.line);
+        context.tracer.emitArraySwap(context.identifier ?? "unknown", i.value, j.value, context.line);
         return YASLNativeValueWrapper.NULL;
     }
 );

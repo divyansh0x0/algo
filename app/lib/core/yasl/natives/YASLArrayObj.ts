@@ -50,4 +50,15 @@ export class YASLArrayObj {
         return "[" + str + "]"
     }
 
+    getArray(){
+        return [...this.internal];
+    }
+
+    copy(): YASLArrayObj{
+        const arr: YASLNativeValueWrapper[] = [];
+        for (const el of this.internal) {
+            arr.push(el.copy());
+        }
+        return new YASLArrayObj(arr);
+    }
 }

@@ -10,8 +10,8 @@ const outputEl = ref<HTMLDivElement | null>(null);
 let editorView: any = null;
 
 const props = defineProps({
-    traceReceiver: {
-        type: Function as PropType<(trace: YASLTracer) => void>,
+    onRunComplete: {
+        type: Function as PropType<(traces: YASLTracer[]) => void>,
         required: false,
         default: undefined,
     },
@@ -32,11 +32,13 @@ onMounted(async () => {
 });
 
 function setCode(newCode: string) {
-    if(editorView) {
+    if (editorView) {
         editorView.setCode(newCode);
     }
 }
+
 watch(() => props.code, setCode);
+
 function onRunBtnClick() {
     console.log(editorView);
 
@@ -53,9 +55,8 @@ function onRunBtnClick() {
             console.error("PARSING ERROR", error);
         }
         const statements = parser.getProgram().getStatements();
-        if (props.traceReceiver)
-            visitor.addTraceListener(props.traceReceiver);
-
+        const traces = Array<YASLTracer>();
+        visitor.addTraceListener((trace) => traces.push(trace));
 
         visitor.setStdOut((outputStr) => {
             const out = outputEl.value;
@@ -75,6 +76,9 @@ function onRunBtnClick() {
             console.log("ERROR", error);
             console.log(visitor.getError());
         }
+
+        if (props.onRunComplete)
+            props.onRunComplete(traces);
     }
 }
 </script>

@@ -2,21 +2,19 @@ import type { World } from "~/lib/core/engine/scene/World";
 
 export class Engine {
     private frame_id: number | null = null;
-    private scene: World | null = null;
+    private world: World | null = null;
     private is_running: boolean = false;
 
-    constructor() {}
-
     attachScene(scene: World): void {
-        this.scene = scene;
+        this.world = scene;
     }
 
     detachScene(scene: World): void {
-        this.scene = scene;
+        this.world = scene;
     }
 
     start() {
-        if (this.is_running || !this.scene) {
+        if (this.is_running || !this.world) {
             return;
         }
         this.is_running = true;
@@ -33,11 +31,11 @@ export class Engine {
     }
 
     private loop(t1: number, t2: number) {
-        if (!this.is_running || !this.scene) {
+        if (!this.is_running || !this.world) {
             return;
         }
 
-        this.scene.update(t2 - t1);
+        this.world.update(t2 - t1);
         this.frame_id = requestAnimationFrame((t) => this.loop(t2, t));
     }
 

@@ -4,9 +4,8 @@ import { ECMoveTo } from "~/lib/core/engine/scene/components/ECMoveTo";
 import { ECStackLayout, ECStackLayoutDirection } from "~/lib/core/engine/scene/components/ECStackLayout";
 import type { Entity } from "~/lib/core/engine/scene/Entity";
 import { type EntitySystem, ESRequirements } from "~/lib/core/engine/scene/systems/EntitySystem";
-import { Vector2D } from "~/lib/core/engine/utils";
+import { Vector2D, equateFloats } from "~/lib/core/engine/utils";
 import type { World } from "../World";
-
 export class ESStackLayout implements EntitySystem {
     requirement: ESRequirements = ESRequirements.from(ECID.StackLayout, ECID.Position);
 
@@ -31,22 +30,32 @@ export class ESStackLayout implements EntitySystem {
         let lastX = layoutCenter.x - stackHalfWidth;
         for (const member of members) {
             const aabb = world.getComponent(member, ECAxisAlignedBoundingBox);
-            const pos = world.getComponent(member, ECPosition);
-            if (!pos || !aabb) {
+            const oldPos = world.getComponent(member, ECPosition);
+            if (!oldPos || !aabb) {
                 throw new Error("Position must be defined for a member for a stack layout entity. Add ECPosition component to all layout members");
             }
 
             lastX += aabb.halfWidth;
-            const x = lastX;
-            const y = layoutCenter.y;
+            const newX = lastX;
+            const newY = layoutCenter.y;
 
-            if (!world.entityHas(member, ECMoveTo)) {
-                world.addComponent(member, new ECMoveTo(new Vector2D(lastX, layoutCenter.y), 1000));
+            if (!world.entityHas(member, ECMoveTo) && (!equateFloats(oldPos.x, newX) || !equateFloats(oldPos.y, newY))) {
+                const newPos = new Vector2D(newX,newY);
+                world.addComponent(member, new ECMoveTo(oldPos.copy(),newPos));
+
             } else {
-                console.log("Reusing moveTo");
-                const moveTo = world.getComponent(member, ECMoveTo)!;
-                moveTo.finalPos.x = x;
-                moveTo.finalPos.y = y;
+                // console.log("Reusing moveTo");
+                // const moveTo = world.getComponent(member, ECMoveTo)!;
+                // // target changed → restart animation
+                // if (
+                //     moveTo.finalPos.x !== newX ||
+                //     moveTo.finalPos.y !== newY
+                // ) {
+                //     moveTo.initialPos = oldPos.copy();
+                //     moveTo.finalPos.x = newX;
+                //     moveTo.finalPos.y = newY;
+                //     moveTo.elapsedTimeMs = 0;
+                // }
             }
 
             lastX += aabb.halfWidth + stackLayout.spacing;

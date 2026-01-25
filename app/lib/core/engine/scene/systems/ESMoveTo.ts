@@ -8,6 +8,11 @@ import type { World } from "../World";
 export class ESMoveTo implements EntitySystem {
     requirement: ESRequirements = ESRequirements.from(ECID.Position, ECID.MoveTo);
 
+    constructor() {
+        console.log("ESMoveTo CREATED");
+
+    }
+
     end(): void {
     }
 
@@ -15,23 +20,23 @@ export class ESMoveTo implements EntitySystem {
         return true;
     }
 
-    update(dt: number, world: World): void {
+    update(dt_ms: number, world: World): void {
         for (const entity of world.getEntities()) {
             const moveTo = world.getComponent(entity, ECMoveTo);
-            if (!moveTo)
-                continue;
             const pos = world.getComponent(entity, ECPosition);
-            const t = Math.min(moveTo.elapsedTimeMs / moveTo.durationMs, 1);
-            if (!pos)
+            if (!moveTo || !pos)
                 continue;
-            if (t === 1) {
+            moveTo.elapsedTimeMs += dt_ms;
+            const t = Math.min(moveTo.elapsedTimeMs / moveTo.durationMs, 1);
+            // console.log(moveTo.initialPos,moveTo.finalPos,moveTo.elapsedTimeMs,dt_ms);
+            if (t >= 1) {
+                console.log("Removed");
                 world.removeComponent(entity, ECMoveTo);
                 continue;
             }
-            const newX = lerp(pos.x, moveTo.finalPos.x, t, Easings.easeInOutCubic);
-            const newY = lerp(pos.y, moveTo.finalPos.y, t, Easings.easeInOutCubic);
-
-            moveTo.elapsedTimeMs += dt;
+            const newX = lerp(moveTo.initialPos.x, moveTo.finalPos.x, t, Easings.easeInOutSin);
+            const newY = lerp(moveTo.initialPos.y, moveTo.finalPos.y, t, Easings.linear);
+            // console.log(moveTo.initialPos, moveTo.finalPos);
 
             pos.set(newX, newY);
         }

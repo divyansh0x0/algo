@@ -82,7 +82,7 @@ export interface YASLTracerArrayRead extends YASLTracer {
 
 export interface YASLTracerArraySwap extends YASLTracer {
     type: TracerType.ARRAY_SWAP;
-    array_name: YASLArrayObj;
+    array_name: string;
     index1: number;
     index2: number;
 }
