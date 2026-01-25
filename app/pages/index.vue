@@ -16,12 +16,10 @@ x.swap(0,1)
 `;
 onMounted(() => {
     isIDELoaded.value = true;
-    // visualizer.addArray("x", [ 1, 2, 3 ]);
 });
 
 function onInitialized(world: World, ctx: CanvasRenderingContext2D) {
     visualizer.setScene(world, ctx);
-    // visualizer.addArray("x", [ 1, 2, 3, 4, 6 ]);
 }
 
 function traceReceiver(trace: YASLTracer) {
@@ -97,9 +95,10 @@ function traceReceiver(trace: YASLTracer) {
 let interval: NodeJS.Timeout;
 let i = 0;
 function onRun(traces: YASLTracer[]) {
-    console.log(traces);
+    if(traces.length == 0) return;
     visualizer.resetScene();
-    i = 0;
+    traceReceiver(traces[0]!); // Play first trace instantly.
+    i = 1;
     interval = setInterval(() => {
         if (i >= traces.length){
             clearInterval(interval);
@@ -124,7 +123,7 @@ onUnmounted(() => {
         </template>
         <template #right>
             <OverlayLoader :loading="!isIDELoaded">
-                <EditorContainer :trace-receiver="traceReceiver" :on-run-complete="onRun" :code="code"/>
+                <EditorContainer :on-run-complete="onRun" :code="code"/>
             </OverlayLoader>
         </template>
     </DividerContainer>
