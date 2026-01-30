@@ -18,7 +18,7 @@ import { ESStackLayout } from "~/lib/core/engine/scene/systems/ESStackLayout";
 import { TransitionSystem } from "~/lib/core/engine/scene/systems/ESTransition";
 import type { World } from "~/lib/core/engine/scene/World";
 import { Color } from "~/lib/core/engine/utils/Color";
-import type { YASLNativeValueWrapper } from "../yasl";
+import type { YNativeValueWrapper } from "../yasl";
 import type { Entity } from "./scene/Entity";
 
 type VValueType = null | boolean | string | number | VValueType[];
@@ -94,7 +94,7 @@ class VValue implements VObject {
     }
 }
 
-function resolveYASLArray(arr: YASLNativeValueWrapper[]): VValueType[] {
+function resolveYASLArray(arr: YNativeValueWrapper[]): VValueType[] {
     const resolvedArr: VValueType[] = [];
 
     // console.log(arr);
@@ -125,7 +125,7 @@ export class Visualizer {
         world.addSystem(new ESMoveTo());
     }
 
-    addArray(name: string, arr: YASLNativeValueWrapper[]) {
+    addArray(name: string, arr: YNativeValueWrapper[]) {
         if (!this.world) {
             console.error("Scene not set before adding content to visualizer", arr);
             return;

@@ -1,10 +1,10 @@
 import type { LineMap } from "../../LineMap";
-import { formatter } from "../formatter";
-import { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
-import { type YASLExpression, YASLProgram,type YASLValueType } from "../YASLAst";
-import { YASLNodeFactory } from "../YASLNodeFactory";
-import { YASLNodeTypeChecker } from "../YASLNodeTypeChecker";
-import { type YASLToken, type YASLTokenBinaryOp, YASLTokenType, type YASLTokenUnaryOp } from "../YASLToken";
+import { YFormatter } from "../YFormatter";
+import { YNativeValueWrapper } from "../natives/YNativeValueWrapper";
+import { type YExpression, YProgram,type YValueType } from "../YAst";
+import { YNodeFactory } from "../YNodeFactory";
+import { YTypeChecker } from "../YTypeChecker";
+import { type YToken, type YTokenBinaryOp, YTokenType, type YTokenUnaryOp } from "../YToken";
 import {
     getBindingPower,
     isAssignmentOperator,
@@ -12,23 +12,23 @@ import {
     isOperator,
     isPostfixOperator,
     parseTypeToken
-} from "./Helpers";
-import type { ParserError } from "./ParserError";
+} from "./YHelpers";
+import type { YParserError } from "./YParserError";
 
-export class Parser {
+export class YParser {
     private next_index = 0;
     private parenthesis_count = 0;
 
-    private program = new YASLProgram();
-    private node_factory = new YASLNodeFactory();
+    private program = new YProgram();
+    private node_factory = new YNodeFactory();
 
-    private errors = Array<ParserError>();
+    private errors = Array<YParserError>();
 
-    constructor(private tokens: YASLToken[], private line_map: LineMap) {
+    constructor(private tokens: YToken[], private line_map: LineMap) {
 
     }
 
-    getProgram(): YASLProgram {
+    getProgram(): YProgram {
         while (!this.isEOF()) {
             this.parseStatement();
         }
@@ -43,13 +43,13 @@ export class Parser {
         const token = this.peek();
 
         switch (token.type) {
-            case YASLTokenType.STATEMENT_END:
+            case YTokenType.STATEMENT_END:
                 this.consume();
                 break;
-            case YASLTokenType.LET:
+            case YTokenType.LET:
                 this.parseDeclaration();
                 break;
-            case YASLTokenType.IDENTIFIER: {
+            case YTokenType.IDENTIFIER: {
                 const lvalue = this.consumeExpression();
                 if (!lvalue) {
                     this.errorToken("Invalid statement", token);
@@ -57,7 +57,7 @@ export class Parser {
                 }
 
                 const inlineAssign = this.peek();
-                if (inlineAssign.type === YASLTokenType.INLINE_ASSIGN) {
+                if (inlineAssign.type === YTokenType.INLINE_ASSIGN) {
                     this.errorToken("Inline assignment used as normal assignment, use '=' for assignments in a statement");
                     break;
                 }
@@ -88,14 +88,14 @@ export class Parser {
     private synchronize() {
         while (!this.isEOF()) {
             const next_token = this.peek();
-            if (next_token.type !== YASLTokenType.STATEMENT_END)
+            if (next_token.type !== YTokenType.STATEMENT_END)
                 this.consume();
             else
                 break;
         }
     }
 
-    private errorToken(msg: string, token: YASLToken | null = null) {
+    private errorToken(msg: string, token: YToken | null = null) {
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
         if (error_token != null) {
             const [ line1, col1 ] = this.line_map.indexToLineCol(error_token.start);
@@ -115,7 +115,7 @@ export class Parser {
         this.synchronize();
     }
 
-    private consume(): YASLToken {
+    private consume(): YToken {
         console.assert(this.next_index < this.tokens.length, "For some reason index of next token exceeded token stream length");
         const token = this.tokens[this.next_index];
         if (this.next_index < this.tokens.length)
@@ -126,11 +126,11 @@ export class Parser {
     /**
      * consumes the token if it matches token type and returns true otherwise false
      */
-    private match(token_type: YASLTokenType): boolean {
+    private match(token_type: YTokenType): boolean {
         return this.peek().type === token_type;
     }
 
-    private peek(): YASLToken {
+    private peek(): YToken {
         if (this.next_index >= this.tokens.length)
             return this.tokens[this.tokens.length - 1]!;
         return this.tokens[this.next_index]!;
@@ -139,7 +139,7 @@ export class Parser {
     /**
      *if next token matches the `token_type` consumes and returns the next token, otherwise returns null and emits an error
      */
-    private expect(token_type: YASLTokenType, msg?: string) {
+    private expect(token_type: YTokenType, msg?: string) {
         if (this.peek().type === token_type) {
             return this.consume();
         } else {
@@ -159,12 +159,12 @@ export class Parser {
         let node = null;
         switch (token.type) {
 
-            case YASLTokenType.STATEMENT_END:
+            case YTokenType.STATEMENT_END:
                 this.consume();
                 break;
-            case YASLTokenType.NUMBER:
-            case YASLTokenType.LPAREN:
-            case YASLTokenType.IDENTIFIER:
+            case YTokenType.NUMBER:
+            case YTokenType.LPAREN:
+            case YTokenType.IDENTIFIER:
                 node = this.consumeExpression();
                 break;
             // case YASLTokenType.LBRACE:
@@ -182,37 +182,37 @@ export class Parser {
 
 
     private parseDeclaration() {
-        this.expect(YASLTokenType.LET, "Assignment requires let");
+        this.expect(YTokenType.LET, "Assignment requires let");
         // storing identifier
-        const identifier = this.expect(YASLTokenType.IDENTIFIER, "Expected an identifier");
+        const identifier = this.expect(YTokenType.IDENTIFIER, "Expected an identifier");
         if (!identifier) return;
         // checking for type
-        let types: Set<YASLValueType> | null = null;
-        if (this.match(YASLTokenType.COLON)) {
+        let types: Set<YValueType> | null = null;
+        if (this.match(YTokenType.COLON)) {
             this.consume(); // consume the colon and get type
 
-            if (this.peek().type === YASLTokenType.IDENTIFIER)
+            if (this.peek().type === YTokenType.IDENTIFIER)
                 types = this.consumeValueType();
         }
 
-        if (this.match(YASLTokenType.STATEMENT_END)) {
+        if (this.match(YTokenType.STATEMENT_END)) {
             this.program.addStatement(this.node_factory.getDeclarationStatement(identifier.lexeme, null, types, identifier.start, identifier.end));
             return;
         }
 
-        this.expect(YASLTokenType.ASSIGN, "Invalid token");
+        this.expect(YTokenType.ASSIGN, "Invalid token");
         const value_node = this.consumeExpression();
         const node = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.endIndex : identifier.end);
         this.program.addStatement(node);
     }
 
     private consumeValueType() {
-        const allowed_types = new Set<YASLValueType>();
+        const allowed_types = new Set<YValueType>();
         while (true) {
             const token = this.peek();
             const value_type = parseTypeToken(token);
             if (value_type === null) {
-                if (token.type !== YASLTokenType.BIT_OR) {
+                if (token.type !== YTokenType.BIT_OR) {
                     break;
                 }
             } else {
@@ -228,27 +228,27 @@ export class Parser {
      * @param token must have been consumed before passing into this function
      * @private
      */
-    private nud(token: YASLToken): YASLExpression | null {
+    private nud(token: YToken): YExpression | null {
         switch (token.type) {
-            case YASLTokenType.MINUS:
-            case YASLTokenType.NOT: {
+            case YTokenType.MINUS:
+            case YTokenType.NOT: {
                 const right_node = this.consumeExpression(0);
-                if (right_node && YASLNodeTypeChecker.isExpression(right_node))
-                    return this.node_factory.getUnaryExpression(token.type as YASLTokenUnaryOp, right_node, token.start, right_node.endIndex);
+                if (right_node && YTypeChecker.isExpression(right_node))
+                    return this.node_factory.getUnaryExpression(token.type as YTokenUnaryOp, right_node, token.start, right_node.endIndex);
                 break;
             }
-            case YASLTokenType.NUMBER:
-                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(token.literal as number), token.start, token.end);
-            case YASLTokenType.IDENTIFIER:
+            case YTokenType.NUMBER:
+                return this.node_factory.getLiteralNode(new YNativeValueWrapper(token.literal as number), token.start, token.end);
+            case YTokenType.IDENTIFIER:
                 return this.node_factory.getIdentifierNode(token);
-            case YASLTokenType.LPAREN: {
+            case YTokenType.LPAREN: {
                 const expr = this.consumeExpression();
-                this.expect(YASLTokenType.RPAREN);
+                this.expect(YTokenType.RPAREN);
                 return expr;
             }
-            case YASLTokenType.LBRACKET: {
-                const values: YASLExpression[] = [];
-                while (this.peek().type !== YASLTokenType.RBRACKET) {
+            case YTokenType.LBRACKET: {
+                const values: YExpression[] = [];
+                while (this.peek().type !== YTokenType.RBRACKET) {
                     if (this.isEOF()) {
                         this.errorToken("Unexpected EOF while reading array");
                         break;
@@ -257,9 +257,9 @@ export class Parser {
                     if (exp)
                         values.push(exp);
                     token = this.peek();
-                    if (token.type === YASLTokenType.COMMA) {
+                    if (token.type === YTokenType.COMMA) {
                         this.consume();
-                    } else if (token.type === YASLTokenType.RBRACKET) {
+                    } else if (token.type === YTokenType.RBRACKET) {
                         this.consume();
                         this.parenthesis_count--;
                         break;
@@ -271,12 +271,12 @@ export class Parser {
 
                 return this.node_factory.getArrayLiteral(values);
             }
-            case YASLTokenType.TRUE:
-                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(true), token.start, token.end);
-            case YASLTokenType.FALSE:
-                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(false), token.start, token.end);
-            case YASLTokenType.STRING:
-                return this.node_factory.getLiteralNode(new YASLNativeValueWrapper(token.literal as string), token.start, token.end);
+            case YTokenType.TRUE:
+                return this.node_factory.getLiteralNode(new YNativeValueWrapper(true), token.start, token.end);
+            case YTokenType.FALSE:
+                return this.node_factory.getLiteralNode(new YNativeValueWrapper(false), token.start, token.end);
+            case YTokenType.STRING:
+                return this.node_factory.getLiteralNode(new YNativeValueWrapper(token.literal as string), token.start, token.end);
             default:
                 this.errorToken(`Unexpected token in nud: ${token.lexeme}`, token);
                 break;
@@ -289,14 +289,14 @@ export class Parser {
      * @param left_node
      * @param bp
      */
-    private led(op_token: YASLToken, left_node: YASLExpression, bp: [ number, number ]): YASLExpression | null {
+    private led(op_token: YToken, left_node: YExpression, bp: [ number, number ]): YExpression | null {
         const [ , right_bp ] = bp;
         // Postfix operators
         if (isPostfixOperator(op_token.type)) {
             if (!isExpressionTerminator(this.peek().type)) {
                 this.errorToken("Postfix operators can only be followed by an expression terminator");
             }
-            if (!YASLNodeTypeChecker.isLValue(left_node)) {
+            if (!YTypeChecker.isLValue(left_node)) {
                 this.errorToken("Postfix operator can only be applied to a LValue");
                 return null;
             }
@@ -305,27 +305,27 @@ export class Parser {
 
         // Indexing operator
         // identifier followed by '[' marks start of array access
-        if (op_token.type === YASLTokenType.LBRACKET) {
+        if (op_token.type === YTokenType.LBRACKET) {
             const index = this.consumeExpression(0);
             if (!index) {
                 this.errorToken("Invalid expression used for index");
             }
-            this.expect(YASLTokenType.RBRACKET, "Expected ']' ");
+            this.expect(YTokenType.RBRACKET, "Expected ']' ");
             if (index)
                 return this.node_factory.getIndexOperation(left_node, index);
         }
 
         // Function call
-        if (op_token.type === YASLTokenType.LPAREN) {
-            if (!YASLNodeTypeChecker.isLValue(left_node)) {
+        if (op_token.type === YTokenType.LPAREN) {
+            if (!YTypeChecker.isLValue(left_node)) {
                 this.errorToken("Invalid function call. Only a valid LValue can have a function call");
                 return null;
             }
 
             // Argument parsing
-            const args: YASLExpression[] = [];
+            const args: YExpression[] = [];
             this.parenthesis_count++;
-            if (!this.match(YASLTokenType.RPAREN)) {
+            if (!this.match(YTokenType.RPAREN)) {
                 let token = null;
                 while (!this.isEOF()) {
                     const expr = this.consumeExpression(0);
@@ -333,9 +333,9 @@ export class Parser {
                         args.push(expr);
 
                     token = this.peek();
-                    if (token.type === YASLTokenType.COMMA) {
+                    if (token.type === YTokenType.COMMA) {
                         this.consume();
-                    } else if (token.type === YASLTokenType.RPAREN) {
+                    } else if (token.type === YTokenType.RPAREN) {
                         this.consume();
                         this.parenthesis_count--;
                         break;
@@ -357,24 +357,24 @@ export class Parser {
             return null;
 
         //Assignment
-        if (op_token.type === YASLTokenType.INLINE_ASSIGN) {
+        if (op_token.type === YTokenType.INLINE_ASSIGN) {
             return this.node_factory.getAssignmentExpression(left_node, right_node);
         }
         //Property access
-        if (op_token.type === YASLTokenType.DOT) {
-            if (YASLNodeTypeChecker.isExpression(left_node) && YASLNodeTypeChecker.isExpression(right_node)) {
+        if (op_token.type === YTokenType.DOT) {
+            if (YTypeChecker.isExpression(left_node) && YTypeChecker.isExpression(right_node)) {
                 return this.node_factory.getPropertyAccessExpression(left_node, right_node);
             }
-            this.errorToken("The right side of property access must be a valid identifier but was " + formatter.formatNodeType(left_node.type));
+            this.errorToken("The right side of property access must be a valid identifier but was " + YFormatter.formatNodeType(left_node.type));
             return null;
         }
-        return this.node_factory.getBinaryExpression(op_token.type as YASLTokenBinaryOp, left_node, right_node);
+        return this.node_factory.getBinaryExpression(op_token.type as YTokenBinaryOp, left_node, right_node);
     }
 
     /**
      * @param min_binding_power Operators with binding power less than this will be ignored
      */
-    private consumeExpression(min_binding_power: number = 0): YASLExpression | null {
+    private consumeExpression(min_binding_power: number = 0): YExpression | null {
         const token = this.consume();
         // console.log("lexeme", token)
         let left_node = this.nud(token);

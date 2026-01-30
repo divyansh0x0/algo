@@ -1,6 +1,6 @@
-import type { YASLNativeValueWrapper } from "../natives/YASLNativeValueWrapper";
-import type { YASLMemPointer } from "./YASLMemPointer";
-import { YASLNativeValuePointer } from "./YASLNativeValuePointer";
+import type { YNativeValueWrapper } from "../natives/YNativeValueWrapper";
+import type { YMemPointer } from "./YMemPointer";
+import { YNativeValuePointer } from "./YNativeValuePointer";
 
 export enum EnvironmentReturnCode {
     AlreadyDefined,
@@ -9,19 +9,19 @@ export enum EnvironmentReturnCode {
 }
 
 
-export class YASLEnvironment {
-    public parent?: YASLEnvironment;
-    private variable_map = new Map<string, YASLMemPointer>();
+export class YEnvironment {
+    public parent?: YEnvironment;
+    private variable_map = new Map<string, YMemPointer>();
 
 
-    define(name: string, value: YASLNativeValueWrapper) {
+    define(name: string, value: YNativeValueWrapper) {
         if (this.variable_map.has(name))
             return EnvironmentReturnCode.AlreadyDefined;
-        this.variable_map.set(name, new YASLNativeValuePointer(value));
+        this.variable_map.set(name, new YNativeValuePointer(value));
         return EnvironmentReturnCode.Success;
     }
 
-    mutate(name: string, new_value: YASLNativeValueWrapper) {
+    mutate(name: string, new_value: YNativeValueWrapper) {
         const ptr = this.variable_map.get(name);
         if (ptr === undefined)
             return EnvironmentReturnCode.NotDefined;

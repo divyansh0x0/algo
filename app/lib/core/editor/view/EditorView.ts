@@ -1,4 +1,4 @@
-import { Lexer, StringifyTokenType } from "../../yasl";
+import { YLexer, StringifyTokenType } from "../../yasl";
 import type { EditorModel } from "../model/EditorModel";
 import EditorPresenter from "../presenter/EditorPresenter";
 import { FontService } from "../services/FontService";
@@ -61,7 +61,7 @@ export class EditorView {
             const line = lines[i];
             if(line === undefined)
                 continue;
-            const lexer = new Lexer(line, true);
+            const lexer = new YLexer(line, true);
             let text = "";
             for (const token of lexer.getTokens()) {
                 text += `<span class="${StringifyTokenType(token.type)}">${token.lexeme}</span>`;

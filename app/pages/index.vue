@@ -2,10 +2,10 @@
 import { Visualizer, type World } from "../lib/core/engine";
 import {
     TracerType,
-    type YASLTracer,
-    type YASLTracerArraySwap,
-    type YASLTracerDeclareVariable
-} from "../lib/core/yasl/tracer/Tracers";
+    type YTracer,
+    type YTracerArraySwap,
+    type YTracerDeclareVariable
+} from "../lib/core/yasl/tracer/YTracers";
 
 const isIDELoaded = ref(false);
 const visualizer = new Visualizer();
@@ -22,10 +22,10 @@ function onInitialized(world: World, ctx: CanvasRenderingContext2D) {
     visualizer.setScene(world, ctx);
 }
 
-function traceReceiver(trace: YASLTracer) {
+function traceReceiver(trace: YTracer) {
     switch (trace.type) {
         case TracerType.DECLARE_VARIABLE: {
-            const declarationTrace = trace as YASLTracerDeclareVariable;
+            const declarationTrace = trace as YTracerDeclareVariable;
             const name = declarationTrace.variable_name;
             const valueWrapper = declarationTrace.assigned_value;
             const value = valueWrapper?.value;
@@ -77,7 +77,7 @@ function traceReceiver(trace: YASLTracer) {
         case TracerType.ARRAY_WRITE:
             break;
         case TracerType.ARRAY_SWAP: {
-            const swapTracer = trace as YASLTracerArraySwap;
+            const swapTracer = trace as YTracerArraySwap;
             const name = swapTracer.array_name;
             visualizer.swapArrayElements(name, swapTracer.index1, swapTracer.index2);
 
@@ -94,7 +94,7 @@ function traceReceiver(trace: YASLTracer) {
 }
 let interval: NodeJS.Timeout;
 let i = 0;
-function onRun(traces: YASLTracer[]) {
+function onRun(traces: YTracer[]) {
     if(traces.length == 0) return;
     visualizer.resetScene();
     traceReceiver(traces[0]!); // Play first trace instantly.

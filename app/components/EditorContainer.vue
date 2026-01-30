@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 
 
-import { Lexer, Parser } from "../lib/core/yasl";
-import type { YASLTracer } from "../lib/core/yasl/tracer/Tracers";
+import { YLexer, YParser } from "../lib/core/yasl";
+import type { YTracer } from "../lib/core/yasl/tracer/YTracers";
 import { TracerVisitor } from "../lib/core/yasl/visitors/TracerVisitor";
 
 const editorEl = ref<HTMLDivElement | null>(null);
@@ -11,7 +11,7 @@ let editorView: any = null;
 
 const props = defineProps({
     onRunComplete: {
-        type: Function as PropType<(traces: YASLTracer[]) => void>,
+        type: Function as PropType<(traces: YTracer[]) => void>,
         required: false,
         default: undefined,
     },
@@ -44,9 +44,9 @@ function onRunBtnClick() {
 
     if (editorView && typeof editorView == "object" && "getCode" in editorView && typeof editorView["getCode"] === "function") {
         const code = editorView.getCode();
-        const lexer = new Lexer(code);
+        const lexer = new YLexer(code);
 
-        const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
+        const parser = new YParser(lexer.getTokens(), lexer.getLineMap());
         const visitor = new TracerVisitor(lexer.getLineMap());
         // if(parser.getErrors())
         const parsingErrors = parser.getErrors();
@@ -55,7 +55,7 @@ function onRunBtnClick() {
             console.error("PARSING ERROR", error);
         }
         const statements = parser.getProgram().getStatements();
-        const traces = Array<YASLTracer>();
+        const traces = Array<YTracer>();
         visitor.addTraceListener((trace) => traces.push(trace));
 
         visitor.setStdOut((outputStr) => {

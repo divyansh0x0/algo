@@ -23,8 +23,8 @@ import {
     type StmtReturnNode,
     type StmtSwitchNode,
     type StmtThenNode,
-    type StmtWhileNode, YASLNode
-} from "../YASLNode";
+    type StmtWhileNode, YNode
+} from "../YNode";
 
 export interface Visitor<T> {
     visitDefArray(node: DefArrayNode): T;

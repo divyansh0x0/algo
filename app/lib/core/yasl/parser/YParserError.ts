@@ -1,8 +1,8 @@
-import type { YASLToken } from "../YASLToken";
+import type { YToken } from "../YToken";
 
-export interface ParserError {
+export interface YParserError {
     message: string;
-    token: YASLToken;
+    token: YToken;
     highlight: string;
     start_col: number;
     end_col: number;

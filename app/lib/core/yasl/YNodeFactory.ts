@@ -1,8 +1,8 @@
 import {
     StmtAssignNode,
     StmtExpressionNode,
-    type YASLNode
-} from "./YASLNode";
+    type YNode
+} from "./YNode";
 import {
     DefArrayNode,
     DefFunctionNode,
@@ -28,18 +28,18 @@ import {
     StmtSwitchNode,
     StmtThenNode,
     StmtWhileNode
-} from "./YASLNode";
-import type { YASLNativeValueWrapper } from "./natives/YASLNativeValueWrapper";
-import type { YASLExpression, YASLValueType, } from "./YASLAst";
-import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp, } from "./YASLToken";
+} from "./YNode";
+import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
+import type { YExpression, YValueType, } from "./YAst";
+import type { YToken, YTokenBinaryOp, YTokenUnaryOp, } from "./YToken";
 
-export class YASLNodeFactory {
+export class YNodeFactory {
     private node_index = 0;
 
     getBinaryExpression(
-        op: YASLTokenBinaryOp,
-        expression_left: YASLExpression,
-        expression_right: YASLExpression,
+        op: YTokenBinaryOp,
+        expression_left: YExpression,
+        expression_right: YExpression,
     ): ExpBinaryNode {
         return new ExpBinaryNode(
             op,
@@ -52,8 +52,8 @@ export class YASLNodeFactory {
     }
 
     getUnaryExpression(
-        op: YASLTokenUnaryOp,
-        expression: YASLExpression,
+        op: YTokenUnaryOp,
+        expression: YExpression,
         start: number,
         end: number,
     ): ExpUnaryNode {
@@ -61,9 +61,9 @@ export class YASLNodeFactory {
     }
 
     getTernaryExpression(
-        condition: YASLNode,
-        true_statement: YASLNode,
-        false_statement: YASLNode,
+        condition: YNode,
+        true_statement: YNode,
+        false_statement: YNode,
     ): ExpTernaryNode {
         return new ExpTernaryNode(
             condition,
@@ -75,7 +75,7 @@ export class YASLNodeFactory {
         );
     }
 
-    getArrayLiteral(elements: YASLExpression[]): DefArrayNode {
+    getArrayLiteral(elements: YExpression[]): DefArrayNode {
         const startIndex = elements[0]?.startIndex ?? 0;
         const endIndex = elements[elements.length - 1]?.endIndex ?? 0;
         return new DefArrayNode(
@@ -87,8 +87,8 @@ export class YASLNodeFactory {
     }
 
     getIndexOperation(
-        operand: YASLExpression,
-        index: YASLExpression,
+        operand: YExpression,
+        index: YExpression,
     ): OpIndexingNode {
         return new OpIndexingNode(
             index,
@@ -100,7 +100,7 @@ export class YASLNodeFactory {
     }
 
     getLiteralNode(
-        value: YASLNativeValueWrapper,
+        value: YNativeValueWrapper,
         startIndex: number,
         endIndex: number,
     ): ExpLiteralNode {
@@ -112,7 +112,7 @@ export class YASLNodeFactory {
         );
     }
 
-    getIdentifierNode(name: YASLToken): ExpIdentifierNode {
+    getIdentifierNode(name: YToken): ExpIdentifierNode {
         const name_str = name.lexeme;
         return new ExpIdentifierNode(
             name_str,
@@ -122,7 +122,7 @@ export class YASLNodeFactory {
         );
     }
 
-    getCallNode(callee: YASLExpression, args: YASLExpression[]): ExpCallNode {
+    getCallNode(callee: YExpression, args: YExpression[]): ExpCallNode {
         return new ExpCallNode(
             callee,
             args,
@@ -132,22 +132,22 @@ export class YASLNodeFactory {
         );
     }
 
-    getBreakStatement(token: YASLToken): StmtBreakNode {
+    getBreakStatement(token: YToken): StmtBreakNode {
         return new StmtBreakNode(this.getDebugId(), token.start, token.end);
     }
 
-    getContinueStatement(token: YASLToken): StmtContinueNode {
+    getContinueStatement(token: YToken): StmtContinueNode {
         return new StmtContinueNode(this.getDebugId(), token.start, token.end);
     }
 
-    getReturnStatement(token: YASLToken): StmtReturnNode {
+    getReturnStatement(token: YToken): StmtReturnNode {
         return new StmtReturnNode(this.getDebugId(), token.start, token.end);
     }
 
     getDeclarationStatement(
         identifier_name: string,
-        value: YASLExpression | null,
-        types: Set<YASLValueType> | null,
+        value: YExpression | null,
+        types: Set<YValueType> | null,
         startIndex: number,
         endIndex: number,
     ): StmtDeclarationNode {
@@ -162,8 +162,8 @@ export class YASLNodeFactory {
     }
 
     getAssignmentExpression(
-        lvalue: YASLExpression,
-        rvalue: YASLExpression,
+        lvalue: YExpression,
+        rvalue: YExpression,
     ): ExpAssignNode {
         return new ExpAssignNode(
             lvalue,
@@ -174,8 +174,8 @@ export class YASLNodeFactory {
         );
     }
     getAssignmentStatement(
-        lvalue: YASLExpression,
-        rvalue: YASLExpression,
+        lvalue: YExpression,
+        rvalue: YExpression,
     ): StmtAssignNode {
         return new StmtAssignNode(
             lvalue,
@@ -187,7 +187,7 @@ export class YASLNodeFactory {
     }
     getFunctionDefinition(
         identifier_name: string,
-        params: YASLNode[],
+        params: YNode[],
         startIndex: number,
         endIndex: number,
     ): DefFunctionNode {
@@ -201,9 +201,9 @@ export class YASLNodeFactory {
     }
 
     getForStatement(
-        statement_1: YASLNode,
-        statement_2: YASLNode,
-        statement_3: YASLNode,
+        statement_1: YNode,
+        statement_2: YNode,
+        statement_3: YNode,
         startIndex: number,
         endIndex: number,
     ): StmtForNode {
@@ -218,7 +218,7 @@ export class YASLNodeFactory {
     }
 
     getWhileStatement(
-        expression_inside: YASLNode,
+        expression_inside: YNode,
         startIndex: number,
         endIndex: number,
     ): StmtWhileNode {
@@ -231,7 +231,7 @@ export class YASLNodeFactory {
     }
 
     getIfStatement(
-        expression_inside: YASLNode,
+        expression_inside: YNode,
         startIndex: number,
         endIndex: number,
     ): StmtIfNode {
@@ -244,7 +244,7 @@ export class YASLNodeFactory {
     }
 
     getElseIfStatement(
-        expression_inside: YASLNode,
+        expression_inside: YNode,
         startIndex: number,
         endIndex: number,
     ): StmtElseIfNode {
@@ -265,7 +265,7 @@ export class YASLNodeFactory {
     }
 
     getSwitchStatement(
-        expression_inside: YASLNode,
+        expression_inside: YNode,
         startIndex: number,
         endIndex: number,
     ): StmtSwitchNode {
@@ -278,7 +278,7 @@ export class YASLNodeFactory {
     }
 
     getSwitchCaseStatement(
-        expression_inside: YASLNode,
+        expression_inside: YNode,
         startIndex: number,
         endIndex: number,
     ): StmtCaseNode {
@@ -291,8 +291,8 @@ export class YASLNodeFactory {
     }
 
     getPropertyAccessExpression(
-        curr: YASLExpression,
-        child?: YASLExpression,
+        curr: YExpression,
+        child?: YExpression,
     ): ExpPropertyAccessNode {
         return new ExpPropertyAccessNode(
             curr,
@@ -304,8 +304,8 @@ export class YASLNodeFactory {
     }
 
     getPostfixOperation(
-        operatorToken: YASLToken,
-        operandNode: YASLNode,
+        operatorToken: YToken,
+        operandNode: YNode,
     ): OpPostfixNode {
         return new OpPostfixNode(
             operatorToken,
@@ -320,7 +320,7 @@ export class YASLNodeFactory {
         return ++this.node_index;
     }
 
-    getStatementExpression(exp: YASLExpression): StmtExpressionNode {
+    getStatementExpression(exp: YExpression): StmtExpressionNode {
         return new StmtExpressionNode(exp, this.getDebugId(), exp.startIndex, exp.endIndex);
     }
 }

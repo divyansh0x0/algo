@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { Lexer, Parser } from "./lib/core/yasl";
+import { YLexer, YParser } from "./lib/core/yasl";
 
 onMounted(() => {
     const code = `
 let a = 5`;
-    const lexer = new Lexer(code);
-    const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
+    const lexer = new YLexer(code);
+    const parser = new YParser(lexer.getTokens(), lexer.getLineMap());
     console.log("Tokens:", lexer.getTokens());
     // const ast = parser.getProgram();
     // console.log(ast);

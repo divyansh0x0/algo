@@ -1,21 +1,20 @@
-import type { YASLMemPointer } from "./environment/YASLMemPointer";
-import type { YASLNativeValueWrapper } from "./natives/YASLNativeValueWrapper";
-import {
-    type DefArrayNode,
-    type ExpAssignNode,
-    type ExpBinaryNode,
-    type ExpCallNode,
-    type ExpIdentifierNode,
-    type ExpLiteralNode,
-    type ExpPropertyAccessNode,
-    type ExpUnaryNode,
-    type OpIndexingNode,
-    type OpPostfixNode, ExpBlockNode, StmtBreakNode, StmtCaseNode,
+import type { YMemPointer } from "./environment/YMemPointer";
+import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
+import type {
+    DefArrayNode,
+    ExpAssignNode,
+    ExpBinaryNode,
+    ExpCallNode,
+    ExpIdentifierNode,
+    ExpLiteralNode,
+    ExpPropertyAccessNode,
+    ExpUnaryNode,
+    OpIndexingNode,
+    OpPostfixNode, ExpBlockNode, StmtBreakNode, StmtCaseNode,
     StmtContinueNode, StmtDeclarationNode, StmtElseIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode,
-    type YASLNode
-} from "./YASLNode";
+} from "./YNode";
 
-export type YASLExpression =
+export type YExpression =
     | ExpUnaryNode
     | ExpBinaryNode
     | ExpAssignNode
@@ -26,12 +25,12 @@ export type YASLExpression =
     | OpPostfixNode
     | OpIndexingNode
     | DefArrayNode;
-export type YASLLValue =
+export type YLValue =
     | ExpIdentifierNode
     | ExpPropertyAccessNode
     | OpIndexingNode;
 
-export enum YASLNodeType {
+export enum YNodeType {
     EXP_IDENTIFIER,
     EXP_LITERAL,
     EXP_CALL,
@@ -61,7 +60,7 @@ export enum YASLNodeType {
     STMT_ASSIGN,
 }
 
-export enum YASLValueType {
+export enum YValueType {
     string,
     number,
     boolean,
@@ -72,11 +71,11 @@ export enum YASLValueType {
     unset,
 }
 
-export interface YASLReturnValue {
-    value: YASLNativeValueWrapper | YASLMemPointer;
+export interface YReturnValue {
+    value: YNativeValueWrapper | YMemPointer;
 }
 
-export type YASLStatement =
+export type YStatement =
     | StmtExpressionNode
     | ExpBlockNode
     | StmtDeclarationNode
@@ -87,14 +86,14 @@ export type YASLStatement =
     | StmtIfNode
     | StmtElseNode;
 
-export class YASLProgram {
-    private statements: YASLStatement[] = [];
+export class YProgram {
+    private statements: YStatement[] = [];
 
     getStatements() {
         return this.statements;
     }
 
-    addStatement(node: YASLStatement) {
+    addStatement(node: YStatement) {
         this.statements.push(node);
     }
 }

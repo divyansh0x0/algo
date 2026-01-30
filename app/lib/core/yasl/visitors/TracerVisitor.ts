@@ -1,19 +1,19 @@
 import {
-    Lexer, Parser, type YASLExpression,
-    YASLNativeValueWrapper,
-    YASLNodeTypeChecker,
-    type YASLNativeValue,
-    YASLTokenType
+    YLexer, YParser, type YExpression,
+    YNativeValueWrapper,
+    YTypeChecker,
+    type YNativeValue,
+    YTokenType
 } from "../";
 import type { LineMap } from "../../LineMap";
-import { YASLEnvironment } from "../environment/environment";
-import { YASLArrayObj } from "../natives/YASLArrayObj";
-import { TraceList } from "../tracer/TraceList";
-import type { YASLTracer } from "../tracer/Tracers";
+import { YEnvironment } from "../environment/environment";
+import { YArrayObj } from "../natives/YArrayObj";
+import { YTraceList } from "../tracer/YTraceList";
+import type { YTracer } from "../tracer/YTracers";
 import type { Visitor } from "./Visitor";
-import type { YASLMemPointer } from "../environment/YASLMemPointer";
-import { YASLArrayNativeMethods } from "../natives/methods/YASLArrayNativeMethods";
-import { YASLRuntimeContext } from "../tracer/YASLRuntimeError";
+import type { YMemPointer } from "../environment/YMemPointer";
+import { YArrayNativeMethods } from "../natives/methods/YArrayNativeMethods";
+import { YRuntimeContext } from "../tracer/YRuntimeError";
 import type {
     DefArrayNode,
     DefFunctionNode,
@@ -41,20 +41,20 @@ import type {
     StmtSwitchNode,
     StmtThenNode,
     StmtWhileNode,
-    YASLNode
-} from "../YASLNode";
-import { YASLError } from "./YASLError";
-import { YASLNull, type YASLRuntimeValue } from "./YASLRuntimeValue";
+    YNode
+} from "../YNode";
+import { YError } from "./YError";
+import { YNull, type YRuntimeValue } from "./YRuntimeValue";
 
-function CreateYaslValue(val: YASLNativeValue): YASLRuntimeValue {
-    return {kind: "value", value: new YASLNativeValueWrapper(val)};
+function CreateYaslValue(val: YNativeValue): YRuntimeValue {
+    return {kind: "value", value: new YNativeValueWrapper(val)};
 }
 
-function CreateYaslRef(ref: YASLMemPointer): YASLRuntimeValue {
+function CreateYaslRef(ref: YMemPointer): YRuntimeValue {
     return {kind: "ref", ref: ref};
 }
 
-function StringifyNativeValues(nativeVals: YASLNativeValue[]): string {
+function StringifyNativeValues(nativeVals: YNativeValue[]): string {
     let str = ""
 
     for (let i = 0; i < nativeVals.length; i++){
@@ -86,17 +86,17 @@ function StringifyNativeValues(nativeVals: YASLNativeValue[]): string {
     return str;
 }
 
-export class TracerVisitor implements Visitor<YASLRuntimeValue> {
-    private next_node: YASLNode | null = null;
-    private rootScope: YASLEnvironment;
-    private currentScope: YASLEnvironment;
-    private tracerList: TraceList = new TraceList();
-    private ctx = new YASLRuntimeContext();
+export class TracerVisitor implements Visitor<YRuntimeValue> {
+    private next_node: YNode | null = null;
+    private rootScope: YEnvironment;
+    private currentScope: YEnvironment;
+    private tracerList: YTraceList = new YTraceList();
+    private ctx = new YRuntimeContext();
     private stdOut = (output:string)=>{
         console.log(output);
     }
     constructor(private readonly map:LineMap) {
-        this.rootScope = new YASLEnvironment();
+        this.rootScope = new YEnvironment();
         this.currentScope = this.rootScope;
     }
 
@@ -104,12 +104,12 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         this.stdOut = listener;
     }
 
-    private getLine(node:YASLNode){
+    private getLine(node:YNode){
         return this.map.getLine(node.startIndex)
     }
     private expectRef(
-        node: YASLNode,
-    ): { kind: "ref"; ref: YASLMemPointer } {
+        node: YNode,
+    ): { kind: "ref"; ref: YMemPointer } {
         const rv = node.accept(this);
         if (rv.kind !== "ref") {
             this.ctx.raise({
@@ -117,14 +117,14 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                 kind: "ReferenceError",
                 message: "Expected reference but got a value"
             });
-            throw new YASLError("TypeError");
+            throw new YError("TypeError");
         }
         return rv;
     }
 
     private expectValue(
-        node: YASLNode
-    ): { kind: "value"; value: YASLNativeValueWrapper } {
+        node: YNode
+    ): { kind: "value"; value: YNativeValueWrapper } {
         const rv = node.accept(this);
         if (rv.kind !== "value") {
             this.ctx.raise({
@@ -132,22 +132,22 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                 kind: "TypeError",
                 message: "Expected value but got a reference",
             });
-            throw new YASLError("TypeError");
+            throw new YError("TypeError");
         }
         return rv;
     }
 
     private callArrayMethod(
         objIdentifierNode: ExpIdentifierNode,
-        arrayValue: YASLArrayObj,
+        arrayValue: YArrayObj,
         methodIdentifierNode: ExpIdentifierNode,
-        args: YASLExpression[],
+        args: YExpression[],
     ): void {
         const methodName = methodIdentifierNode.name;
 
         const valueArgs = args.map(arg => this.expectValue(arg).value);
 
-        YASLArrayNativeMethods.call(
+        YArrayNativeMethods.call(
             methodName,
             arrayValue,
             valueArgs,
@@ -158,33 +158,33 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
             }
         );
     }
-    private doAssignment(leftNode:YASLNode, rightNode:YASLNode) {
+    private doAssignment(leftNode:YNode, rightNode:YNode) {
         const lvalue = this.expectRef(leftNode);
         const rvalue = this.expectValue(rightNode);
         lvalue.ref.set(rvalue.value);
         return rvalue;
     }
 
-    visitDefArray(node: DefArrayNode): YASLRuntimeValue {
-        const arr: YASLArrayObj = new YASLArrayObj();
+    visitDefArray(node: DefArrayNode): YRuntimeValue {
+        const arr: YArrayObj = new YArrayObj();
         for (const element of node.elements) {
             const val = this.expectValue(element).value;
             arr.push(val);
         }
-        return {kind: "value", value: new YASLNativeValueWrapper(arr)};
+        return {kind: "value", value: new YNativeValueWrapper(arr)};
     }
 
-    visitDefFunction(node: DefFunctionNode): YASLRuntimeValue {
-        return YASLNull;
+    visitDefFunction(node: DefFunctionNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitExpAssign(node: ExpAssignNode): YASLRuntimeValue {
+    visitExpAssign(node: ExpAssignNode): YRuntimeValue {
         return this.doAssignment(node.lvalue,node.rvalue);
     }
 
-    visitExpBinary(node: ExpBinaryNode): YASLRuntimeValue {
+    visitExpBinary(node: ExpBinaryNode): YRuntimeValue {
         // For inline assign operations
-        if (node.op === YASLTokenType.INLINE_ASSIGN) {
+        if (node.op === YTokenType.INLINE_ASSIGN) {
             const operand1 = this.expectRef(node.expLeft).ref;
             const operand2 = this.expectValue(node.expRight).value;
             operand1.set(operand2);
@@ -197,7 +197,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         const operand1 = expLeft.kind == "ref" ? expLeft.ref.get() : expLeft.value;
         const operand2 = expRight.kind == "ref" ? expRight.ref.get() : expRight.value;
         switch (node.op) {
-            case YASLTokenType.PLUS: {
+            case YTokenType.PLUS: {
                 // Number addition
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value + operand2.value);
@@ -208,13 +208,13 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                 }
                 break;
             }
-            case YASLTokenType.MINUS:
+            case YTokenType.MINUS:
                 // Number subtraction
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value - operand2.value);
                 }
                 break;
-            case YASLTokenType.MULTIPLY:
+            case YTokenType.MULTIPLY:
                 // Number multiplication
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value * operand2.value);
@@ -225,56 +225,56 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                     return CreateYaslValue(operand1.value.repeat(operand2.value));
                 }
                 break;
-            case YASLTokenType.DIVIDE:
+            case YTokenType.DIVIDE:
                 // Number division
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value / operand2.value);
                 }
                 break;
-            case YASLTokenType.MODULO:
+            case YTokenType.MODULO:
                 // Number remainder
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value % operand2.value);
                 }
                 break;
-            case YASLTokenType.BIT_AND:
+            case YTokenType.BIT_AND:
                 // BITWISE AND
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value & operand2.value);
                 }
                 break;
-            case YASLTokenType.BIT_OR:
+            case YTokenType.BIT_OR:
                 // BITWISE OR
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value | operand2.value);
                 }
                 break;
-            case YASLTokenType.BIT_XOR:
+            case YTokenType.BIT_XOR:
                 // BITWISE XOR
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value ^ operand2.value);
                 }
                 break;
-            case YASLTokenType.BIT_SHIFT_LEFT:
+            case YTokenType.BIT_SHIFT_LEFT:
                 // BITSHIFT LEFT
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value << operand2.value);
                 }
                 break;
-            case YASLTokenType.BIT_SHIFT_RIGHT:
+            case YTokenType.BIT_SHIFT_RIGHT:
                 // BITSHIFT RIGHT
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value << operand2.value);
                 }
 
                 break;
-            case YASLTokenType.AND:
+            case YTokenType.AND:
                 // Logical AND
                 if (operand1.isBoolean() && operand2.isBoolean()) {
                     return CreateYaslValue(operand1.value && operand2.value);
                 }
                 break;
-            case YASLTokenType.OR:
+            case YTokenType.OR:
                 // Logical AND
                 if (operand1.isBoolean() || operand2.isBoolean()) {
                     return CreateYaslValue(operand1.value && operand2.value);
@@ -287,15 +287,15 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                     kind: "RuntimeError"
                 });
         }
-        throw new YASLError("Invalid binary operation");
+        throw new YError("Invalid binary operation");
     }
 
-    visitExpCall(node: ExpCallNode): YASLRuntimeValue {
-        if (YASLNodeTypeChecker.isIdentifier(node.qualifiedName)) {
+    visitExpCall(node: ExpCallNode): YRuntimeValue {
+        if (YTypeChecker.isIdentifier(node.qualifiedName)) {
             switch (node.qualifiedName.name) {
                 case "print": {
                     const runtimeVals = node.args.map((arg) => arg.accept(this));
-                    const nativeVals: YASLNativeValue[] = [];
+                    const nativeVals: YNativeValue[] = [];
                     for (const runtimeVal of runtimeVals) {
                         if (runtimeVal.kind === "value")
                             nativeVals.push(runtimeVal.value.value);
@@ -308,17 +308,17 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
                 }
             }
         }
-        if (YASLNodeTypeChecker.isPropertyAccess(node.qualifiedName)) {
+        if (YTypeChecker.isPropertyAccess(node.qualifiedName)) {
             const obj = node.qualifiedName.objectNode;
             const prop = node.qualifiedName.propertyNode;
             if (!prop)
-                throw new YASLError("Invalid state achieved. Prop was undefined of obj");
+                throw new YError("Invalid state achieved. Prop was undefined of obj");
 
-            if (YASLNodeTypeChecker.isIdentifier(obj) && YASLNodeTypeChecker.isIdentifier(prop)) {
+            if (YTypeChecker.isIdentifier(obj) && YTypeChecker.isIdentifier(prop)) {
                 const objRef = this.expectRef(obj);
                 const nativeVal = objRef.ref.get();
                 if (!nativeVal.isArray())
-                    throw new YASLError("Object methods not implemented");
+                    throw new YError("Object methods not implemented");
                 else
                     this.callArrayMethod(obj, nativeVal.value, prop, node.args);
             }
@@ -326,77 +326,77 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         return node.qualifiedName.accept(this);
     }
 
-    visitExpLiteral(node: ExpLiteralNode): YASLRuntimeValue {
+    visitExpLiteral(node: ExpLiteralNode): YRuntimeValue {
         return {kind: "value", value: node.value};
     }
 
-    visitExpPropertyAccess(node: ExpPropertyAccessNode): YASLRuntimeValue {
-        return YASLNull;
+    visitExpPropertyAccess(node: ExpPropertyAccessNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitExpTernary(node: ExpTernaryNode): YASLRuntimeValue {
-        return YASLNull;
-
-    }
-
-    visitExpUnary(node: ExpUnaryNode): YASLRuntimeValue {
-        return YASLNull;
+    visitExpTernary(node: ExpTernaryNode): YRuntimeValue {
+        return YNull;
 
     }
 
-    visitExpIdentifier(node: ExpIdentifierNode): YASLRuntimeValue {
-        let currScope: YASLEnvironment | undefined = this.currentScope;
-        let ref: YASLMemPointer | undefined;
+    visitExpUnary(node: ExpUnaryNode): YRuntimeValue {
+        return YNull;
+
+    }
+
+    visitExpIdentifier(node: ExpIdentifierNode): YRuntimeValue {
+        let currScope: YEnvironment | undefined = this.currentScope;
+        let ref: YMemPointer | undefined;
         while (!ref && currScope) {
             ref = currScope.get(node.name);
             currScope = this.currentScope.parent;
         }
-        return ref ? CreateYaslRef(ref) : YASLNull;
+        return ref ? CreateYaslRef(ref) : YNull;
 
     }
 
-    visitOpIndexing(node: OpIndexingNode): YASLRuntimeValue {
-        return YASLNull;
+    visitOpIndexing(node: OpIndexingNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitOpPostfix(node: OpPostfixNode): YASLRuntimeValue {
-        return YASLNull;
+    visitOpPostfix(node: OpPostfixNode): YRuntimeValue {
+        return YNull;
     }
-    visitStmtAssign(node: StmtAssignNode): YASLRuntimeValue {
+    visitStmtAssign(node: StmtAssignNode): YRuntimeValue {
         this.doAssignment(node.lvalue,node.rvalue);
-        return YASLNull;
+        return YNull;
     }
-    expBlockNode(node: ExpBlockNode): YASLRuntimeValue {
+    expBlockNode(node: ExpBlockNode): YRuntimeValue {
         for (let i = 0; i < node.statements.length; i++){
             const statement = node.statements[i];
             if(i === node.statements.length - 1){ // Last statement
-                return statement?.accept(this) ?? YASLNull;
+                return statement?.accept(this) ?? YNull;
             }
             else{
                 statement?.accept(this);
             }
         }
-        return YASLNull;
+        return YNull;
     }
 
-    visitStmtBreak(node: StmtBreakNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtBreak(node: StmtBreakNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtCase(node: StmtCaseNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtCase(node: StmtCaseNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtContinue(node: StmtContinueNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtContinue(node: StmtContinueNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtDeclaration(node: StmtDeclarationNode): YASLRuntimeValue {
+    visitStmtDeclaration(node: StmtDeclarationNode): YRuntimeValue {
         const lvalue = node.lvalue;
         if (!node.rvalue) {
-            this.currentScope.define(lvalue, YASLNativeValueWrapper.NULL);
-            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YASLNativeValueWrapper.NULL );
-            return YASLNull;
+            this.currentScope.define(lvalue, YNativeValueWrapper.NULL);
+            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YNativeValueWrapper.NULL );
+            return YNull;
         }
         const rvalue = this.expectValue(node.rvalue);
         this.currentScope.define(lvalue, rvalue.value);
@@ -404,40 +404,40 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         return rvalue;
     }
 
-    visitStmtExpression(node: StmtExpressionNode): YASLRuntimeValue {
+    visitStmtExpression(node: StmtExpressionNode): YRuntimeValue {
         return node.exp.accept(this);
     }
 
-    visitStmtElse(node: StmtElseNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtElse(node: StmtElseNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtFor(node: StmtForNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtFor(node: StmtForNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtIf(node: StmtIfNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtIf(node: StmtIfNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtIfElse(node: StmtElseIfNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtIfElse(node: StmtElseIfNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtReturn(node: StmtReturnNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtReturn(node: StmtReturnNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtSwitch(node: StmtSwitchNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtSwitch(node: StmtSwitchNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtThen(node: StmtThenNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtThen(node: StmtThenNode): YRuntimeValue {
+        return YNull;
     }
 
-    visitStmtWhile(node: StmtWhileNode): YASLRuntimeValue {
-        return YASLNull;
+    visitStmtWhile(node: StmtWhileNode): YRuntimeValue {
+        return YNull;
     }
 
 
@@ -447,7 +447,7 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
         return this.tracerList
     }
 
-    addTraceListener(param: (trace:YASLTracer) => void): void {
+    addTraceListener(param: (trace:YTracer) => void): void {
         this.tracerList.setListener(param);
     }
 
@@ -463,14 +463,14 @@ export class TracerVisitor implements Visitor<YASLRuntimeValue> {
 // print(a)
 // `;
 // const lexer = new Lexer(code);
-// const parser = new Parser(lexer.getTokens(), lexer.getLineMap());
+// const parser = new YParser(lexer.getTokens(), lexer.getLineMap());
 // const visitor = new TracerVisitor(lexer.getLineMap());
 // visitor.addTraceListener((trace)=>{
 //     console.log("GOT TRACER",trace)
 // })
 // const statements = parser.getProgram().getStatements();
 // if (statements) {
-//     // console.log(formatter.formatAst(ast));
+//     // console.log(YFormatter.formatAst(ast));
 //     for (const statement of statements) {
 //         statement.accept(visitor);
 //     }

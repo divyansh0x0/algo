@@ -1,9 +1,9 @@
-import type { YASLNativeValueWrapper } from "./YASLNativeValueWrapper";
+import type { YNativeValueWrapper } from "./YNativeValueWrapper";
 
-export class YASLArrayObj {
-    private readonly internal: YASLNativeValueWrapper[];
+export class YArrayObj {
+    private readonly internal: YNativeValueWrapper[];
 
-    constructor(initialValues: YASLNativeValueWrapper[] = []) {
+    constructor(initialValues: YNativeValueWrapper[] = []) {
         this.internal = initialValues;
     }
 
@@ -11,21 +11,21 @@ export class YASLArrayObj {
         return this.internal.length;
     }
 
-    get(index: number): YASLNativeValueWrapper {
+    get(index: number): YNativeValueWrapper {
         this.assertIndex(index);
         return this.internal[index]!;
     }
 
-    set(index: number, value: YASLNativeValueWrapper) {
+    set(index: number, value: YNativeValueWrapper) {
         this.assertIndex(index);
         this.internal[index] = value;
     }
 
-    push(value: YASLNativeValueWrapper) {
+    push(value: YNativeValueWrapper) {
         this.internal.push(value);
     }
 
-    pop(): YASLNativeValueWrapper {
+    pop(): YNativeValueWrapper {
         if (this.internal.length === 0)
             throw new Error("Pop from empty array is not possible");
 
@@ -54,11 +54,11 @@ export class YASLArrayObj {
         return [...this.internal];
     }
 
-    copy(): YASLArrayObj{
-        const arr: YASLNativeValueWrapper[] = [];
+    copy(): YArrayObj{
+        const arr: YNativeValueWrapper[] = [];
         for (const el of this.internal) {
             arr.push(el.copy());
         }
-        return new YASLArrayObj(arr);
+        return new YArrayObj(arr);
     }
 }

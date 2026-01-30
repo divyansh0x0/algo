@@ -1,18 +1,18 @@
-import type { YASLArrayObj } from "../YASLArrayObj";
-import { YASLNativeMethodRegistry } from "../YASLNativeMethodRegistry";
-import { YASLNativeValueWrapper } from "../YASLNativeValueWrapper";
+import type { YArrayObj } from "../YArrayObj";
+import { YNativeMethodRegistry } from "../YNativeMethodRegistry";
+import { YNativeValueWrapper } from "../YNativeValueWrapper";
 
-function assertArgLength(args: YASLNativeValueWrapper[], expected: number, name: string): void {
+function assertArgLength(args: YNativeValueWrapper[], expected: number, name: string): void {
     if (args.length !== expected) {
         throw new Error(`${name} expects ${expected} arguments`);
     }
 }
 
 
-export const YASLArrayNativeMethods = new YASLNativeMethodRegistry<YASLArrayObj>();
+export const YArrayNativeMethods = new YNativeMethodRegistry<YArrayObj>();
 
 
-YASLArrayNativeMethods.register("swap", (arr, args, context): YASLNativeValueWrapper => {
+YArrayNativeMethods.register("swap", (arr, args, context): YNativeValueWrapper => {
         assertArgLength(args, 2, "swap");
         const [ i, j ] = args;
         if (!i || !j) {
@@ -31,11 +31,11 @@ YASLArrayNativeMethods.register("swap", (arr, args, context): YASLNativeValueWra
         arr.set(i.value, b);
 
         context.tracer.emitArraySwap(context.identifier ?? "unknown", i.value, j.value, context.line);
-        return YASLNativeValueWrapper.NULL;
+        return YNativeValueWrapper.NULL;
     }
 );
 
-YASLArrayNativeMethods.register("length", (arr, args): YASLNativeValueWrapper => {
+YArrayNativeMethods.register("length", (arr, args): YNativeValueWrapper => {
     assertArgLength(args, 0, "length");
-    return new YASLNativeValueWrapper(arr.length());
+    return new YNativeValueWrapper(arr.length());
 });

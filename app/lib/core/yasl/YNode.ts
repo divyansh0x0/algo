@@ -1,11 +1,11 @@
-import type { YASLNativeValueWrapper } from "./natives/YASLNativeValueWrapper";
+import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
 import type { Visitor } from "./visitors/Visitor";
-import { type YASLExpression, YASLNodeType, type YASLStatement, type YASLValueType } from "./YASLAst";
-import type { YASLToken, YASLTokenBinaryOp, YASLTokenUnaryOp } from "./YASLToken";
+import { type YExpression, YNodeType, type YStatement, type YValueType } from "./YAst";
+import type { YToken, YTokenBinaryOp, YTokenUnaryOp } from "./YToken";
 
-export abstract class YASLNode {
+export abstract class YNode {
     constructor(
-        public type: YASLNodeType,
+        public type: YNodeType,
         public debugId: number,
         public startIndex: number,
         public endIndex: number,
@@ -15,15 +15,15 @@ export abstract class YASLNode {
     abstract accept<T>(visitor: Visitor<T>): T;
 }
 
-export class OpPostfixNode extends YASLNode {
+export class OpPostfixNode extends YNode {
     constructor(
-        public operator: YASLToken,
-        public identifier: YASLNode,
+        public operator: YToken,
+        public identifier: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.OP_POSTFIX, debugId, startIndex, endIndex);
+        super(YNodeType.OP_POSTFIX, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -31,16 +31,16 @@ export class OpPostfixNode extends YASLNode {
     }
 }
 
-export class ExpPropertyAccessNode extends YASLNode {
+export class ExpPropertyAccessNode extends YNode {
     constructor(
-        public objectNode: YASLExpression,
-        public propertyNode: YASLExpression | undefined,
+        public objectNode: YExpression,
+        public propertyNode: YExpression | undefined,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
         super(
-            YASLNodeType.EXP_PROPERTY_ACCESS,
+            YNodeType.EXP_PROPERTY_ACCESS,
 
             debugId,
             startIndex,
@@ -53,16 +53,16 @@ export class ExpPropertyAccessNode extends YASLNode {
     }
 }
 
-export class ExpBinaryNode extends YASLNode {
+export class ExpBinaryNode extends YNode {
     constructor(
-        public op: YASLTokenBinaryOp,
-        public expLeft: YASLExpression,
-        public expRight: YASLExpression,
+        public op: YTokenBinaryOp,
+        public expLeft: YExpression,
+        public expRight: YExpression,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.EXP_BINARY, debugId, startIndex, endIndex);
+        super(YNodeType.EXP_BINARY, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -70,15 +70,15 @@ export class ExpBinaryNode extends YASLNode {
     }
 }
 
-export class ExpUnaryNode extends YASLNode {
+export class ExpUnaryNode extends YNode {
     constructor(
-        public op: YASLTokenUnaryOp,
-        public expression: YASLExpression,
+        public op: YTokenUnaryOp,
+        public expression: YExpression,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.EXP_UNARY, debugId, startIndex, endIndex);
+        super(YNodeType.EXP_UNARY, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -86,9 +86,9 @@ export class ExpUnaryNode extends YASLNode {
     }
 }
 
-export class ExpBlockNode extends YASLNode {
-    constructor(public statements:YASLStatement[], debugId: number, startIndex: number, endIndex: number) {
-        super(YASLNodeType.STMT_BLOCK, debugId, startIndex, endIndex);
+export class ExpBlockNode extends YNode {
+    constructor(public statements:YStatement[], debugId: number, startIndex: number, endIndex: number) {
+        super(YNodeType.STMT_BLOCK, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -96,16 +96,16 @@ export class ExpBlockNode extends YASLNode {
     }
 }
 
-export class ExpTernaryNode extends YASLNode {
+export class ExpTernaryNode extends YNode {
     constructor(
-        public condition: YASLNode,
-        public true_statement: YASLNode,
-        public false_statement: YASLNode,
+        public condition: YNode,
+        public true_statement: YNode,
+        public false_statement: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.OP_TERNARY, debugId, startIndex, endIndex);
+        super(YNodeType.OP_TERNARY, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -113,14 +113,14 @@ export class ExpTernaryNode extends YASLNode {
     }
 }
 
-export class ExpLiteralNode extends YASLNode {
+export class ExpLiteralNode extends YNode {
     constructor(
-        public value: YASLNativeValueWrapper,
+        public value: YNativeValueWrapper,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.EXP_LITERAL, debugId, startIndex, endIndex);
+        super(YNodeType.EXP_LITERAL, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -128,14 +128,14 @@ export class ExpLiteralNode extends YASLNode {
     }
 }
 
-export class ExpIdentifierNode extends YASLNode {
+export class ExpIdentifierNode extends YNode {
     constructor(
         public name: string,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.EXP_IDENTIFIER, debugId, startIndex, endIndex);
+        super(YNodeType.EXP_IDENTIFIER, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -143,14 +143,14 @@ export class ExpIdentifierNode extends YASLNode {
     }
 }
 
-export class DefArrayNode extends YASLNode {
+export class DefArrayNode extends YNode {
     constructor(
-        public elements: YASLExpression[],
+        public elements: YExpression[],
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.DEF_ARRAY, debugId, startIndex, endIndex);
+        super(YNodeType.DEF_ARRAY, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -158,15 +158,15 @@ export class DefArrayNode extends YASLNode {
     }
 }
 
-export class OpIndexingNode extends YASLNode {
+export class OpIndexingNode extends YNode {
     constructor(
-        public operand: YASLExpression,
-        public index: YASLExpression,
+        public operand: YExpression,
+        public index: YExpression,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.OP_INDEXING, debugId, startIndex, endIndex);
+        super(YNodeType.OP_INDEXING, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -174,15 +174,15 @@ export class OpIndexingNode extends YASLNode {
     }
 }
 
-export class ExpCallNode extends YASLNode {
+export class ExpCallNode extends YNode {
     constructor(
-        public qualifiedName: YASLExpression,
-        public args: YASLExpression[],
+        public qualifiedName: YExpression,
+        public args: YExpression[],
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.EXP_CALL, debugId, startIndex, endIndex);
+        super(YNodeType.EXP_CALL, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -190,9 +190,9 @@ export class ExpCallNode extends YASLNode {
     }
 }
 
-export class StmtBreakNode extends YASLNode {
+export class StmtBreakNode extends YNode {
     constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YASLNodeType.STMT_BREAK, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_BREAK, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -200,9 +200,9 @@ export class StmtBreakNode extends YASLNode {
     }
 }
 
-export class StmtContinueNode extends YASLNode {
+export class StmtContinueNode extends YNode {
     constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YASLNodeType.STMT_CONTINUE, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_CONTINUE, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -210,9 +210,9 @@ export class StmtContinueNode extends YASLNode {
     }
 }
 
-export class StmtReturnNode extends YASLNode {
+export class StmtReturnNode extends YNode {
     constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YASLNodeType.STMT_RETURN, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_RETURN, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -220,17 +220,17 @@ export class StmtReturnNode extends YASLNode {
     }
 }
 
-export class StmtDeclarationNode extends YASLNode {
+export class StmtDeclarationNode extends YNode {
     constructor(
         public lvalue: string,
-        public rvalue: YASLExpression | null,
-        public types: Set<YASLValueType> | null,
+        public rvalue: YExpression | null,
+        public types: Set<YValueType> | null,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
         super(
-            YASLNodeType.STMT_DECLARATION,
+            YNodeType.STMT_DECLARATION,
 
             debugId,
             startIndex,
@@ -242,15 +242,15 @@ export class StmtDeclarationNode extends YASLNode {
         return visitor.visitStmtDeclaration(this);
     }
 }
-export class StmtExpressionNode extends YASLNode {
+export class StmtExpressionNode extends YNode {
     constructor(
-        public exp: YASLExpression,
+        public exp: YExpression,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
         super(
-            YASLNodeType.STMT_EXPRESSION,
+            YNodeType.STMT_EXPRESSION,
 
             debugId,
             startIndex,
@@ -262,45 +262,45 @@ export class StmtExpressionNode extends YASLNode {
         return visitor.visitStmtExpression(this);
     }
 }
-export class ExpAssignNode extends YASLNode {
+export class ExpAssignNode extends YNode {
     constructor(
-        public lvalue: YASLExpression,
-        public rvalue: YASLExpression,
+        public lvalue: YExpression,
+        public rvalue: YExpression,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.EXP_ASSIGN, debugId, startIndex, endIndex);
+        super(YNodeType.EXP_ASSIGN, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
         return visitor.visitExpAssign(this);
     }
 }
-export class StmtAssignNode extends YASLNode {
+export class StmtAssignNode extends YNode {
     constructor(
-        public lvalue: YASLExpression,
-        public rvalue: YASLExpression,
+        public lvalue: YExpression,
+        public rvalue: YExpression,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_ASSIGN, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_ASSIGN, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
         return visitor.visitStmtAssign(this);
     }
 }
-export class DefFunctionNode extends YASLNode {
+export class DefFunctionNode extends YNode {
     constructor(
         public identifier_name: string,
-        public params: YASLNode[],
+        public params: YNode[],
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.DEF_FUNCTION, debugId, startIndex, endIndex);
+        super(YNodeType.DEF_FUNCTION, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -308,16 +308,16 @@ export class DefFunctionNode extends YASLNode {
     }
 }
 
-export class StmtForNode extends YASLNode {
+export class StmtForNode extends YNode {
     constructor(
-        public statement_1: YASLNode,
-        public statement_2: YASLNode,
-        public statement_3: YASLNode,
+        public statement_1: YNode,
+        public statement_2: YNode,
+        public statement_3: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_FOR, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_FOR, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -325,14 +325,14 @@ export class StmtForNode extends YASLNode {
     }
 }
 
-export class StmtWhileNode extends YASLNode {
+export class StmtWhileNode extends YNode {
     constructor(
-        public expression_inside: YASLNode,
+        public expression_inside: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_WHILE, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_WHILE, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -340,14 +340,14 @@ export class StmtWhileNode extends YASLNode {
     }
 }
 
-export class StmtIfNode extends YASLNode {
+export class StmtIfNode extends YNode {
     constructor(
-        public expression_inside: YASLNode,
+        public expression_inside: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_IF, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_IF, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -355,14 +355,14 @@ export class StmtIfNode extends YASLNode {
     }
 }
 
-export class StmtElseIfNode extends YASLNode {
+export class StmtElseIfNode extends YNode {
     constructor(
-        public expression_inside: YASLNode,
+        public expression_inside: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_ELSE_IF, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_ELSE_IF, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -370,9 +370,9 @@ export class StmtElseIfNode extends YASLNode {
     }
 }
 
-export class StmtElseNode extends YASLNode {
+export class StmtElseNode extends YNode {
     constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YASLNodeType.STMT_ELSE, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_ELSE, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -380,9 +380,9 @@ export class StmtElseNode extends YASLNode {
     }
 }
 
-export class StmtThenNode extends YASLNode {
+export class StmtThenNode extends YNode {
     constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YASLNodeType.STMT_THEN, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_THEN, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -390,14 +390,14 @@ export class StmtThenNode extends YASLNode {
     }
 }
 
-export class StmtSwitchNode extends YASLNode {
+export class StmtSwitchNode extends YNode {
     constructor(
-        public expression_inside: YASLNode,
+        public expression_inside: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_SWITCH, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_SWITCH, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
@@ -405,14 +405,14 @@ export class StmtSwitchNode extends YASLNode {
     }
 }
 
-export class StmtCaseNode extends YASLNode {
+export class StmtCaseNode extends YNode {
     constructor(
-        public expression_inside: YASLNode,
+        public expression_inside: YNode,
         debugId: number,
         startIndex: number,
         endIndex: number,
     ) {
-        super(YASLNodeType.STMT_CASE, debugId, startIndex, endIndex);
+        super(YNodeType.STMT_CASE, debugId, startIndex, endIndex);
     }
 
     accept<T>(visitor: Visitor<T>): T {
