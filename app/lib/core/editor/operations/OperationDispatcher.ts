@@ -17,7 +17,7 @@ export class OperationDispatcher {
         const op = this.undoStack.pop();
         if (!op) return;
 
-        const inverse = op.invert(this.model);
+        const inverse = op.invert();
         inverse.apply(this.model);
         this.redoStack.push(op);
     }
