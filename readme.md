@@ -1,75 +1,34 @@
-# Nuxt Minimal Starter
+# Algorithm Visualizer
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Algorithm Visualizer is an ongoing project focused on building a complete environment for algorithm visualization. The system is under active development and currently includes a working foundation across language, simulation, and tooling.
 
-## Setup
+## Current Implementation
 
-Make sure to install dependencies:
+The project has implemented the following components:
 
-```bash
-# npm
-npm install
+1. A high level compiler for YASL
+2. A simple custom text editor
+3. An Entity Component System based simulation engine
 
-# pnpm
-pnpm install
+The simulation engine runs on HTML Canvas and is capable of:
 
-# yarn
-yarn install
+1. Simulating arrays
+2. Animating the swapping of array elements
 
-# bun
-bun install
-```
+These features form the base layer for further expansion of visualization capabilities.
 
-## Development Server
+## YASL
 
-Start the development server on `http://localhost:3000`:
+YASL, short for YET Another Scripting Language, is the scripting language designed for this project. A high level compiler has been developed, allowing YASL programs to be parsed and prepared for execution within the simulation environment.
 
-```bash
-# npm
-npm run dev
+The language is intended to support visualization driven constructs and structured execution, with further features planned for future development.
 
-# pnpm
-pnpm dev
+## Editor
 
-# yarn
-yarn dev
+A basic custom text editor has been implemented to write and manage YASL code. It serves as the initial interface for interacting with the compiler and simulation engine.
 
-# bun
-bun run dev
-```
+## Direction
 
-## Production
+The long term objective remains to build a complete IDE tailored for algorithm visualization, expand the simulation engine to support more data structures, and introduce multiple levels of execution detail. The current implementation establishes the technical base required to move toward that goal.
 
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+<img width="1896" height="1022" alt="image" src="https://github.com/user-attachments/assets/4d44398d-41b7-45d2-9bcd-7ce3fe327701" />
