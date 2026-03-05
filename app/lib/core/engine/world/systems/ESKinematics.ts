@@ -1,4 +1,4 @@
-import { type EntitySystem } from "../systems/EntitySystem";
+import type { EntitySystem } from "../systems/EntitySystem";
 import { ECPosition } from "../components/ECPosition";
 import { ECVelocity } from "../components/ECVelocity";
 import type { World } from "../World";

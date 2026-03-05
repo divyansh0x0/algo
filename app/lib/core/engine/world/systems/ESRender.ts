@@ -25,6 +25,11 @@ export class ESRender implements EntitySystem {
         [ ECCircle, this.renderCircle.bind(this) ],
         [ ECText, this.renderText.bind(this) ]
     ]);
+    private fpsTracker = {
+        fps: 0,
+        frameCount: 0,
+        timePassed: 0,
+    };
 
     constructor(private ctx: CanvasRenderingContext2D, private cellSize: number = 30) {
     }
@@ -33,7 +38,7 @@ export class ESRender implements EntitySystem {
         return true;
     }
 
-    update(_: number, world: World): void {
+    update(dt_ms: number, world: World): void {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         const camera = world.getResource(ERCamera);
@@ -43,19 +48,12 @@ export class ESRender implements EntitySystem {
         }
         const originX = this.ctx.canvas.width / 2;
         const originY = this.ctx.canvas.height / 2;
-        const zoomPoint = camera.zoomPivot;
 
-        this.ctx.fillStyle = ThemeManager.color("textSecondary").hex;
-        this.ctx.textAlign = "start";
-        this.ctx.textBaseline = "top";
-        this.ctx.fillText(`Camera:${camera.position.x},${camera.position.y}`, 0, 0);
-        this.renderGrids(camera, this.ctx.canvas.width, this.ctx.canvas.height);
         this.ctx.save();
         this.ctx.translate(originX, originY);
-        this.ctx.translate(zoomPoint.x, zoomPoint.y);
         this.ctx.scale(camera.scale, camera.scale);
-        this.ctx.translate(-zoomPoint.x, -zoomPoint.y);
-        this.ctx.translate(-camera.position.x, -camera.position.y);
+        this.ctx.translate(-camera.position.x, camera.position.y);
+        this.renderGrids(camera, this.ctx.canvas.width, this.ctx.canvas.height);
         for (const entity of world.getEntities()) {
             const pos = world.getComponent(entity, ECPosition);
             if (!pos) continue;
@@ -69,6 +67,8 @@ export class ESRender implements EntitySystem {
             }
         }
         this.ctx.restore();
+        this.renderInfo(world);
+        this.updateFps(dt_ms);
     }
 
     end(): void {
@@ -133,29 +133,59 @@ export class ESRender implements EntitySystem {
     }
 
     private renderGrids(camera: ERCamera, width: number, height: number): void {
-        const cellSize = this.cellSize*camera.scale;
-        const rows = Math.floor(height / cellSize) + 1;
-        const columns = Math.floor(width / cellSize) + 1;
-        const halfGridWidth = columns * cellSize;
-        const halfGridHeight = rows * cellSize;
-        const gridStartX = -camera.position.x*camera.scale % cellSize;
-        const gridStartY = -camera.position.y*camera.scale % cellSize;
+        this.ctx.save();
+        const cellSize = this.cellSize;
+        const halfRows = Math.floor(height / 2 / camera.scale / cellSize) + 1;
+        const halfColumns = Math.floor(width / 2 / camera.scale / cellSize) + 1;
+        console.log(halfColumns, halfRows);
+        const halfGridWidth = halfColumns * cellSize;
+        const halfGridHeight = halfRows * cellSize;
+        const gridStartX = -camera.position.x % cellSize;
+        const gridStartY = camera.position.y % cellSize;
         this.ctx.strokeStyle = ThemeManager.color("grid").hex;
         this.ctx.beginPath();
         // vertical lines
-        for (let i = 0; i <= columns; i++) {
-            const x = gridStartX + cellSize * i;
-            this.ctx.moveTo(x, -halfGridHeight);
-            this.ctx.lineTo(x, halfGridHeight);
+        for (let i = -halfColumns; i <= halfColumns; i++) {
+            const x = gridStartX + cellSize * i + camera.position.x;
+            this.ctx.moveTo(x, -halfGridHeight - camera.position.y);
+            this.ctx.lineTo(x, halfGridHeight - camera.position.y);
         }
         // horizontal lines
-        for (let i = 0; i <= rows; i++) {
-            const y = gridStartY + cellSize * i;
-            this.ctx.moveTo(-halfGridWidth, y);
-            this.ctx.lineTo(halfGridWidth, y);
+        for (let i = -halfRows; i <= halfRows; i++) {
+            const y = gridStartY + cellSize * i - camera.position.y;
+            this.ctx.moveTo(-halfGridWidth + camera.position.x, y);
+            this.ctx.lineTo(halfGridWidth + camera.position.x, y);
 
         }
         this.ctx.closePath();
         this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+    private renderInfo(world: World): void {
+        const camera = world.getResource(ERCamera);
+        const x = 0;
+        let y = 0;
+        this.ctx.fillStyle = ThemeManager.color("textSecondary").hex;
+        this.ctx.textAlign = "start";
+        this.ctx.textBaseline = "top";
+        this.ctx.font = `22px monospace`;
+        if (camera) {
+            this.ctx.fillText(`Camera:${camera.position.x.toFixed(2)},${camera.position.y.toFixed(2)}`, x, y);
+            y += 30;
+        }
+        //FPS tracker
+        this.ctx.fillText(`FPS:${this.fpsTracker.fps.toFixed(2)}`, x, y);
+
+    }
+
+    private updateFps(dt_ms: number): void {
+        this.fpsTracker.frameCount += 1;
+        this.fpsTracker.timePassed += dt_ms;
+        if (this.fpsTracker.timePassed >= 1000) {
+            this.fpsTracker.fps = this.fpsTracker.frameCount ;
+            this.fpsTracker.timePassed = 0;
+            this.fpsTracker.frameCount = 0;
+        }
     }
 }

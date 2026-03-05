@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-const props = defineProps({
+defineProps({
     name: { type: String, required: true },
     size: { type: [String, Number], default: '1em' },
 });

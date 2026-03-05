@@ -107,7 +107,7 @@ export class Vector2D {
         if (!scale_y)
             scale_y = scale;
         this.x *= scale;
-        this.y *= scale;
+        this.y *= scale_y;
         return this;
     }
 

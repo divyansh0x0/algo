@@ -1,32 +1,27 @@
-import { Vector2D } from "../../../../../../../AirMess/frontend/src/engine/Vector2D";
-import type EntityResource from "./EntityResource";
+import { Vector2D } from "../../utils";
+import type { EntityResource } from "./EntityResource";
 
 export class ERCamera implements EntityResource{
     position = new Vector2D(0,0);
-    scale = 1;
-    zoomPivot=  new Vector2D(0,0) ;
+    private _scale = 1;
     constructor(private ctx: CanvasRenderingContext2D){}
 
-    canvasToWorld(x: number, y: number): [number, number] {
-        const originX = this.ctx.canvas.width / 2;
-        const originY = this.ctx.canvas.height / 2;
+    get scale(): number {
+        return this._scale;
+    }
 
-        // Move into centered coordinates
-        let sx = x - originX;
-        let sy = y - originY;
+    setScale(newScale: number, pivot: Vector2D) {
+        const initialPivot = this.getWorldCoordinate(pivot);
+        this._scale = newScale;
+        const finalPivot = this.getWorldCoordinate(pivot);
+        this.position.x -= finalPivot.x - initialPivot.x;
+        this.position.y -= finalPivot.y - initialPivot.y;
+    }
+    getWorldCoordinate(point:Vector2D):Vector2D{
+        const viewportCenterX = this.ctx.canvas.width / 2;
+        const viewportCenterY = this.ctx.canvas.height / 2;
 
-        // Undo Y flip
-        sy = -sy;
-
-        // Undo scale
-        sx /= this.scale;
-        sy /= this.scale;
-
-        // Undo camera translation
-        sx += this.position.x;
-        sy += this.position.y;
-
-        return [sx, sy];
+        return new Vector2D(this.position.x + (point.x - viewportCenterX)/this.scale, this.position.y - (point.y - viewportCenterY)/this.scale);
     }
 
 }

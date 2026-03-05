@@ -21,7 +21,7 @@ export const DefaultLightTheme: ThemeStyle = {
     textPrimary: new Color("#000000"),
     textSecondary: new Color("#555555"),
     border: new Color("#dddddd"),
-    grid: new Color("#e3e3e3")
+    grid: new Color("#e9e9e9")
 };
 
 export const DefaultDarkTheme: ThemeStyle = {
@@ -32,5 +32,5 @@ export const DefaultDarkTheme: ThemeStyle = {
     textPrimary: new Color("#ffffff"),
     textSecondary: new Color("#cbd5f5"),
     border: new Color("#334155"),
-    grid: new Color("#090909")
+    grid: new Color("#181a23")
 };

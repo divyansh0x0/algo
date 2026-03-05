@@ -1,3 +1,2 @@
-export default interface EntityResource{
-    
-}
+
+export type EntityResource = object

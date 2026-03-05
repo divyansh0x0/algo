@@ -16,10 +16,10 @@ onMounted(() => {
     const divider_comp = divider.value;
     let dragging = false;
 
-    divider_comp.onmousedown = (e: MouseEvent) => {
+    divider_comp.onmousedown = () => {
         dragging = true;
     };
-    window.addEventListener("mouseup", (e: MouseEvent) => {
+    window.addEventListener("mouseup", () => {
         dragging = false;
     });
     window.addEventListener("mousemove", (e: MouseEvent) => {

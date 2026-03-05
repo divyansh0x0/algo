@@ -23,7 +23,7 @@ import {
     type StmtReturnNode,
     type StmtSwitchNode,
     type StmtThenNode,
-    type StmtWhileNode, YNode
+    type StmtWhileNode
 } from "../YNode";
 
 export interface Visitor<T> {

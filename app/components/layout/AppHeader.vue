@@ -17,14 +17,15 @@ function toggleTheme() {
 <template>
     <header class="app-header">
         <div class="header-brand">
-            <div class="pixel-logo"></div>
+            <div class="pixel-logo"/>
             <h1 class="header-title">ALGO <span class="header-subtitle">YASL Studio</span></h1>
         </div>
 
         <div class="header-controls">
-            <PixelButton variant="ghost" @click="toggleTheme()"
-                :icon="themeManager.themeType.value === 'light' ? 'ic:round-dark-mode' : 'iconamoon:mode-light'"
-                aria-label="Toggle Theme" />
+            <PixelButton
+variant="ghost" :icon="themeManager.themeType.value === 'light' ? 'ic:round-dark-mode' : 'iconamoon:mode-light'"
+                aria-label="Toggle Theme"
+                @click="toggleTheme()" />
             <slot name="controls" />
         </div>
     </header>
@@ -54,6 +55,8 @@ function toggleTheme() {
     height: 20px;
     background-color: var(--color-primary);
     box-shadow: 4px 4px 0 0 var(--color-secondary);
+    background-image: url("./favicon.ico");
+    background-position: center;
     margin-right: var(--spacing-sm);
 }
 

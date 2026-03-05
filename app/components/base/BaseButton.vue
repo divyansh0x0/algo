@@ -17,8 +17,8 @@ function onClick(e: Event) {
     <button 
         :type="type" 
         :disabled="disabled" 
-        @click="onClick" 
         v-bind="$attrs"
+        @click="onClick"
     >
         <slot />
     </button>

@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import BaseCard from '../base/BaseCard.vue';
-
-const props = defineProps({
-    title: { type: String, required: false },
+defineProps({
+    title: { type: String, required: false, default: "Title" },
     noPadding: { type: Boolean, default: false }
 });
 </script>

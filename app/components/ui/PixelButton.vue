@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import BaseButton from '../base/BaseButton.vue';
 import BaseIcon from '../base/BaseIcon.vue';
-
-const props = defineProps({
-    icon: { type: String, required: false },
+defineProps({
+    icon: { type: String, required: false, default: null },
     variant: { type: String as PropType<'primary'|'secondary'|'ghost'>, default: 'primary' },
     disabled: { type: Boolean, default: false },
 });

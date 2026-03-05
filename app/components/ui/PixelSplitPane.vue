@@ -73,7 +73,7 @@ onMounted(() => {
         <div ref="right" class="split-right">
             <!-- The grabber/divider -->
             <div ref="divider" class="split-divider">
-                <div class="divider-line"></div>
+                <div class="divider-line"/>
                 <div class="divider-handle">
                     <BaseIcon name="material-symbols:drag-indicator" size="20" class="handle-icon" />
                 </div>

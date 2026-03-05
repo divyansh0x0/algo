@@ -1,5 +1,5 @@
 import {
-    YLexer, YParser, type YExpression,
+    type YExpression,
     YNativeValueWrapper,
     YTypeChecker,
     type YNativeValue,
