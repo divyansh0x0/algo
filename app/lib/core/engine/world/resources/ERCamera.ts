@@ -2,7 +2,7 @@ import { Vector2D } from "../../../../../../../AirMess/frontend/src/engine/Vecto
 import type EntityResource from "./EntityResource";
 
 export class ERCamera implements EntityResource{
-    position = new Vector2D(50,50);
+    position = new Vector2D(0,0);
     scale = 1;
     constructor(private ctx: CanvasRenderingContext2D){}
 

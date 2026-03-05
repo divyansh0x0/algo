@@ -6,12 +6,11 @@ import {
     ECPosition,
     ECRectangle,
     ECStackLayout,
-    ECStackLayoutDirection,
-    ECTextColor,ECText,ECAxisAlignedBoundingBox
+    ECStackLayoutDirection,ECText,ECAxisAlignedBoundingBox
 } from "./world/components";
 import type { Entity } from "./world/Entity";
 import { ERCamera, ERMouse } from "./world/resources";
-import { ESCamera, ESMoveTo, ESStackLayout, KinematicsSystem, RenderSystem, TransitionSystem } from "./world/systems";
+import { ESCamera, ESMoveTo, ESStackLayout, KinematicsSystem, ESRender, TransitionSystem } from "./world/systems";
 import type { World } from "./world/World";
 
 
@@ -46,8 +45,7 @@ class VArray implements VObject {
             this.world.addComponent(elEntity, new ECPosition(0, 0))
                 .addComponent(elEntity, new ECRectangle(100, 100, ECDrawableStyle.Stroke))
                 .addComponent(elEntity, new ECAxisAlignedBoundingBox(50, 50))
-                .addComponent(elEntity, new ECText(el.toString()))
-                .addComponent(elEntity, new ECTextColor(new Color("#fff")));
+                .addComponent(elEntity, new ECText(el.toString()));
             this.stackLayout.add(elEntity);
 
             this.children?.push(elEntity);
@@ -75,7 +73,6 @@ class VValue implements VObject {
             .addComponent(entity, new ECRectangle(100, 100, ECDrawableStyle.Stroke))
             .addComponent(entity, new ECAxisAlignedBoundingBox(50, 50))
             .addComponent(entity, new ECText(this.stringify()))
-            .addComponent(entity, new ECTextColor(new Color("#fff")));
     }
 
     kill(): void {
@@ -105,7 +102,7 @@ export class Visualizer {
         this.world = world;
         console.log("world set", this.world);
 
-        world.addSystem(new RenderSystem(ctx));
+        world.addSystem(new ESRender(ctx));
         world.addSystem(new KinematicsSystem());
         world.addSystem(new TransitionSystem());
         world.addSystem(new ESStackLayout());

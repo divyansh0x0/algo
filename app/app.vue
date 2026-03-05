@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+import { ThemeMode } from "./lib/core/engine/theme";
+
+const themeManager = useThemeManager();
+themeManager.setThemeMode(ThemeMode.AUTO);
 </script>
 <template>
     <ButtonTheme/>

@@ -117,7 +117,7 @@ onUnmounted(() => {
 <template>
 
 
-    <DividerContainer class="divider" style="height: 100vh; width: 100vw; overflow: hidden;">
+    <SplitPane class="divider" style="height: 100vh; width: 100vw; overflow: hidden;">
         <template #left>
             <VisualizerCanvas :on-initialized="onInitialized"/>
         </template>
@@ -126,10 +126,8 @@ onUnmounted(() => {
                 <EditorContainer :on-run-complete="onRun" :code="code"/>
             </OverlayLoader>
         </template>
-    </DividerContainer>
+    </SplitPane>
 </template>
 
 <style scoped>
-.visualizer-container {
-}
 </style>

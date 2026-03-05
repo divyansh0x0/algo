@@ -25,6 +25,7 @@ onMounted(async () => {
     engine.start();
     props.onInitialized?.call(window,scene,ctx);
     const updateCanvasSize = () => {
+        engine.stop();
         if (!canvas.value || !ctx || !container.value) {
             return;
         }
@@ -35,6 +36,7 @@ onMounted(async () => {
         ctx.canvas.width = Math.round(rect.width * ratio);
         ctx.canvas.height = Math.round(rect.height * ratio);
         ctx.setTransform(prevTransform);
+        engine.start();
     };
     updateCanvasSize();
 

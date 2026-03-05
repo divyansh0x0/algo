@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 const divider = ref<HTMLDivElement | null>(null);
 const right = ref<HTMLElement | null>(null);
+const left = ref<HTMLElement | null>(null);
 const container = ref<HTMLDivElement | null>(null);
 const props = defineProps({
     padding: {
@@ -9,22 +10,27 @@ const props = defineProps({
     }
 });
 let dragging = false;
-let mouse_down_x = 0;
+let mouseDownX = 0;
 
-function dragMove(x: number): void {
+function dragMove(x?: number): void {
+    if(x === undefined)
+        return;
     if (dragging) {
         if (!divider.value || !container.value) {
             return;
         }
-        const container_bounds = container.value.getBoundingClientRect();
-        const divider_bounds = divider.value.getBoundingClientRect();
-        const x_pos_centered = x + (divider_bounds.left + divider_bounds.width / 2) - mouse_down_x;
-        const x_pos = Math.max(props.padding + container_bounds.left, Math.min(x_pos_centered, container_bounds.width - props.padding));
-        const right_width = Math.max(window.innerWidth - x_pos, 0);
+        const rect = container.value.getBoundingClientRect();
+        const dividerBounds = divider.value.getBoundingClientRect();
+        const x_pos_centered = x + (dividerBounds.left + dividerBounds.width / 2) - mouseDownX;
+        const xPos = Math.max(props.padding + rect.left, Math.min(x_pos_centered, rect.width - props.padding));
+        const rightWidth = Math.max(rect.width - xPos, 0);
         if (right.value) {
-            right.value.style.width = `${right_width}px`;
+            right.value.style.width = `${rightWidth}px`;
         }
-        mouse_down_x = x;
+        if(left.value) {
+            left.value.style.width = `${xPos}px`;
+        }
+        mouseDownX = x;
     }
 }
 
@@ -34,7 +40,7 @@ function dragEnd(): void {
 }
 
 function dragStart(x: number): void {
-    mouse_down_x = x;
+    mouseDownX = x;
     dragging = true;
     divider.value?.classList.add("active");
 }
@@ -48,30 +54,21 @@ onMounted(() => {
         if (touch)
             dragStart(touch.clientX);
     });
-    window.addEventListener("mouseup", () => {
-        dragEnd();
-    });
 
-    window.addEventListener("touchend", () => {
-        dragEnd();
-    });
-    window.addEventListener("mousemove", (e) => {
-        dragMove(e.clientX);
-    });
+    window.addEventListener("mousemove", (e)=> dragMove(e.clientX));
+    window.addEventListener("mouseup", dragEnd);
+    window.addEventListener("touchmove", (e)=> dragMove(e.touches[0]?.clientX));
 
-    window.addEventListener("touchmove", (e) => {
-        const touch = e.touches[0];
-        if (touch)
-            dragMove(touch.clientX);
-    });
+    window.addEventListener("touchend",  dragEnd);
 });
 </script>
 
 <template>
-    <div ref="container" v-bind="$attrs">
+    <div ref="container" class="divider-container" v-bind="$attrs">
         <div ref="left" class="left">
             <slot name="left"/>
         </div>
+
         <div ref="right" class="right">
             <div ref="divider" class="slider" style="">
                 <Icon class="icon" name="material-symbols:drag-indicator" width="24"/>
@@ -119,17 +116,18 @@ onMounted(() => {
         z-index: 1;
     }
 }
-
+.divider-container{
+    display: flex;
+    flex-direction: row;
+}
 .left {
-    width: 100%;
+    width: 50%;
     height: 100%;
     overflow: hidden;
 }
 
 .right {
-    position: absolute;
-    right: 0;
-    top: 0;
+    position: relative;
     width: 50%;
     height: 100%;
     background-color: var(--color-background);

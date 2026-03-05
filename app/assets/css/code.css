@@ -1,4 +1,4 @@
-[theme="light"] {
+[data-theme="light"] {
     --yasl-editor-bg: rgba(255, 255, 255, 0.03);
     --yasl-row-active-bg: rgba(255, 255, 255, 0.03);
     --yasl-text-color: #a6a6a6;
@@ -22,7 +22,7 @@
     --yasl-editor-line-height: 2;
 }
 
-[theme="dark"] {
+[data-theme="dark"] {
     --yasl-editor-bg: rgba(255, 255, 255, 0.02);
     --yasl-row-active-bg: rgba(221, 235, 255, 0.06);
     --yasl-text-color: #a6a6a6;

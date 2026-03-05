@@ -1,4 +1,5 @@
 import { Vector2D } from "../../utils";
+import type { ERCamera } from "./ERCamera";
 
 export class ERMouse{
 
@@ -60,6 +61,10 @@ export class ERMouse{
 
     consumeButtons():void{
         this.buttonsConsumed = true;
+    }
+    getWorldPosition(camera:ERCamera): Vector2D {
+        const bounds = this.ctx.canvas.getBoundingClientRect();
+        return this.mousePosition.addXY(-bounds.left - bounds.width/2 + camera.position.x * camera.scale, - bounds.top - bounds.height/2 + camera.position.y*camera.scale);
     }
     /**
      * Returns the vertical mouse scroll delta. The last delta is cleared once this is called

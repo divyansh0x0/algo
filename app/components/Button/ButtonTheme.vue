@@ -1,11 +1,21 @@
 <script lang="ts" setup>
-const {theme, toggleTheme} = useThemeManager();
+import { ThemeMode } from "../../lib/core/engine/theme";
 
+const themeManager = useThemeManager();
+function toggleTheme() {
+    const themeMode = themeManager.getThemeMode();
+    if (themeMode === 'light') {
+        themeManager.setThemeMode(ThemeMode.DARK);
+    }
+    else{
+        themeManager.setThemeMode(ThemeMode.LIGHT);
+    }
+}
 </script>
 
 <template>
     <button @click="toggleTheme()">
-        <Icon v-if="theme == 'light'" class="icon" name="ic:round-dark-mode"/>
+        <Icon v-if="themeManager.themeType.value === 'light'" class="icon" name="ic:round-dark-mode"/>
         <Icon v-else class="icon" name="iconamoon:mode-light"/>
     </button>
 </template>

@@ -41,7 +41,7 @@ onMounted(() => {
 <template>
     <div style="display: flex;" v-bind="$attrs">
         <slot ref="left" name="left" style="flex: 0 0 50%"/>
-        <div ref="divider"></div>
+        <div ref="divider"/>
         <slot ref="right" name="right" style="flex: 0 0 50%"/>
     </div>
 </template>

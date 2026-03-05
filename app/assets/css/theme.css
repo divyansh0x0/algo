@@ -27,7 +27,7 @@
     --spacing-xs: 4px;
 }
 
-[theme="dark"] {
+:root[data-theme="dark"] {
     --color-background: rgb(0, 0, 0);
     color-scheme: dark;
     --color-error: rgb(255 180 171);
@@ -81,7 +81,7 @@
 
 }
 
-[theme="light"] {
+:root[data-theme="light"] {
     --color-background: rgb(251 248 255);
     color-scheme: light;
     --color-error: rgb(186 26 26);
