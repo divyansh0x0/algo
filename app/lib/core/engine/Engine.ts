@@ -1,4 +1,4 @@
-import type { World } from "~/lib/core/engine/scene/World";
+import type { World } from "./world/World";
 
 export class Engine {
     private frame_id: number | null = null;

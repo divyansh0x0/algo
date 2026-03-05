@@ -7,7 +7,7 @@ export class FontService {
         this.span = document.createElement("span");
         container.appendChild(this.span);
 
-        console.log(container)
+        console.log(container);
         const computedStyles = window.getComputedStyle(container);
         this.span.style.fontFamily = computedStyles.fontFamily;
         this.span.style.fontSize = computedStyles.fontSize;

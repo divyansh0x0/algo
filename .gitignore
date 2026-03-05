@@ -4,7 +4,7 @@
 .nitro
 .cache
 dist
-
+docs
 # NodeClient dependencies
 node_modules
 

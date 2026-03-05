@@ -55,7 +55,7 @@ function CreateYaslRef(ref: YMemPointer): YRuntimeValue {
 }
 
 function StringifyNativeValues(nativeVals: YNativeValue[]): string {
-    let str = ""
+    let str = "";
 
     for (let i = 0; i < nativeVals.length; i++){
         const nativeVal = nativeVals[i];
@@ -76,7 +76,7 @@ function StringifyNativeValues(nativeVals: YNativeValue[]): string {
                 str += nativeVal.toString();
                 break;
             default:
-                str += "[unknown]"
+                str += "[unknown]";
                 break;
         }
         if(i < nativeVals.length - 1){
@@ -94,7 +94,7 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
     private ctx = new YRuntimeContext();
     private stdOut = (output:string)=>{
         console.log(output);
-    }
+    };
     constructor(private readonly map:LineMap) {
         this.rootScope = new YEnvironment();
         this.currentScope = this.rootScope;

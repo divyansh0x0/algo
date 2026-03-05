@@ -8,4 +8,4 @@ export type YRuntimeValue =
 export const YNull:YRuntimeValue = {
     kind:"value",
     value:YNativeValueWrapper.NULL,
-}
+};

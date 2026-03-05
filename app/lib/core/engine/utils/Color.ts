@@ -1,4 +1,4 @@
-import { clamp } from "~/lib/core/engine/utils";
+import { MathUtils } from "~/lib/core/engine/utils";
 
 function isValidHexColor(color: string) {
     //adding 1 to 3,4,6,8 valid hex lengths to count for # in the beginning
@@ -27,10 +27,10 @@ export class Color {
         } else {
             const [ r = 0, g = 0, b = 0, a = 1 ] = args;
             this.rgba = {
-                r: clamp(r, 0, 255),
-                g: clamp(g, 0, 255),
-                b: clamp(b, 0, 255),
-                a: clamp(a, 0, 1)
+                r: MathUtils.clamp(r, 0, 255),
+                g: MathUtils.clamp(g, 0, 255),
+                b: MathUtils.clamp(b, 0, 255),
+                a: MathUtils.clamp(a, 0, 1)
             };
         }
     }
@@ -40,7 +40,7 @@ export class Color {
     }
 
     set r(value: number) {
-        this.rgba.r = clamp(Math.round(value), 0, 255);
+        this.rgba.r = MathUtils.clamp(Math.round(value), 0, 255);
     }
 
     get g(): number {
@@ -48,7 +48,7 @@ export class Color {
     }
 
     set g(value: number) {
-        this.rgba.g = clamp(Math.round(value), 0, 255);
+        this.rgba.g = MathUtils.clamp(Math.round(value), 0, 255);
     }
 
     get b(): number {
@@ -56,7 +56,7 @@ export class Color {
     }
 
     set b(value: number) {
-        this.rgba.b = clamp(Math.round(value), 0, 255);
+        this.rgba.b = MathUtils.clamp(Math.round(value), 0, 255);
     }
 
     get a(): number {
@@ -64,7 +64,7 @@ export class Color {
     }
 
     set a(value: number) {
-        this.rgba.a = clamp(Math.round(value), 0, 255);
+        this.rgba.a = MathUtils.clamp(Math.round(value), 0, 255);
     }
 
     get hex(): string {

@@ -3,10 +3,10 @@
 import fs from 'fs'
 import path from 'path'
 
-const cssDir = path.resolve('app/assets/css')
+const cssDir = path.resolve('app/assets/css');
 const cssFiles = fs.readdirSync(cssDir)
     .filter(f => f.endsWith('.css'))
-    .map(f => `~/assets/css/${f}`)
+    .map(f => `~/assets/css/${f}`);
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',

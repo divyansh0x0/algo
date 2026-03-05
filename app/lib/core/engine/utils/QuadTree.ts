@@ -2,9 +2,6 @@
 import { Size } from "~/lib/core/engine/utils/Size";
 import { AABB } from "./AABB";
 import { Vector2D } from "./Vector2D";
-
-const FLOAT_ERROR = 0.01;
-
 function circleIntersectsAABB(circle_center: Vector2D, radius: number, aabb: AABB) {
     // Compute AABB bounds
     const minX = aabb.center.x - aabb.half_dimension.width;

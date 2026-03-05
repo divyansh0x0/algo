@@ -60,7 +60,7 @@ class EditorPresenter {
     private onKeyDown(event: KeyboardEvent) {
         event.preventDefault();
         event.stopPropagation();
-        console.log("Keydown")
+        console.log("Keydown");
         const editorIntent = this.keybindingService.resolve(
             event.ctrlKey,
             event.altKey,
@@ -71,7 +71,7 @@ class EditorPresenter {
         );
         if (!editorIntent) return;
 
-        console.log(editorIntent)
+        console.log(editorIntent);
         const handler = this.handlers[editorIntent.type] as (intent: typeof editorIntent) => void;
         handler?.(editorIntent);
         this.renderView();

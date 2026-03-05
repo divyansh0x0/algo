@@ -1,21 +1,4 @@
 <script lang="ts" setup>
-import { YLexer, YParser } from "./lib/core/yasl";
-
-onMounted(() => {
-    const code = `
-let a = 5`;
-    const lexer = new YLexer(code);
-    const parser = new YParser(lexer.getTokens(), lexer.getLineMap());
-    console.log("Tokens:", lexer.getTokens());
-    // const ast = parser.getProgram();
-    // console.log(ast);
-    // const tracer = new ProgramTracer();
-    // if (ast.root)
-    //     tracer.run(ast.root);
-    // else
-    //     console.log("No AST root found");
-});
-
 </script>
 <template>
     <ButtonTheme/>

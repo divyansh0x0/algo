@@ -1,5 +1,4 @@
 import type { LineMap } from "../../LineMap";
-import { YFormatter } from "../YFormatter";
 import { YNativeValueWrapper } from "../natives/YNativeValueWrapper";
 import { type YExpression, YProgram,type YValueType } from "../YAst";
 import { YNodeFactory } from "../YNodeFactory";
@@ -365,7 +364,7 @@ export class YParser {
             if (YTypeChecker.isExpression(left_node) && YTypeChecker.isExpression(right_node)) {
                 return this.node_factory.getPropertyAccessExpression(left_node, right_node);
             }
-            this.errorToken("The right side of property access must be a valid identifier but was " + YFormatter.formatNodeType(left_node.type));
+            this.errorToken("The right side of property access must be a valid identifier but was " + left_node.type);
             return null;
         }
         return this.node_factory.getBinaryExpression(op_token.type as YTokenBinaryOp, left_node, right_node);
