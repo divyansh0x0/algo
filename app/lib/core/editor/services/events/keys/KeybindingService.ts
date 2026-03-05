@@ -1,4 +1,5 @@
-type EditorIntent = { type: "command", command: string }
+export type EditorIntent =
+    | { type: "command", command: string }
     | { type: "insertChar", text: string }
     | { type: "deleteLeft" }
     | { type: "newline" }
@@ -9,7 +10,12 @@ type EditorIntent = { type: "command", command: string }
     | { type: "deleteRight" };
 
 type CommandID = string;
-
+const IGNORED_KEYS = new Set([
+    "Shift",
+    "Meta",
+    "Alt",
+    "CapsLock"
+]);
 export class Keymap {
     private bindings = new Map<CommandID, EditorIntent>(
         [
@@ -31,32 +37,29 @@ export class Keymap {
 
 export class KeybindingService {
     private keymap = new Keymap();
+
+
     resolve(ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, code: string, key: string): EditorIntent | undefined {
         const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey);
         if (!isShortcut) {
-            switch (key) {
-                case "Shift":
-                case "Meta":
-                case "Alt":
-                case "CapsLock":
 
-                    return undefined;
-
+            if (IGNORED_KEYS.has(key)) {
+                return undefined;
             }
-            const keymapBinding = this.keymap.resolve(key);
-            if(keymapBinding === undefined) return {type: "insertChar", text: key};
-            return keymapBinding;
+
+            const binding = this.keymap.resolve(key);
+
+            return binding ?? { type: "insertChar", text: key };
         }
-        let cmd = "";
-        if (metaKey)
-            cmd += "meta+";
-        if (ctrlKey)
-            cmd += "ctrl+";
-        if (altKey)
-            cmd += "alt+";
-        if (shiftKey)
-            cmd += "shift+";
-        cmd += code;
+        const modifiers = [
+            metaKey && "meta",
+            ctrlKey && "ctrl",
+            altKey && "alt",
+            shiftKey && "shift",
+        ].filter(Boolean);
+
+        console.log(binding,modifiers);
+        const cmd = [...modifiers, code].join("+");
         return {type: "command", command: cmd};
     }
 }

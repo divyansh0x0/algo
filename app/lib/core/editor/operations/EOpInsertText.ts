@@ -4,13 +4,13 @@ import type EditorOperation from "./EditorOperation";
 import EOpDeleteText from "./EOpDeleteText";
 
 export class EOpInsertText implements EditorOperation {
-    constructor(private str:string, private col:number, private row:number) {}
+    constructor(private offset:number,private str:string) {}
     apply(model:EditorModel): void {
-        model.document.insertSubstr(this.str, this.col, this.row);
+        model.doc.insertText(this.offset,this.str);
     }
 
     invert(): EditorOperation {
-        return new EOpDeleteText(this.col,this.row, this.str.length);
+        return new EOpDeleteText(this.offset, this.str.length);
     }
 
 }

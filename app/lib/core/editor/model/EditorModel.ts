@@ -1,22 +1,40 @@
+import { vModelText } from "vue";
+import EOpDeleteText from "../operations/EOpDeleteText";
+import { EOpInsertText } from "../operations/EOpInsertText";
 import { OperationDispatcher } from "../operations/OperationDispatcher";
-import { CaretModel } from "./CaretModel";
 import type { DocumentModel } from "./DocumentModel";
+
 
 export class EditorModel {
     // readonly document: DocumentModel;
-    private caret: CaretModel= new CaretModel();
-    private selection: Selection[] = [];
-    private opDispatcher = new OperationDispatcher(this);
-    constructor(private readonly doc: DocumentModel) {}
+    readonly carets: number[] = [ 0 ];
+    readonly selection: [ number, number ][] = [];
+    readonly opDispatcher = new OperationDispatcher(this);
 
-    getCarets(): CaretModel {
-        return this.caret;
+    constructor(readonly doc: DocumentModel) {
     }
 
-    getOpDispatcher(): OperationDispatcher {
-        return this.opDispatcher;
+    deleteChars(delta: number): void {
+        if (delta === 0)
+            return;
+        for (let i = 0; i < this.carets.length; i++){
+            const caret = this.carets[i]!;
+            if (delta > 0)
+                this.opDispatcher.execute(new EOpDeleteText(caret, delta));
+            else{
+                console.error(caret + delta, caret);
+                this.opDispatcher.execute(new EOpDeleteText(caret + delta, -delta));
+                this.carets[i]! += delta;
+            }
+        }
     }
-    get document() {
-        return this.doc;
+
+    insertText(text: string): void {
+        const carets = this.carets;
+        for (let i = 0; i < carets.length; i++) {
+            const caret = this.carets[i]!;
+            this.opDispatcher.execute(new EOpInsertText(caret,text));
+            this.carets[i]! += text.length;
+        }
     }
 }

@@ -5,15 +5,15 @@ import { EOpInsertText } from "./EOpInsertText";
 export default class EOpDeleteText implements EditorOperation {
     private deletedStr: string = "";
 
-    constructor(private col: number, private row: number, private count: number) {
+    constructor(private offset:number, private count: number) {
     }
 
     apply(model: EditorModel): void {
-        this.deletedStr = model.document.deleteRange(this.col, this.row, this.count);
+        this.deletedStr = model.doc.deleteRange(this.offset, this.count);
     }
 
     invert(): EditorOperation {
-        return new EOpInsertText(this.deletedStr, this.col, this.row);
+        return new EOpInsertText(this.offset,this.deletedStr);
     }
 
 }

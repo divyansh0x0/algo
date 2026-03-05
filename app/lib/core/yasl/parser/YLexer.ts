@@ -231,7 +231,7 @@ export class YLexer {
         return c;
     }
 
-    private addToken(type: YTokenType, obj: Object | null = null) {
+    private addToken(type: YTokenType, obj: string | number | boolean | object | null = null) {
         const lexeme = this.text.slice(this.start_read_index, this.next_read_index);
         this.tokens_list.push({
             type: type,
@@ -282,8 +282,7 @@ export class YLexer {
         let invalid_underscore = false;
         while (!this.isEOF()) {
             const c = this.peek();
-
-            if (/[0-9]/.test(c)) {
+            if ("0" <= c && c <= "9") {
                 this.consume();
                 num_str += c;
                 prev_char = c;
@@ -320,7 +319,7 @@ export class YLexer {
         }
     }
 
-    private consume_string(start_symbol: "\"" | "\'"): void {
+    private consume_string(start_symbol: "\"" | "'"): void {
         let str = "";
         while (!this.isEOF()) {
             const c = this.consume();
@@ -341,7 +340,7 @@ export class YLexer {
                     case "\"":
                         str += "\"";
                         break;
-                    case "\'":
+                    case "'":
                         str += "'";
                         break;
                     case "n":

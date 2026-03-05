@@ -1,213 +1,176 @@
+import type { EditorPosition } from "../EditorPosition";
 import { DocumentModel } from "../model/DocumentModel";
 import { EditorModel } from "../model/EditorModel";
-import EOpDeleteText from "../operations/EOpDeleteText";
-import { EOpInsertText } from "../operations/EOpInsertText";
-import { KeybindingService } from "../services/events/keys/KeybindingService";
+import { type EditorIntent, KeybindingService } from "../services/events/keys/KeybindingService";
 
 
 import type { EditorView } from "../view/EditorView";
-import { EopMergeRow } from "../operations/EopMergeRow";
 
-function CountChars(line: string, s: string): number {
-    let count = 0;
-    for (let i = 0; i < line.length; i++) {
-        const char = line.charAt(i);
-        if (char === s)
-            count++;
-        else
-            break;
-    }
-    return count;
-}
+// function CountChars(line: string, s: string): number {
+//     let count = 0;
+//     for (let i = 0; i < line.length; i++) {
+//         const char = line.charAt(i);
+//         if (char === s)
+//             count++;
+//         else
+//             break;
+//     }
+//     return count;
+// }
+
 
 class EditorPresenter {
-    private doc: DocumentModel;
     private model: EditorModel;
+    private mouseState = {
+        isDown: false,
+        startX: 0,
+        startY: 0
+    };
     private keybindingService = new KeybindingService();
-
     constructor(private view: EditorView) {
-        view.onKeyUp(this.onKeyUp.bind(this));
         view.onKeyDown(this.onKeyDown.bind(this));
-        view.onMouseUp(this.onMouseUp.bind(this));
         view.onMouseDown(this.onMouseDown.bind(this));
 
-        this.doc = new DocumentModel();
-        this.model = new EditorModel(this.doc);
-
+        this.model = new EditorModel(new DocumentModel());
+        this.mouseState = {
+            isDown: false,
+            startX: 0,
+            startY: 0
+        };
         window.requestAnimationFrame(() => {
             this.view.render(this.model);
         });
     }
+    private handlers: {
+        [K in EditorIntent["type"]]?: (intent: Extract<EditorIntent, { type: K }>) => void;
+    } = {
+        insertChar: (intent) => this.insertChar(intent.text),
 
+        deleteLeft: () => this.deleteChars(-1),
+        deleteRight: () => this.deleteChars(1),
+
+        newline: () => this.createNewLine(),
+
+        moveRight: () => this.moveCaretHorizontallyBy(1),
+        moveLeft: () => this.moveCaretHorizontallyBy(-1),
+
+        moveUp: () => this.moveCaretVerticallyBy(-1),
+        moveDown: () => this.moveCaretVerticallyBy(1),
+    };
     private onKeyDown(event: KeyboardEvent) {
         event.preventDefault();
         event.stopPropagation();
-
-        const editorIntent = this.keybindingService.resolve(event.ctrlKey, event.altKey, event.shiftKey, event.metaKey, event.code, event.key);
+        console.log("Keydown")
+        const editorIntent = this.keybindingService.resolve(
+            event.ctrlKey,
+            event.altKey,
+            event.shiftKey,
+            event.metaKey,
+            event.code,
+            event.key
+        );
         if (!editorIntent) return;
 
-
-        switch (editorIntent.type) {
-            case "insertChar":
-                this.insertChar(editorIntent.text);
-                break;
-            case "deleteLeft":
-                this.deleteChars(-1);
-                break;
-            case "deleteRight":
-                this.deleteChars(1);
-                break;
-            case "newline":
-                this.createNewLine();
-                break;
-            case "moveRight":
-                this.moveCaretHorizontallyBy(1);
-                break;
-            case "moveLeft":
-                this.moveCaretHorizontallyBy(-1);
-                break;
-            case "moveUp":
-                this.moveCaretVerticallyBy(1);
-                break;
-            case "moveDown":
-                this.moveCaretVerticallyBy(-1);
-                break;
-            default:
-                console.error("Unknown editor operation", editorIntent);
-                break;
-
-        }
+        console.log(editorIntent)
+        const handler = this.handlers[editorIntent.type] as (intent: typeof editorIntent) => void;
+        handler?.(editorIntent);
         this.renderView();
     }
 
-    private onKeyUp(event: KeyboardEvent) {
-    }
-
-    private onMouseUp(event: MouseEvent) {
+    private onMouseUp() {
+        this.mouseState.isDown = false;
+        window.removeEventListener("mousemove", this.onMouseMove);
+        window.removeEventListener("mouseup", this.onMouseUp);
     }
 
     private onMouseDown(event: MouseEvent) {
+        // event.preventDefault();
+
+        this.mouseState.isDown = true;
+        this.mouseState.startX = event.clientX;
+        this.mouseState.startY = event.clientY;
+
+        const position = this.getEditorPosition(event);
+
+        this.setUniCaret(position);
+
+        window.addEventListener("mousemove", this.onMouseMove.bind(this));
+        window.addEventListener("mouseup", this.onMouseUp.bind(this));
     }
+    private onMouseMove(event: MouseEvent) {
+        if (!this.mouseState?.isDown) return;
 
+        const position = this.getEditorPosition(event);
+
+        this.updateSelection(position);
+
+        this.renderView();
+    }
+    private getEditorPosition(event: MouseEvent) {
+        return  this.view.getEditorPosition(event.clientX, event.clientY);
+    }
     private insertChar(text: string) {
-        const carets = this.model.getCarets();
-        const defaultCaret = carets.getDefaultCaret();
-        this.model.getOpDispatcher().execute(new EOpInsertText(text, defaultCaret.col, defaultCaret.row));
 
-        if (text === "\n") {
-            carets.incrementRow();
-            carets.setCol(0);
-        } else {
-            carets.moveColBy(text.length);
-        }
+
+        this.model.insertText(text);
     }
 
     private deleteChars(delta: number): void {
-        if (delta == 0)
+        if(delta == 0)
             return;
-        const carets = this.model.getCarets();
-        const defaultCaret = carets.getDefaultCaret();
-        if (defaultCaret.col == 0 && defaultCaret.row == 0 && delta < 0) {
-            return;
-        }
-        const currRowIndex = defaultCaret.row;
-        const prevRowIndex = currRowIndex - 1;
-        const nextRowIndex = currRowIndex + 1;
 
-        const currLine = this.model.document.getLine(currRowIndex);
-        const lineCount = this.model.document.getLineCount();
-
-        if (delta > 0 && defaultCaret.col == currLine.length && nextRowIndex > lineCount) {
-            return;
-        }
-
-        if (delta < 0) {
-            const prevLine = this.model.document.getLine(prevRowIndex);
-            if (defaultCaret.col == 0) {
-                carets.setCol(prevLine.length);
-                carets.setRow(prevRowIndex);
-                this.model.getOpDispatcher().execute(new EopMergeRow(prevRowIndex, currRowIndex));
-                return;
-            }
-            this.model.getOpDispatcher().execute(new EOpDeleteText(defaultCaret.col, currRowIndex, delta));
-            carets.moveColBy(delta);
-            return;
-        }
-
-
-        if (defaultCaret.col == currLine.length) {
-            this.model.getOpDispatcher().execute(new EopMergeRow(currRowIndex, nextRowIndex));
-            return;
-        }
-        this.model.getOpDispatcher().execute(new EOpDeleteText(defaultCaret.col, currRowIndex, delta));
+        this.model.deleteChars(delta);
     }
 
-    private createNewLine(): void {
-        const carets = this.model.getCarets();
-        const col = CountChars(this.model.document.getLine(carets.getDefaultCaret().row), " ");
-        const row = carets.getDefaultCaret().row + 1;
-        this.model.getOpDispatcher().execute(new EOpInsertText(" ".repeat(col), 0, row));
-        this.model.getCarets().incrementRow();
-        this.model.getCarets().setCol(col);
-    }
-
-
-    //TODO: Add multi caret support
-    /**
-     * @param deltaCol Positive value for moving column right while negative for moving column left
-     * @private
-     */
-    private moveCaretHorizontallyBy(deltaCol: number): void {
-        const currRowIndex = this.model.getCarets().getDefaultCaret().row;
-        const currColIndex: number = this.model.getCarets().getDefaultCaret().col;
-        const newColIndex = currColIndex + deltaCol;
-        const carets = this.model.getCarets();
-        if (newColIndex < 0 && currRowIndex > 0) {
-            const prevLine = this.model.document.getLine(currRowIndex - 1);
-            carets.decrementRow();
-            carets.setCol(prevLine.length);
-            return;
-        }
-        const currLine = this.model.document.getLine(currRowIndex);
-        if (newColIndex > currLine.length && currRowIndex < this.model.document.getLineCount() - 1) {
-            carets.incrementRow();
-            carets.setCol(0);
-            return;
-        }
-        // If new column index is in bounds
-        carets.setCol(Math.min(newColIndex, currLine.length));
-    }
-
-    /**
-     * @param deltaRow Positive value moves caret up while negative value moves it down.
-     * @private
-     */
-    private moveCaretVerticallyBy(deltaRow: number): void {
-        const currRowIndex = this.model.getCarets().getDefaultCaret().row;
-        const currColIndex: number = this.model.getCarets().getDefaultCaret().col;
-        const invertedDeltaRow = (-1 * deltaRow); // Invert the delta because negative value should increase the row
-        const newRowIndex = currRowIndex + invertedDeltaRow;
-        const carets = this.model.getCarets();
-        if (newRowIndex < 0 || newRowIndex > this.model.document.getLineCount() - 1) {
-            return;
-        }
-
-        const newRowLine = this.model.document.getLine(newRowIndex);
-        const newColumnIndex = Math.max(Math.min(currColIndex, newRowLine.length), 0);
-        carets.setRow(newRowIndex);
-        carets.setCol(newColumnIndex);
-    }
 
     getCode(): string {
-        return this.model.document.getLines().join('\n');
+        return this.model.doc.getText();
     }
     setCode(code: string): void {
-        this.model.document.insertText(code);
+        this.model.doc.clearAll();
+        this.model.doc.insertText(0, code);
         this.renderView();
     }
 
     private renderView(): void {
         this.view.render(this.model);
+    }
+
+
+    private setUniCaret(position: EditorPosition): void {
+        this.model.carets.length = 0;
+        this.model.carets.push(this.model.doc.getCharacterOffset(position.line, position.column));
+    }
+
+    private updateSelection(position: EditorPosition): void {
+        const offset = this.model.doc.getCharacterOffset(position.line, position.column);
+        if(this.model.selection.length !== 1){
+            this.model.selection.length = 0;
+            this.model.selection.push([offset,offset]);
+            return;
+        }
+        //Set end to the offset
+        this.model.selection[0]![1] = offset;
+    }
+
+    private moveCaretVerticallyBy(delta: number): void {
+        const doc: DocumentModel = this.model.doc;
+        const carets: number[] = this.model.carets;
+        for (let i = 0; i < carets.length; i++) {
+            const caret = carets[i]!;
+            const pos = doc.getLineAndColumn(caret);
+            carets[i] = doc.getCharacterOffset(pos.line + delta, pos.column);
+        }
+    }
+
+    private moveCaretHorizontallyBy(delta: number): void {
+        for (let i = 0; i < this.model.carets.length; i++) {
+            this.model.carets[i]!  += delta;
+        }
+    }
+
+    private createNewLine(): void {
+        this.insertChar("\n");
     }
 }
 

@@ -1,11 +1,11 @@
 import { YLexer, StringifyTokenType } from "../../yasl";
+import type { EditorPosition } from "../EditorPosition";
 import type { EditorModel } from "../model/EditorModel";
 import EditorPresenter from "../presenter/EditorPresenter";
 import { FontService } from "../services/FontService";
 
 type MouseEventHandler = (event: MouseEvent) => void;
 type KeyboardEventHandler = (event: KeyboardEvent) => void;
-
 export class EditorView {
     private presenter: EditorPresenter;
     // private lexer = new Lexer();
@@ -24,7 +24,7 @@ export class EditorView {
         this.caretEl = document.createElement("div");
         this.textLayer = document.createElement("div");
 
-        this.container.tabIndex = 1;
+        this.container.tabIndex = 2;
         documentWrapper.append(this.textLayer, this.caretEl);
         this.container.appendChild(documentWrapper);
 
@@ -54,26 +54,37 @@ export class EditorView {
     }
 
     render(model: EditorModel): void {
-        const lines = model.document.getLines();
+        const doc = model.doc;
+        const lineCount = doc.getLineCount();
+
         this.textLayer.innerHTML = "";
-        const charHeight: number = this.fontservice.getCharHeight();
-        for (let i = 0; i < lines.length; i++){
-            const line = lines[i];
-            if(line === undefined)
-                continue;
+
+        const charHeight = this.fontservice.getCharHeight();
+        const charWidth = this.fontservice.getCharWidth();
+
+        const caretOffset = model.carets[0]!;
+        const caretPos = doc.getLineAndColumn(caretOffset);
+
+        for (let i = 0; i < lineCount; i++) {
+            const line = doc.getLine(i);
+
             const lexer = new YLexer(line, true);
+
             let text = "";
             for (const token of lexer.getTokens()) {
                 text += `<span class="${StringifyTokenType(token.type)}">${token.lexeme}</span>`;
             }
-            let active = false;
-            if (i === model.getCarets().getDefaultCaret().row)
-                active = true;
-            this.textLayer.innerHTML += `<div class='yl-document-row ${active ? "active" : ""}' style='height:${charHeight}px;'>` + text + "</div>";
+
+            const active = i === caretPos.line;
+
+            this.textLayer.innerHTML +=
+                `<div class='yl-document-row ${active ? "active" : ""}' style='height:${charHeight}px;'>`
+                + text +
+                "</div>";
         }
-        // this.textLayer.innerText = (model.document.getText());
-        this.caretEl.style.left = `${this.fontservice.getCharWidth() * model.getCarets().getDefaultCaret().col}px`;
-        this.caretEl.style.top = `${charHeight * model.getCarets().getDefaultCaret().row}px`;
+
+        this.caretEl.style.left = `${charWidth * caretPos.column}px`;
+        this.caretEl.style.top = `${charHeight * caretPos.line}px`;
         this.caretEl.style.height = `${charHeight}px`;
     }
 
@@ -83,5 +94,17 @@ export class EditorView {
 
     setCode(code: string) {
         this.presenter.setCode(code);
+    }
+
+    // Returns the window x,y coordinates in editor caret positions
+    getEditorPosition(x: number, y: number): EditorPosition {
+        const charHeight: number = this.fontservice.getCharHeight();
+        const charWidth: number = this.fontservice.getCharWidth();
+        const boundingBox = this.textLayer.getBoundingClientRect();
+        const row = (x - boundingBox.x) / charHeight;
+        const col = (y - boundingBox.y) / charWidth;
+        return {
+            line: row, column: col
+        };
     }
 }
