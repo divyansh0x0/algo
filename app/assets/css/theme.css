@@ -1,139 +1,129 @@
 :root {
-    --color-accent: #6471e3; /* Blue 800 */
+    --color-accent: #6471e3;
+    /* Blue 800 */
     --debug-color: #f00;
 
-    /* Common static variables */
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --padding-lg: 1.5em;
-    --spacing-lg: 24px;
-    --padding-md: 1em;
-    --spacing-md: 16px;
+    /* Base Font */
+    --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
-    --border-radius: 10px;
-    --border-radius-circle: 99999px;
-
-    /* Spacing */
-    --border-radius-lg: 4em;
-    --border-radius-md: 2em;
-    --border-radius-sm: 0.5em;
-    --box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
-    --padding-sm: 0.5em;
-    /* Padding */
-    --spacing-sm: 8px;
-    --transition-speed: 0.3s;
-    --spacing-xl: 30px;
-
-    /* Base accent color */
+    /* Spacing: Modern clean scaling */
     --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    --padding-sm: 8px;
+    --padding-md: 16px;
+    --padding-lg: 24px;
+
+    /* Pixel UI Specific Borders & Shadows */
+    --border-radius: 0px;
+    /* Sharp corners */
+    --border-radius-sm: 0px;
+    --border-radius-md: 0px;
+    --border-radius-lg: 0px;
+    --border-radius-circle: 0;
+    /* No circles in pixel UI, maybe small cut corners later if needed, but strict pixel relies on squares */
+
+    /* Strict border styling for pixel look */
+    --border-width-sm: 2px;
+    --border-width-md: 4px;
+
+    --transition-speed: 0s;
+    /* No smooth transitions for that chucky retro feel */
 }
 
 :root[data-theme="dark"] {
-    --color-background: rgb(0, 0, 0);
     color-scheme: dark;
-    --color-error: rgb(255 180 171);
-    --color-error-container: rgb(147 0 10);
-    --color-inverse-on-surface: rgb(48 48 54);
-    --color-inverse-primary: rgb(85 89 146);
-    --color-inverse-surface: rgb(228 225 233);
-    --color-on-background: rgb(228 225 233);
-    --color-on-error: rgb(105 0 5);
-    --color-on-error-container: rgb(255 218 214);
-    --color-on-primary: rgb(39 43 96);
-    --color-on-primary-container: rgb(224 224 255);
+    --color-background: #0f0f13;
 
+    /* High contrast pixel colors */
+    --color-surface: #1e1e24;
+    --color-surface-hover: #2a2a35;
+    --color-surface-active: #363645;
 
-    --color-on-secondary: rgb(46 47 66);
-    --color-on-secondary-container: rgb(225 224 249);
+    --color-primary: #8a96ff;
+    --color-primary-hover: #a5afff;
+    --color-primary-active: #707df0;
+    --color-on-primary: #050510;
 
+    --color-secondary: #00d2d3;
+    --color-on-secondary: #000000;
 
-    --color-on-surface: rgb(228 225 233);
-    --color-on-surface-variant: rgb(199 197 208);
-    --color-on-tertiary: rgb(70 38 59);
-    --color-on-tertiary-container: rgb(255 216 238);
+    --color-error: #ff6b6b;
+    --color-on-error: #500000;
 
+    --color-on-background: #e0e0e0;
+    --color-on-surface: #e0e0e0;
+    --color-on-surface-variant: #a0a0b0;
 
-    --color-outline: rgb(145 144 154);
-    --color-outline-variant: rgb(70 70 79);
-    --color-primary: rgb(190 194 255);
-    --color-primary-container: rgb(62 66 120);
+    /* Borders and Shadows */
+    --color-border: #404050;
+    --color-border-primary: #8a96ff;
 
+    --color-shadow: #000000;
+    --shadow-pixel-sm: 2px 2px 0px 0px var(--color-shadow);
+    --shadow-pixel-md: 4px 4px 0px 0px var(--color-shadow);
+    --shadow-pixel-inset: inset 4px 4px 0px 0px rgba(0, 0, 0, 0.5);
 
-    --color-scrim: rgb(0 0 0);
+    --border-pixel: var(--border-width-sm) solid var(--color-border);
+    --border-pixel-primary: var(--border-width-sm) solid var(--color-primary);
 
-    --color-secondary: rgb(197 196 221);
-    --color-secondary-container: rgb(68 69 89);
+    /* Original surface container variables redefined for pixel UI compatibility */
+    --color-surface-container-lowest: #0a0a0d;
+    --color-surface-container-low: #14141a;
+    --color-surface-container: #1e1e24;
+    --color-surface-container-high: #282830;
+    --color-surface-container-highest: #32323c;
 
-
-    --color-shadow: rgb(0 0 0);
-    --color-surface: rgb(19 19 24);
-    --color-surface-bright: rgb(57 57 63);
-    --color-surface-container: rgb(31 31 37);
-    --color-surface-container-high: rgb(42 41 47);
-    --color-surface-container-highest: rgb(52 52 58);
-    --color-surface-container-low: rgb(27 27 33);
-    --color-surface-container-lowest: rgb(14 14 19);
-    --color-surface-dim: rgb(19 19 24);
-    --color-surface-tint: rgb(190 194 255);
-    --color-surface-variant: rgb(70 70 79);
-    --color-tertiary: rgb(232 185 213);
-    --color-tertiary-container: rgb(94 60 82);
-
-
+    --canvas-bg-default-color: #0f0f13;
 }
 
 :root[data-theme="light"] {
-    --color-background: rgb(251 248 255);
     color-scheme: light;
-    --color-error: rgb(186 26 26);
-    --color-error-container: rgb(255 218 214);
-    --color-inverse-on-surface: rgb(242 239 247);
-    --color-inverse-primary: rgb(190 194 255);
-    --color-inverse-surface: rgb(48 48 54);
-    --color-on-background: rgb(27 27 33);
-    --color-on-error: rgb(255 255 255);
-    --color-on-error-container: rgb(147 0 10);
-    --color-on-primary: rgb(255 255 255);
-    --color-on-primary-container: rgb(62 66 120);
+    --color-background: #f4f4f8;
 
+    /* High contrast pixel colors */
+    --color-surface: #ffffff;
+    --color-surface-hover: #e8e8f0;
+    --color-surface-active: #d0d0e0;
 
-    --color-on-secondary: rgb(255 255 255);
-    --color-on-secondary-container: rgb(68 69 89);
+    --color-primary: #4a5cf6;
+    --color-primary-hover: #6070ff;
+    --color-primary-active: #3a4ad0;
+    --color-on-primary: #ffffff;
 
+    --color-secondary: #01a3a4;
+    --color-on-secondary: #ffffff;
 
-    --color-on-surface: rgb(27 27 33);
-    --color-on-surface-variant: rgb(70 70 79);
-    --color-on-tertiary: rgb(255 255 255);
-    --color-on-tertiary-container: rgb(94 60 82);
+    --color-error: #ee5253;
+    --color-on-error: #ffffff;
 
+    --color-on-background: #101015;
+    --color-on-surface: #101015;
+    --color-on-surface-variant: #505060;
 
-    --color-outline: rgb(119 118 128);
-    --color-outline-variant: rgb(199 197 208);
-    --color-primary: rgb(85 89 146);
-    --color-primary-container: rgb(224 224 255);
+    /* Borders and Shadows */
+    --color-border: #202025;
+    /* Very dark border for light mode contrast */
+    --color-border-primary: #101560;
+    /* Darker primary for border */
 
+    --color-shadow: #101015;
+    --shadow-pixel-sm: 2px 2px 0px 0px var(--color-shadow);
+    --shadow-pixel-md: 4px 4px 0px 0px var(--color-shadow);
+    --shadow-pixel-inset: inset 4px 4px 0px 0px rgba(0, 0, 0, 0.1);
 
-    --color-scrim: rgb(0 0 0);
-    --color-secondary: rgb(92 93 114);
-    --color-secondary-container: rgb(225 224 249);
+    --border-pixel: var(--border-width-sm) solid var(--color-border);
+    --border-pixel-primary: var(--border-width-sm) solid var(--color-border);
 
+    /* Original surface container variables redefined for pixel UI compatibility */
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f8f8fc;
+    --color-surface-container: #f0f0f5;
+    --color-surface-container-high: #e8e8f0;
+    --color-surface-container-highest: #dcdce6;
 
-    --color-shadow: rgb(0 0 0);
-    --color-surface: rgb(251 248 255);
-    --color-surface-bright: rgb(251 248 255);
-    --color-surface-container: rgb(240 236 244);
-    --color-surface-container-high: rgb(234 231 239);
-    --color-surface-container-highest: rgb(228 225 233);
-    --color-surface-container-low: rgb(245 242 250);
-    --color-surface-container-lowest: rgb(255 255 255);
-
-    --color-surface-dim: rgb(219 217 224);
-    --color-surface-tint: rgb(85 89 146);
-    --color-surface-variant: rgb(228 225 236);
-
-
-    --color-tertiary: rgb(120 83 107);
-    --color-tertiary-container: rgb(255 216 238);
-
-
-    /** Examples */
+    --canvas-bg-default-color: #f4f4f8;
 }

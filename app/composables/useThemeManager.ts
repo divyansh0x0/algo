@@ -10,6 +10,7 @@ export function useThemeManager() {
         if (savedThemeMode) {
             ThemeManager.setThemeMode(savedThemeMode);
         }
+        themeType.value = ThemeManager.getThemeType();
     }
     const setThemeMode = (newThemeMode: ThemeMode) => {
         ThemeManager.setThemeMode(newThemeMode);
