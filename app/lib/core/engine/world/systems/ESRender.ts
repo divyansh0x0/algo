@@ -12,7 +12,7 @@ import {
     ECTextColor
 } from "../components";
 import type { Entity } from "../Entity";
-import { ERCamera, ERMouse } from "../resources";
+import { ERCamera } from "../resources";
 import type { ComponentClass, World } from "../World";
 import type { EntitySystem } from "./EntitySystem";
 
@@ -26,7 +26,7 @@ export class ESRender implements EntitySystem {
         [ ECText, this.renderText.bind(this) ]
     ]);
 
-    constructor(private ctx: CanvasRenderingContext2D) {
+    constructor(private ctx: CanvasRenderingContext2D, private cellSize: number = 30) {
     }
 
     start(): boolean {
@@ -37,22 +37,25 @@ export class ESRender implements EntitySystem {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         const camera = world.getResource(ERCamera);
-        const mouse = world.getResource(ERMouse);
         if (!camera) {
             console.error("Camera not found");
             return;
         }
         const originX = this.ctx.canvas.width / 2;
         const originY = this.ctx.canvas.height / 2;
-        const zoomPoint = mouse?.getWorldPosition(camera) ?? Vector2D.ZERO;
+        const zoomPoint = camera.zoomPivot;
+
+        this.ctx.fillStyle = ThemeManager.color("textSecondary").hex;
+        this.ctx.textAlign = "start";
+        this.ctx.textBaseline = "top";
+        this.ctx.fillText(`Camera:${camera.position.x},${camera.position.y}`, 0, 0);
+        this.renderGrids(camera, this.ctx.canvas.width, this.ctx.canvas.height);
         this.ctx.save();
         this.ctx.translate(originX, originY);
-
         this.ctx.translate(zoomPoint.x, zoomPoint.y);
         this.ctx.scale(camera.scale, camera.scale);
         this.ctx.translate(-zoomPoint.x, -zoomPoint.y);
-        this.ctx.translate(-camera.position.x, camera.position.y);
-
+        this.ctx.translate(-camera.position.x, -camera.position.y);
         for (const entity of world.getEntities()) {
             const pos = world.getComponent(entity, ECPosition);
             if (!pos) continue;
@@ -127,5 +130,32 @@ export class ESRender implements EntitySystem {
 
     private applyFillColor<K extends keyof ThemeStyle>(color: Color | undefined, defaultColor: K) {
         this.ctx.fillStyle = color?.hex ?? ThemeManager.color(defaultColor).hex;
+    }
+
+    private renderGrids(camera: ERCamera, width: number, height: number): void {
+        const cellSize = this.cellSize*camera.scale;
+        const rows = Math.floor(height / cellSize) + 1;
+        const columns = Math.floor(width / cellSize) + 1;
+        const halfGridWidth = columns * cellSize;
+        const halfGridHeight = rows * cellSize;
+        const gridStartX = -camera.position.x*camera.scale % cellSize;
+        const gridStartY = -camera.position.y*camera.scale % cellSize;
+        this.ctx.strokeStyle = ThemeManager.color("grid").hex;
+        this.ctx.beginPath();
+        // vertical lines
+        for (let i = 0; i <= columns; i++) {
+            const x = gridStartX + cellSize * i;
+            this.ctx.moveTo(x, -halfGridHeight);
+            this.ctx.lineTo(x, halfGridHeight);
+        }
+        // horizontal lines
+        for (let i = 0; i <= rows; i++) {
+            const y = gridStartY + cellSize * i;
+            this.ctx.moveTo(-halfGridWidth, y);
+            this.ctx.lineTo(halfGridWidth, y);
+
+        }
+        this.ctx.closePath();
+        this.ctx.stroke();
     }
 }

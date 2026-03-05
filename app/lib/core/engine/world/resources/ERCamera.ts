@@ -4,6 +4,7 @@ import type EntityResource from "./EntityResource";
 export class ERCamera implements EntityResource{
     position = new Vector2D(0,0);
     scale = 1;
+    zoomPivot=  new Vector2D(0,0) ;
     constructor(private ctx: CanvasRenderingContext2D){}
 
     canvasToWorld(x: number, y: number): [number, number] {
