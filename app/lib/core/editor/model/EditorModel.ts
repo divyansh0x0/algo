@@ -1,4 +1,3 @@
-import { vModelText } from "vue";
 import EOpDeleteText from "../operations/EOpDeleteText";
 import { EOpInsertText } from "../operations/EOpInsertText";
 import { OperationDispatcher } from "../operations/OperationDispatcher";

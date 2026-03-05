@@ -58,7 +58,6 @@ export class KeybindingService {
             shiftKey && "shift",
         ].filter(Boolean);
 
-        console.log(binding,modifiers);
         const cmd = [...modifiers, code].join("+");
         return {type: "command", command: cmd};
     }

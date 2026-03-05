@@ -34,7 +34,6 @@ class InputController {
     private onWheel = (e: WheelEvent) => {
         if (e.shiftKey) {
             e.preventDefault();
-            this.scene.zoomAt(e.clientX, e.clientY, e.deltaY < 0);
         }
     };
 

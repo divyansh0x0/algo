@@ -40,7 +40,7 @@ export class Color {
     }
 
     set r(value: number) {
-        this.rgba.r = Vmath.clamp(Math.round(value), 0, 255);
+        this.rgba.r = clamp(Math.round(value), 0, 255);
     }
 
     get g(): number {
@@ -48,7 +48,7 @@ export class Color {
     }
 
     set g(value: number) {
-        this.rgba.g = Vmath.clamp(Math.round(value), 0, 255);
+        this.rgba.g = clamp(Math.round(value), 0, 255);
     }
 
     get b(): number {
@@ -56,7 +56,7 @@ export class Color {
     }
 
     set b(value: number) {
-        this.rgba.b = Vmath.clamp(Math.round(value), 0, 255);
+        this.rgba.b = clamp(Math.round(value), 0, 255);
     }
 
     get a(): number {
@@ -64,7 +64,7 @@ export class Color {
     }
 
     set a(value: number) {
-        this.rgba.a = Vmath.clamp(Math.round(value), 0, 255);
+        this.rgba.a = clamp(Math.round(value), 0, 255);
     }
 
     get hex(): string {

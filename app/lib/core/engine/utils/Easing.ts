@@ -1,43 +1,17 @@
 export type EasingFunction = (t: number) => number;
 
-export class Easings {
-    static linear(t: number): number {
-        return t;
-    }
+export const Easings = {
+    linear: (t: number) => t,
 
-    static easeInSin(t: number): number {
-        return 1 - Math.cos(t * Math.PI / 2);
-    }
+    easeInSin: (t: number) => 1 - Math.cos(t * Math.PI / 2),
+    easeOutSin: (t: number) => Math.sin(t * Math.PI / 2),
+    easeInOutSin: (t: number) => (1 - Math.cos(t * Math.PI)) / 2,
 
-    static easeOutSin(t: number): number {
-        return Math.sin(t * Math.PI / 2);
-    }
+    easeInCubic: (t: number) => t ** 3,
+    easeOutCubic: (t: number) => 1 - (1 - t) ** 3,
+    easeInOutCubic: (t: number) => t < 0.5 ? 4 * t ** 3 : 1 - (1 - t) ** 3,
 
-    static easeInOutSin(t: number): number {
-        return (1 - Math.cos(t * Math.PI)) / 2;
-    }
-
-    static easeInCubic(t: number): number {
-        return t ** 3;
-    }
-
-    static easeOutCubic(t: number): number {
-        return 1 - (1 - t) ** 3;
-    }
-
-    static easeInOutCubic(t: number): number {
-        return t < 0.5 ? 4 * t ** 3 : 1 - (1 - t) ** 3;
-    }
-
-    static easeInQuad(t: number): number {
-        return t * t;
-    }
-
-    static easeOutQuad(t: number): number {
-        return 1 - (1 - t) ** 2;
-    }
-
-    static easeInOutQuad(t: number): number {
-        return t < 0.5 ? 2 * t ** 2 : 1 - (1 - t) ** 2;
-    }
-}
+    easeInQuad: (t: number) => t * t,
+    easeOutQuad: (t: number) => 1 - (1 - t) ** 2,
+    easeInOutQuad: (t: number) => t < 0.5 ? 2 * t ** 2 : 1 - (1 - t) ** 2,
+};

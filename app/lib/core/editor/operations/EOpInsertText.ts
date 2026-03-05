@@ -1,4 +1,3 @@
-import type { CaretModel } from "../model/CaretModel";
 import type { EditorModel } from "../model/EditorModel";
 import type EditorOperation from "./EditorOperation";
 import EOpDeleteText from "./EOpDeleteText";
