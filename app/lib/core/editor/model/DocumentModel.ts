@@ -5,6 +5,9 @@ export class DocumentModel {
     private text = "";
     private lineTable = new EditorLineTable(this.text);
 
+    getLineTable(): EditorLineTable {
+        return this.lineTable;
+    }
     insertText(offset: number, insertText: string) {
         this.text = this.text.slice(0, offset) + insertText + this.text.slice(offset);
         this.lineTable.setText(this.text);
@@ -19,10 +22,11 @@ export class DocumentModel {
 
     getLine(line: number): string {
         const start = this.lineTable.getLineStart(line);
-        const end = line + 1 < this.lineTable.getLineCount()
-            ? this.lineTable.getLineStart(line + 1) - 1
-            : this.text.length;
-        return this.text.slice(start, end);
+        if(start === undefined){
+            return ""
+        }
+        const end = this.lineTable.getLineEnd(line);
+        return this.text.slice(start, end+1);
     }
 
     getText(): string {
@@ -44,5 +48,9 @@ export class DocumentModel {
     clearAll(): void {
         this.text = "";
         this.lineTable.setText(this.text);
+    }
+
+    getMaxOffset(): number {
+        return this.text.length;
     }
 }

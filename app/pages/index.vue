@@ -12,8 +12,7 @@ const visualizer = new Visualizer();
 const code = `let x = [1,2,3]
 x.swap(0,1)
 x.swap(1,2)
-x.swap(0,1)
-`;
+x.swap(0,1)`;
 
 onMounted(() => {
     isIDELoaded.value = true;

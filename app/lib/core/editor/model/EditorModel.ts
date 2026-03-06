@@ -6,7 +6,7 @@ import type { DocumentModel } from "./DocumentModel";
 
 export class EditorModel {
     // readonly document: DocumentModel;
-    readonly carets: number[] = [ 0 ];
+    carets: number[] = [ 0 ];
     readonly selection: [ number, number ][] = [];
     readonly opDispatcher = new OperationDispatcher(this);
 

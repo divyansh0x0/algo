@@ -1,3 +1,4 @@
+import { MathUtils } from "../../engine/utils";
 import type { EditorPosition } from "../EditorPosition";
 import { DocumentModel } from "../model/DocumentModel";
 import { EditorModel } from "../model/EditorModel";
@@ -26,6 +27,8 @@ class EditorPresenter {
         startX: 0,
         startY: 0
     };
+    private onMouseMoveBound = this.onMouseMove.bind(this);
+    private onMouseUpBound = this.onMouseUp.bind(this);
     private keybindingService = new KeybindingService();
     constructor(private view: EditorView) {
         view.onKeyDown(this.onKeyDown.bind(this));
@@ -58,8 +61,6 @@ class EditorPresenter {
         moveDown: () => this.moveCaretVerticallyBy(1),
     };
     private onKeyDown(event: KeyboardEvent) {
-        event.preventDefault();
-        event.stopPropagation();
         console.log("Keydown");
         const editorIntent = this.keybindingService.resolve(
             event.ctrlKey,
@@ -79,13 +80,11 @@ class EditorPresenter {
 
     private onMouseUp() {
         this.mouseState.isDown = false;
-        window.removeEventListener("mousemove", this.onMouseMove);
-        window.removeEventListener("mouseup", this.onMouseUp);
+        window.removeEventListener("mousemove", this.onMouseMoveBound);
+        window.removeEventListener("mouseup", this.onMouseUpBound);
     }
 
     private onMouseDown(event: MouseEvent) {
-        // event.preventDefault();
-
         this.mouseState.isDown = true;
         this.mouseState.startX = event.clientX;
         this.mouseState.startY = event.clientY;
@@ -94,8 +93,8 @@ class EditorPresenter {
 
         this.setUniCaret(position);
 
-        window.addEventListener("mousemove", this.onMouseMove.bind(this));
-        window.addEventListener("mouseup", this.onMouseUp.bind(this));
+        window.addEventListener("mousemove", this.onMouseMoveBound);
+        window.addEventListener("mouseup", this.onMouseUpBound);
     }
     private onMouseMove(event: MouseEvent) {
         if (!this.mouseState?.isDown) return;
@@ -138,8 +137,21 @@ class EditorPresenter {
 
 
     private setUniCaret(position: EditorPosition): void {
-        this.model.carets.length = 0;
-        this.model.carets.push(this.model.doc.getCharacterOffset(position.line, position.column));
+        const maxLines = this.model.doc.getLineCount();
+        if(position.line > maxLines) {
+            position.line = maxLines;
+        }
+
+        const lineEnd: number = this.model.doc.getLineTable().getLineEnd(position.line);
+        const lineStart: number = this.model.doc.getLineTable().getLineStart(position.line);
+        const maxCol = lineEnd  - lineStart;
+        if(position.column >  maxCol) {
+            position.column = maxCol;
+        }
+        const offset = this.model.doc.getCharacterOffset(position.line, position.column);
+        console.log("offset",offset,"max:",maxCol,"col:",position.column, "lineStart",lineStart, "lineEnd",lineEnd);
+        this.model.carets = [offset];
+        this.renderView();
     }
 
     private updateSelection(position: EditorPosition): void {
@@ -165,7 +177,8 @@ class EditorPresenter {
 
     private moveCaretHorizontallyBy(delta: number): void {
         for (let i = 0; i < this.model.carets.length; i++) {
-            this.model.carets[i]!  += delta;
+            const caretOffset = this.model.carets[i]!;
+            this.model.carets[i]  = MathUtils.clamp(caretOffset +  delta, 0, this.model.doc.getMaxOffset());
         }
     }
 

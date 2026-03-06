@@ -137,7 +137,6 @@ export class ESRender implements EntitySystem {
         const cellSize = this.cellSize;
         const halfRows = Math.floor(height / 2 / camera.scale / cellSize) + 1;
         const halfColumns = Math.floor(width / 2 / camera.scale / cellSize) + 1;
-        console.log(halfColumns, halfRows);
         const halfGridWidth = halfColumns * cellSize;
         const halfGridHeight = halfRows * cellSize;
         const gridStartX = -camera.position.x % cellSize;
