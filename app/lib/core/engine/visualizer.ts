@@ -125,7 +125,6 @@ export class Visualizer {
         this.insertObj(name, vArrObj);
     }
 
-    // }
     resetScene(): void {
         for (const value of this.vobjects.values()) {
             value.kill();
@@ -134,9 +133,6 @@ export class Visualizer {
         this.vobjects.clear();
         this.world?.clearAllEntities();
     }
-
-    // createValue(name: string, value: VValueTypes): void {
-    //
 
     swapArrayElements(name: string, index1: number, index2: number): void {
         const varr = this.vobjects.get(name);

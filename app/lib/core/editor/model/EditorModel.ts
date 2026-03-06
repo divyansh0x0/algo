@@ -21,8 +21,7 @@ export class EditorModel {
             if (delta > 0)
                 this.opDispatcher.execute(new EOpDeleteText(caret, delta));
             else{
-                console.error(caret + delta, caret);
-                this.opDispatcher.execute(new EOpDeleteText(caret + delta, -delta));
+                    this.opDispatcher.execute(new EOpDeleteText(caret + delta, -delta));
                 this.carets[i]! += delta;
             }
         }

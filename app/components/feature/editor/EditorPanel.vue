@@ -45,6 +45,9 @@ function runCode() {
         return;
     }
     const code = editorView.getCode();
+    if(code === ""){
+        props.onRunComplete([]);
+    }
     const lexer = new YLexer(code);
     const parser = new YParser(lexer.getTokens(), lexer.getLineMap());
     const visitor = new TracerVisitor(lexer.getLineMap());
@@ -107,7 +110,6 @@ function runCode() {
 .editor {
     position: absolute;
     inset: 0;
-    overflow: auto;
     background-color: var(--color-surface-container-lowest);
 }
 

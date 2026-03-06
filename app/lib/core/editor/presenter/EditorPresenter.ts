@@ -30,20 +30,6 @@ class EditorPresenter {
     private onMouseMoveBound = this.onMouseMove.bind(this);
     private onMouseUpBound = this.onMouseUp.bind(this);
     private keybindingService = new KeybindingService();
-    constructor(private view: EditorView) {
-        view.onKeyDown(this.onKeyDown.bind(this));
-        view.onMouseDown(this.onMouseDown.bind(this));
-
-        this.model = new EditorModel(new DocumentModel());
-        this.mouseState = {
-            isDown: false,
-            startX: 0,
-            startY: 0
-        };
-        window.requestAnimationFrame(() => {
-            this.view.render(this.model);
-        });
-    }
     private handlers: {
         [K in EditorIntent["type"]]?: (intent: Extract<EditorIntent, { type: K }>) => void;
     } = {
@@ -60,6 +46,42 @@ class EditorPresenter {
         moveUp: () => this.moveCaretVerticallyBy(-1),
         moveDown: () => this.moveCaretVerticallyBy(1),
     };
+
+    constructor(private view: EditorView) {
+        view.onKeyDown(this.onKeyDown.bind(this));
+        view.onMouseDown(this.onMouseDown.bind(this));
+
+        this.model = new EditorModel(new DocumentModel());
+        this.mouseState = {
+            isDown: false,
+            startX: 0,
+            startY: 0
+        };
+        window.requestAnimationFrame(() => {
+            this.view.render(this.model);
+        });
+    }
+
+    getCode(): string {
+        return this.model.doc.getText();
+    }
+
+    setCode(code: string): void {
+        this.model.doc.clearAll();
+        this.model.doc.insertText(0, code);
+        this.renderView();
+    }
+
+    clampEditorPosition(position: EditorPosition) {
+        const maxLines = this.model.doc.getLineCount();
+        position.line = MathUtils.clamp(position.line, 0, maxLines);
+
+        const lineEnd: number = this.model.doc.getLineTable().getLineEnd(position.line);
+        const lineStart: number = this.model.doc.getLineTable().getLineStart(position.line);
+        const maxCol = lineEnd - lineStart;
+        position.column = MathUtils.clamp(position.column, 0, maxCol);
+    }
+
     private onKeyDown(event: KeyboardEvent) {
         console.log("Keydown");
         const editorIntent = this.keybindingService.resolve(
@@ -75,6 +97,7 @@ class EditorPresenter {
         console.log(editorIntent);
         const handler = this.handlers[editorIntent.type] as (intent: typeof editorIntent) => void;
         handler?.(editorIntent);
+        this.resetSelection()
         this.renderView();
     }
 
@@ -91,23 +114,27 @@ class EditorPresenter {
 
         const position = this.getEditorPosition(event);
 
-        this.setUniCaret(position);
-
+        this.clampEditorPosition(position);
+        this.updateCaret(position);
+        this.resetSelection();
         window.addEventListener("mousemove", this.onMouseMoveBound);
         window.addEventListener("mouseup", this.onMouseUpBound);
     }
+
     private onMouseMove(event: MouseEvent) {
         if (!this.mouseState?.isDown) return;
 
         const position = this.getEditorPosition(event);
-
+        this.clampEditorPosition(position);
         this.updateSelection(position);
-
+        this.updateCaret(position);
         this.renderView();
     }
+
     private getEditorPosition(event: MouseEvent) {
-        return  this.view.getEditorPosition(event.clientX, event.clientY);
+        return this.view.getEditorPosition(event.clientX, event.clientY);
     }
+
     private insertChar(text: string) {
 
 
@@ -115,54 +142,32 @@ class EditorPresenter {
     }
 
     private deleteChars(delta: number): void {
-        if(delta == 0)
+        if (delta == 0)
             return;
 
         this.model.deleteChars(delta);
-    }
-
-
-    getCode(): string {
-        return this.model.doc.getText();
-    }
-    setCode(code: string): void {
-        this.model.doc.clearAll();
-        this.model.doc.insertText(0, code);
-        this.renderView();
     }
 
     private renderView(): void {
         this.view.render(this.model);
     }
 
-
-    private setUniCaret(position: EditorPosition): void {
-        const maxLines = this.model.doc.getLineCount();
-        if(position.line > maxLines) {
-            position.line = maxLines;
-        }
-
-        const lineEnd: number = this.model.doc.getLineTable().getLineEnd(position.line);
-        const lineStart: number = this.model.doc.getLineTable().getLineStart(position.line);
-        const maxCol = lineEnd  - lineStart;
-        if(position.column >  maxCol) {
-            position.column = maxCol;
-        }
+    private updateCaret(position: EditorPosition): void {
         const offset = this.model.doc.getCharacterOffset(position.line, position.column);
-        console.log("offset",offset,"max:",maxCol,"col:",position.column, "lineStart",lineStart, "lineEnd",lineEnd);
-        this.model.carets = [offset];
+        this.model.carets = [ offset ];
         this.renderView();
     }
 
     private updateSelection(position: EditorPosition): void {
         const offset = this.model.doc.getCharacterOffset(position.line, position.column);
-        if(this.model.selection.length !== 1){
+        if (this.model.selection.length !== 1) {
             this.model.selection.length = 0;
-            this.model.selection.push([offset,offset]);
+            this.model.selection.push([ offset, offset ]);
             return;
         }
         //Set end to the offset
         this.model.selection[0]![1] = offset;
+        this.renderView();
     }
 
     private moveCaretVerticallyBy(delta: number): void {
@@ -178,12 +183,24 @@ class EditorPresenter {
     private moveCaretHorizontallyBy(delta: number): void {
         for (let i = 0; i < this.model.carets.length; i++) {
             const caretOffset = this.model.carets[i]!;
-            this.model.carets[i]  = MathUtils.clamp(caretOffset +  delta, 0, this.model.doc.getMaxOffset());
+            this.model.carets[i] = MathUtils.clamp(caretOffset + delta, 0, this.model.doc.getMaxOffset());
         }
     }
 
     private createNewLine(): void {
         this.insertChar("\n");
+    }
+
+    private resetSelection(position?: EditorPosition): void {
+        if(position === undefined){
+            this.model.selection.length = 0;
+            this.renderView();
+            return;
+        }
+        const offset = this.model.doc.getCharacterOffset(position.line, position.column);
+        this.model.selection.length = 0;
+        this.model.selection.push([ offset, offset ]);
+        this.renderView();
     }
 }
 

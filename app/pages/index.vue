@@ -51,8 +51,8 @@ let interval: NodeJS.Timeout;
 let i = 0;
 
 function onRun(traces: YTracer[]) {
-    if (traces.length === 0) return;
     visualizer.resetScene();
+    if (traces.length === 0) return;
     traceReceiver(traces[0]!); // Play first trace instantly
     i = 1;
     clearInterval(interval);
