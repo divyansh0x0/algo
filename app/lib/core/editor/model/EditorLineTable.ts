@@ -15,7 +15,7 @@ export class EditorLineTable {
         }
     }
     getLineAndColumn(offset: number): EditorPosition {
-        const line = this.findLine(offset);
+        const line = this.findLineNumber(offset);
         if(this.lineStarts[line] == undefined) {
             return {line:0, column:0};
         }
@@ -39,7 +39,7 @@ export class EditorLineTable {
         return this.lineStarts[line]!;
     }
     // Binary search
-    private findLine(offset: number): number {
+    private findLineNumber(offset: number): number {
         let low = 0, high = this.lineStarts.length - 1;
         while (low <= high) {
             const mid = (low + high) >> 1;
@@ -62,5 +62,13 @@ export class EditorLineTable {
     getLineEnd(line: number): number {
         const nextLineStart = this.getLineStart(line + 1);
         return nextLineStart - 1;
+    }
+
+    getLineStartEndOffsetFromOffset(offset: number): { start: number, end: number } {
+        const lineNumber = this.findLineNumber(offset);
+        const start = this.getLineStart(lineNumber);
+        const end = this.getLineEnd(lineNumber);
+        console.log("line:",lineNumber, start, end);
+        return { start, end };
     }
 }

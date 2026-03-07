@@ -20,7 +20,7 @@ export class DocumentModel {
         return deleted;
     }
 
-    getLine(line: number): string {
+    getLineText(line: number): string {
         const start = this.lineTable.getLineStart(line);
         if(start === undefined){
             return ""
@@ -52,5 +52,11 @@ export class DocumentModel {
 
     getMaxOffset(): number {
         return this.text.length;
+    }
+
+    getLineByOffset(offset:number): string {
+        const {start,end} = this.lineTable.getLineStartEndOffsetFromOffset(offset);
+        console.log("line offset:",start,end);
+        return this.text.slice(start, end+1);
     }
 }

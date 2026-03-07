@@ -77,7 +77,7 @@ export class EditorView {
 
         let html = "";
         for (let i = 0; i < lineCount; i++) {
-            const line = doc.getLine(i);
+            const line = doc.getLineText(i);
 
             const lexer = new YLexer(line, true);
 

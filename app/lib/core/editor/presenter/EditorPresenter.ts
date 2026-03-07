@@ -2,26 +2,18 @@ import { MathUtils } from "../../engine/utils";
 import type { EditorPosition } from "../EditorPosition";
 import { DocumentModel } from "../model/DocumentModel";
 import { EditorModel } from "../model/EditorModel";
-import { type EditorIntent, KeybindingService } from "../services/events/keys/KeybindingService";
+import {
+    CaretMovementDirection,
+    CaretMovementUnit,
+    type EditorIntent,
+    KeybindingService
+} from "../services/events/keys/KeybindingService";
 
 
 import type { EditorView } from "../view/EditorView";
 
-// function CountChars(line: string, s: string): number {
-//     let count = 0;
-//     for (let i = 0; i < line.length; i++) {
-//         const char = line.charAt(i);
-//         if (char === s)
-//             count++;
-//         else
-//             break;
-//     }
-//     return count;
-// }
-
-
 class EditorPresenter {
-    private model: EditorModel;
+    private readonly model: EditorModel;
     private mouseState = {
         isDown: false,
         startX: 0,
@@ -40,11 +32,7 @@ class EditorPresenter {
 
         newline: () => this.createNewLine(),
 
-        moveRight: () => this.handleRightMoveCaret(),
-        moveLeft: () => this.handleLeftMoveCaret(),
-
-        moveUp: () => this.moveCaretVerticallyBy(-1),
-        moveDown: () => this.moveCaretVerticallyBy(1),
+        move: (intent) => this.handleCaretMovement(intent.direction, intent.extendsSelection ?? false, intent.unit ?? CaretMovementUnit.CHAR),
     };
 
     constructor(private view: EditorView) {
@@ -94,16 +82,15 @@ class EditorPresenter {
         );
         if (!editorIntent) return;
 
-        console.log(editorIntent);
         const handler = this.handlers[editorIntent.type] as (intent: typeof editorIntent) => void;
         handler?.(editorIntent);
-        this.resetSelection();
     }
 
     private onMouseUp() {
         this.mouseState.isDown = false;
         window.removeEventListener("mousemove", this.onMouseMoveBound);
         window.removeEventListener("mouseup", this.onMouseUpBound);
+        this.renderView();
     }
 
     private onMouseDown(event: MouseEvent) {
@@ -116,6 +103,7 @@ class EditorPresenter {
         this.clampEditorPosition(position);
         this.updateCaret(position);
         this.resetSelection();
+        this.ensureSelectionAnchor();
         window.addEventListener("mousemove", this.onMouseMoveBound);
         window.addEventListener("mouseup", this.onMouseUpBound);
     }
@@ -125,8 +113,8 @@ class EditorPresenter {
 
         const position = this.getEditorPosition(event);
         this.clampEditorPosition(position);
-        this.updateSelection(position);
         this.updateCaret(position);
+        this.updateSelection();
         this.renderView();
     }
 
@@ -136,6 +124,7 @@ class EditorPresenter {
 
     private insertChar(text: string) {
         this.deleteSelection();
+        this.resetSelection();
         this.model.insertText(text);
     }
 
@@ -156,16 +145,29 @@ class EditorPresenter {
         this.renderView();
     }
 
-    private updateSelection(position: EditorPosition): void {
-        const offset = this.model.doc.getCharacterOffset(position.line, position.column);
-        if (this.model.selections.length !== 1) {
-            this.model.selections.length = 0;
-            this.model.selections.push([ offset, offset ]);
-            return;
+    // if dir = 1 moves caret right, if dir = -1 moves caret left and for dir=0 does not moves the caret
+    private updateSelection(): void {
+        for (let i = 0; i < this.model.carets.length; i++) {
+            const caret = this.model.carets[i];
+            if (caret === undefined)
+                continue;
+            this.model.selections[i]![1] = caret;
         }
-        //Set end to the offset
-        this.model.selections[0]![1] = offset;
         this.renderView();
+    }
+
+    private ensureSelectionAnchor(): void {
+        if (this.model.selections.length !== this.model.carets.length) {
+            this.model.selections.length = this.model.carets.length;
+            for (let i = 0; i < this.model.carets.length; i++) {
+                const caret = this.model.carets[i];
+                if (caret === undefined)
+                    continue;
+
+                this.model.selections[i] = [ caret, caret ];
+            }
+            this.renderView();
+        }
     }
 
     private moveCaretVerticallyBy(delta: number): void {
@@ -191,16 +193,10 @@ class EditorPresenter {
         this.insertChar("\n");
     }
 
-    private resetSelection(position?: EditorPosition): void {
-        if (position === undefined) {
-            this.model.selections.length = 0;
-            this.renderView();
-            return;
-        }
-        const offset = this.model.doc.getCharacterOffset(position.line, position.column);
+    private resetSelection(): void {
         this.model.selections.length = 0;
-        this.model.selections.push([ offset, offset ]);
         this.renderView();
+        return;
     }
 
     private handleDeleteLeft(): void {
@@ -233,27 +229,30 @@ class EditorPresenter {
                 continue;
             const start = Math.min(...selection);
             const end = Math.max(...selection);
-            const count = end-start;
+            const count = end - start;
             this.model.doc.deleteRange(start, count);
             // Moves the corresponding caret to the start
             this.model.carets[i] = start;
         }
+        this.resetSelection();
         this.renderView();
     }
 
-    private handleRightMoveCaret(): void {
+    private handleHorizontalCaretMovement(dir: -1 | 1): void {
         if (this.model.selections.length === 0) {
-            this.moveCaretHorizontallyBy(1);
+            this.moveCaretHorizontallyBy(dir);
         }
-        this.jumpSelection(1);
+        this.jumpSelection(dir);
+        this.resetSelection();
     }
 
-    private handleLeftMoveCaret(): void {
+    private handleVerticalCaretMovement(dir: -1 | 1): void {
         if (this.model.selections.length === 0) {
-            this.moveCaretHorizontallyBy(-1);
+            this.moveCaretVerticallyBy(dir);
             return;
         }
-        this.jumpSelection(-1);
+        this.jumpSelection(dir);
+        this.resetSelection();
     }
 
     // Moves caret to the end if type is 1 otherwise moves it towards the back of selection
@@ -271,6 +270,74 @@ class EditorPresenter {
             else
                 // Moves the corresponding caret to the start of selection
                 this.model.carets[i] = Math.min(...selection);
+        }
+        this.renderView();
+    }
+
+    private beginSelection(): void {
+        if (this.model.selections.length !== 0) {
+            this.model.selections.length = 0;
+        }
+        for (const caret of this.model.carets) {
+            this.model.selections.push([ caret, caret ]);
+        }
+        this.renderView();
+    }
+
+    private handleCaretMovement(direction: CaretMovementDirection, extendsSelection: boolean, unit: CaretMovementUnit): void {
+
+        if (extendsSelection) {
+            this.ensureSelectionAnchor();
+        } else {
+            this.resetSelection();
+        }
+
+        switch (direction) {
+            case CaretMovementDirection.UP:
+                this.moveCaretVerticallyBy(-1);
+                break;
+            case CaretMovementDirection.DOWN:
+                this.moveCaretVerticallyBy(1);
+                break;
+            case CaretMovementDirection.LEFT:
+                if (unit === CaretMovementUnit.CHAR)
+                    this.moveCaretHorizontallyBy(-1);
+                else
+                    this.moveCaretByWord(-1);
+                break;
+            case CaretMovementDirection.RIGHT:
+                if (unit === CaretMovementUnit.CHAR)
+                    this.moveCaretHorizontallyBy(1);
+                else
+                    this.moveCaretByWord(1);
+                break;
+
+        }
+        if (extendsSelection)
+            this.updateSelection();
+
+    }
+
+    private moveCaretByWord(delta: -1 | 1): void {
+        const wordRegex = /\w/;
+        for (let i = 0; i < this.model.carets.length; i++) {
+            const caret = this.model.carets[i];
+            if (caret === undefined)
+                continue;
+            const {line, column} = this.model.doc.getLineAndColumn(caret);
+            const text = this.model.doc.getLineText(line);
+
+            let k = column;
+            if (delta < 0) {
+                while (k > 0 && wordRegex.test(text[k - 1]!)) k--;
+            } else {
+                while (k < text.length && wordRegex.test(text[k]!)) k++;
+            }
+            console.log(k)
+            if(k === column)
+                k += delta;
+            const count = k-column;
+            this.moveCaretHorizontallyBy(count);
         }
         this.renderView();
     }
