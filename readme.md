@@ -31,4 +31,4 @@ A basic custom text editor has been implemented to write and manage YASL code. I
 
 The long term objective remains to build a complete IDE tailored for algorithm visualization, expand the simulation engine to support more data structures, and introduce multiple levels of execution detail. The current implementation establishes the technical base required to move toward that goal.
 
-<img width="1896" height="1022" alt="image" src="https://github.com/user-attachments/assets/4d44398d-41b7-45d2-9bcd-7ce3fe327701" />
+<img width="1902" height="947" alt="image" src="https://github.com/user-attachments/assets/e1585e19-d0e8-459c-b12f-9f8bd0781207" />
