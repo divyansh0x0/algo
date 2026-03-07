@@ -1,9 +1,9 @@
-import { Color } from "~/lib/core/engine/utils/Color";
+import type { Color } from "~/lib/core/engine/utils/Color";
 import { lerpColor } from "~/lib/core/engine/utils/Lerp";
 import { ECBackgroundColor, ECBorderColor, ECTextColor } from "../components/ECColor";
 import { ECColorTransition, ECColorTransitionType } from "../components/ECTransition";
 import type { World } from "../World";
-import { type EntitySystem } from "./EntitySystem";
+import type { EntitySystem } from "./EntitySystem";
 
 export class TransitionSystem implements EntitySystem {
 

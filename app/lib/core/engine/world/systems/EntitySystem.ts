@@ -7,6 +7,3 @@ export interface EntitySystem {
 
     end(): void;
 }
-
-export class ESRequirements {
-}

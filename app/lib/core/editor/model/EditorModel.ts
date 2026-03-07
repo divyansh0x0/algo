@@ -6,8 +6,8 @@ import type { DocumentModel } from "./DocumentModel";
 
 export class EditorModel {
     // readonly document: DocumentModel;
-    readonly carets: number[] = [ 0 ];
-    readonly selection: [ number, number ][] = [];
+    carets: number[] = [ 0 ];
+    readonly selections: [ number, number ][] = [];
     readonly opDispatcher = new OperationDispatcher(this);
 
     constructor(readonly doc: DocumentModel) {
@@ -21,8 +21,7 @@ export class EditorModel {
             if (delta > 0)
                 this.opDispatcher.execute(new EOpDeleteText(caret, delta));
             else{
-                console.error(caret + delta, caret);
-                this.opDispatcher.execute(new EOpDeleteText(caret + delta, -delta));
+                    this.opDispatcher.execute(new EOpDeleteText(caret + delta, -delta));
                 this.carets[i]! += delta;
             }
         }

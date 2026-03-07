@@ -15,27 +15,31 @@ export class EditorLineTable {
         }
     }
     getLineAndColumn(offset: number): EditorPosition {
-        const line = this.findLine(offset);
+        const line = this.findLineNumber(offset);
         if(this.lineStarts[line] == undefined) {
             return {line:0, column:0};
         }
         return { line, column: offset - this.lineStarts[line] };
     }
     getCharacterOffset(line: number, column: number): number {
-        if(this.getLineStart(line) === undefined) {
+        const lineStart = this.getLineStart(line);
+        if(lineStart === undefined) {
             return 0;
         }
-        const lineStart = this.getLineStart(line);
-        return Math.min(lineStart + column, this.getLineStart(line + 1));
+        const lineEnd = this.getLineEnd(line + 1);
+        return Math.min(lineStart + column,lineEnd);
     }
     getLineStart(line: number): number {
         if(line < 0){
             return 0;
         }
-        return  line < this.getLineCount() ? this.lineStarts[line]! : this.lineStarts[this.getLineCount() - 1]!;
+        if(line >= this.getLineCount()){
+            return this.text.length+1;
+        }
+        return this.lineStarts[line]!;
     }
     // Binary search
-    private findLine(offset: number): number {
+    private findLineNumber(offset: number): number {
         let low = 0, high = this.lineStarts.length - 1;
         while (low <= high) {
             const mid = (low + high) >> 1;
@@ -53,5 +57,18 @@ export class EditorLineTable {
     setText(text: string) {
         this.text = text;
         this.buildLineStarts();
+    }
+
+    getLineEnd(line: number): number {
+        const nextLineStart = this.getLineStart(line + 1);
+        return nextLineStart - 1;
+    }
+
+    getLineStartEndOffsetFromOffset(offset: number): { start: number, end: number } {
+        const lineNumber = this.findLineNumber(offset);
+        const start = this.getLineStart(lineNumber);
+        const end = this.getLineEnd(lineNumber);
+        console.log("line:",lineNumber, start, end);
+        return { start, end };
     }
 }

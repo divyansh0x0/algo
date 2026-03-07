@@ -102,7 +102,7 @@ export class Graph {
 
     attach(parent_node: string, toList: string[]) {
         this.addNode(parent_node);
-        let neighbours_set = this.adjacency_mapping.get(parent_node);
+        const neighbours_set = this.adjacency_mapping.get(parent_node);
         for (const to of toList) {
             this.addNode(to);
 

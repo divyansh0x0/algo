@@ -3,7 +3,7 @@ import type { EntitySystem } from "./systems/EntitySystem";
 import type { EntityComponent } from "./components";
 import type { Entity } from "./Entity";
 import { SparseSet } from "./SparseSet";
-import type EntityResource from "./resources/EntityResource";
+import type { EntityResource } from "./resources/EntityResource";
 
 export type ComponentClass<T extends EntityComponent = EntityComponent> = new (...args: never[]) => T;
 

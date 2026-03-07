@@ -17,7 +17,7 @@
 
     --yasl-repl-border-radius: 10px;
     --yasl-editor-font-size: 1rem;
-    --yasl-caret-color: #fff;
+    --yasl-caret-color: #070707;
     --yasl-loader-bg: rgb(53, 53, 53);
     --yasl-editor-line-height: 2;
 }
@@ -50,20 +50,50 @@
 ************************************************ Code ****************************************************************
 /**********************************************************************************************************************/
 .yl-editor-wrapper {
+    display: flex;
+    position: relative;
     font-family: "JetBrains Mono", monospace;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 .yl-editor-wrapper * {
+    user-select: none;
     font-family: "JetBrains \Mono", monospace;
 }
-
+.yl-editor-selection{
+    background-color: var(--yasl-editor-selection-color);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+}
 .yl-document-wrapper {
+    position: relative;
     min-height: 1em;
-    height: fit-content;
+    height: 100%;
     width: 100%;
+    cursor: text;
+
 }
 
+.yl-editor-number-gutter{
+    flex-grow: 0;
+    display: flex;
+    flex-direction: column;
+    width: min-content;
+    padding: 0 10px 0 5px;
+}
+.yl-text-layer{
+    overflow: scroll;
+    min-width: 100%;
+    height: 100%;
+    outline: none;
+}
 .yl-caret {
+    pointer-events: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -72,13 +102,28 @@
     background-color: var(--yasl-caret-color);
     animation: blink 0.5s infinite ease alternate forwards;
 }
-
-.yl-document-row {
+.yl-selection-container{
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    white-space: pre;
-    overflow: hidden;
+    height: 100%;
+    pointer-events: none;
+    touch-action: none;
 }
-.yl-document-row.active {
+.yl-document-row {
+    min-width: max-content;
+    white-space: pre;
+    cursor: text;
+    pointer-events: none;
+    touch-action: none;
+}
+.yl-document-active-row-marker{
+    width: 100%;
+    left: 0;
+    position: absolute;
+    pointer-events: none;
+    touch-action: none;
     background-color: var(--yasl-row-active-bg);
 }
 .yl-document-wrapper .keyword {

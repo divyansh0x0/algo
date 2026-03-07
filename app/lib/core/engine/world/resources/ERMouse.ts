@@ -1,7 +1,8 @@
 import { Vector2D } from "../../utils";
+import type { EntityResource } from "./EntityResource";
 import type { ERCamera } from "./ERCamera";
 
-export class ERMouse{
+export class ERMouse implements EntityResource{
 
     private mousePosition: Vector2D = new Vector2D(0, 0);
     private mousePressed: boolean = false;
@@ -34,6 +35,8 @@ export class ERMouse{
             this.mouseClicked = true;
         });
         canvas.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
             this.scrollDelta = Math.sign(e.deltaY);
         })
     }
@@ -63,8 +66,9 @@ export class ERMouse{
         this.buttonsConsumed = true;
     }
     getWorldPosition(camera:ERCamera): Vector2D {
-        const bounds = this.ctx.canvas.getBoundingClientRect();
-        return this.mousePosition.addXY(-bounds.left - bounds.width/2 + camera.position.x * camera.scale, - bounds.top - bounds.height/2 + camera.position.y*camera.scale);
+        const originX = this.ctx.canvas.width / 2;
+        const originY = this.ctx.canvas.height / 2;
+        return new Vector2D(camera.position.x + (this.mousePosition.x - originX)/camera.scale, camera.position.y + (this.mousePosition.y - originY)/camera.scale);
     }
     /**
      * Returns the vertical mouse scroll delta. The last delta is cleared once this is called
