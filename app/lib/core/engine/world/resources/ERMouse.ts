@@ -35,6 +35,8 @@ export class ERMouse implements EntityResource{
             this.mouseClicked = true;
         });
         canvas.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
             this.scrollDelta = Math.sign(e.deltaY);
         })
     }

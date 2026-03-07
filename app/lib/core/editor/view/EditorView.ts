@@ -44,9 +44,6 @@ export class EditorView {
         this.fontservice.init();
 
         this.presenter = new EditorPresenter(this);
-        setInterval(() => {
-            console.log(document.activeElement)
-        },1000)
     }
 
     onKeyDown(handler: KeyboardEventHandler): void {
@@ -111,13 +108,12 @@ export class EditorView {
         this.activeRowElement.style.height = `${charHeight}px`;
 
         this.selectionEl.innerHTML = "";
-        for (const selection of model.selection) {
+        for (const selection of model.selections) {
             const selectionStart = Math.min(...selection);
             const selectionEnd = Math.max(...selection);
 
             const start = model.doc.getLineAndColumn(selectionStart);
             const end = model.doc.getLineAndColumn(selectionEnd);
-            console.log(start, end);
 
             const startSelectionEl = document.createElement("div");
             startSelectionEl.classList.add("yl-editor-selection");

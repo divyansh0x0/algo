@@ -35,13 +35,13 @@ class EditorPresenter {
     } = {
         insertChar: (intent) => this.insertChar(intent.text),
 
-        deleteLeft: () => this.deleteChars(-1),
-        deleteRight: () => this.deleteChars(1),
+        deleteLeft: () => this.handleDeleteLeft(),
+        deleteRight: () => this.handleDeleteRight(),
 
         newline: () => this.createNewLine(),
 
-        moveRight: () => this.moveCaretHorizontallyBy(1),
-        moveLeft: () => this.moveCaretHorizontallyBy(-1),
+        moveRight: () => this.handleRightMoveCaret(),
+        moveLeft: () => this.handleLeftMoveCaret(),
 
         moveUp: () => this.moveCaretVerticallyBy(-1),
         moveDown: () => this.moveCaretVerticallyBy(1),
@@ -97,8 +97,7 @@ class EditorPresenter {
         console.log(editorIntent);
         const handler = this.handlers[editorIntent.type] as (intent: typeof editorIntent) => void;
         handler?.(editorIntent);
-        this.resetSelection()
-        this.renderView();
+        this.resetSelection();
     }
 
     private onMouseUp() {
@@ -136,8 +135,7 @@ class EditorPresenter {
     }
 
     private insertChar(text: string) {
-
-
+        this.deleteSelection();
         this.model.insertText(text);
     }
 
@@ -160,13 +158,13 @@ class EditorPresenter {
 
     private updateSelection(position: EditorPosition): void {
         const offset = this.model.doc.getCharacterOffset(position.line, position.column);
-        if (this.model.selection.length !== 1) {
-            this.model.selection.length = 0;
-            this.model.selection.push([ offset, offset ]);
+        if (this.model.selections.length !== 1) {
+            this.model.selections.length = 0;
+            this.model.selections.push([ offset, offset ]);
             return;
         }
         //Set end to the offset
-        this.model.selection[0]![1] = offset;
+        this.model.selections[0]![1] = offset;
         this.renderView();
     }
 
@@ -178,6 +176,7 @@ class EditorPresenter {
             const pos = doc.getLineAndColumn(caret);
             carets[i] = doc.getCharacterOffset(pos.line + delta, pos.column);
         }
+        this.renderView();
     }
 
     private moveCaretHorizontallyBy(delta: number): void {
@@ -185,6 +184,7 @@ class EditorPresenter {
             const caretOffset = this.model.carets[i]!;
             this.model.carets[i] = MathUtils.clamp(caretOffset + delta, 0, this.model.doc.getMaxOffset());
         }
+        this.renderView();
     }
 
     private createNewLine(): void {
@@ -192,14 +192,86 @@ class EditorPresenter {
     }
 
     private resetSelection(position?: EditorPosition): void {
-        if(position === undefined){
-            this.model.selection.length = 0;
+        if (position === undefined) {
+            this.model.selections.length = 0;
             this.renderView();
             return;
         }
         const offset = this.model.doc.getCharacterOffset(position.line, position.column);
-        this.model.selection.length = 0;
-        this.model.selection.push([ offset, offset ]);
+        this.model.selections.length = 0;
+        this.model.selections.push([ offset, offset ]);
+        this.renderView();
+    }
+
+    private handleDeleteLeft(): void {
+        if (this.model.selections.length > 0) {
+            this.deleteSelection();
+            return;
+        }
+        this.deleteChars(-1);
+    }
+
+    private handleDeleteRight(): void {
+        if (this.model.selections.length > 0) {
+            this.deleteSelection();
+            return;
+        }
+        this.deleteChars(1);
+    }
+
+    private deleteSelection(): void {
+
+        if (this.model.selections.length === 0) {
+            return;
+        }
+        for (let i = 0; i < this.model.selections.length; i++) {
+            const selection = this.model.selections[i];
+            const caret = this.model.carets[i];
+            if (selection === undefined)
+                continue;
+            if (caret === undefined)
+                continue;
+            const start = Math.min(...selection);
+            const end = Math.max(...selection);
+            const count = end-start;
+            this.model.doc.deleteRange(start, count);
+            // Moves the corresponding caret to the start
+            this.model.carets[i] = start;
+        }
+        this.renderView();
+    }
+
+    private handleRightMoveCaret(): void {
+        if (this.model.selections.length === 0) {
+            this.moveCaretHorizontallyBy(1);
+        }
+        this.jumpSelection(1);
+    }
+
+    private handleLeftMoveCaret(): void {
+        if (this.model.selections.length === 0) {
+            this.moveCaretHorizontallyBy(-1);
+            return;
+        }
+        this.jumpSelection(-1);
+    }
+
+    // Moves caret to the end if type is 1 otherwise moves it towards the back of selection
+    private jumpSelection(type: 1 | -1): void {
+        for (let i = 0; i < this.model.selections.length; i++) {
+            const selection = this.model.selections[i];
+            const carets = this.model.carets[i];
+            if (!selection)
+                continue;
+            if (carets === undefined)
+                continue;
+            if (type === 1)
+                // Moves the corresponding caret to the end of selection
+                this.model.carets[i] = Math.max(...selection);
+            else
+                // Moves the corresponding caret to the start of selection
+                this.model.carets[i] = Math.min(...selection);
+        }
         this.renderView();
     }
 }
