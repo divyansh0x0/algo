@@ -2,13 +2,21 @@ import EOpDeleteText from "../operations/EOpDeleteText";
 import { EOpInsertText } from "../operations/EOpInsertText";
 import { OperationDispatcher } from "../operations/OperationDispatcher";
 import type { DocumentModel } from "./DocumentModel";
+import { EditorSelection } from "./EditorSelection";
 
-
+const SETTINGS = {
+  tabSize: 6,
+};
 export class EditorModel {
     // readonly document: DocumentModel;
     carets: number[] = [ 0 ];
-    readonly selections: [ number, number ][] = [];
+
+    // stores start and end column of selection
+    readonly selections: EditorSelection[] = [];
     readonly opDispatcher = new OperationDispatcher(this);
+    get settings(){
+        return SETTINGS
+    }
 
     constructor(readonly doc: DocumentModel) {
     }
@@ -34,5 +42,13 @@ export class EditorModel {
             this.opDispatcher.execute(new EOpInsertText(caret,text));
             this.carets[i]! += text.length;
         }
+    }
+
+    hasSelections(): boolean {
+        return this.selections.length > 0;
+    }
+
+    insertAt(offset: number,text: string): void {
+        this.opDispatcher.execute(new EOpInsertText(offset, text));
     }
 }

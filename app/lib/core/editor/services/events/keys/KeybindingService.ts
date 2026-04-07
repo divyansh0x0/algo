@@ -1,5 +1,5 @@
 
-export enum CaretMovementUnit {
+export enum TextUnit {
     CHAR,
     WORD,
 }
@@ -14,8 +14,17 @@ export type EditorIntent =
     | { type: "insertChar", text: string }
     | { type: "deleteLeft" }
     | { type: "newline" }
-    | { type: "move", direction: CaretMovementDirection, extendsSelection?: boolean, unit?: CaretMovementUnit }
-    | { type: "deleteRight" };
+    | { type: "move", direction: CaretMovementDirection, extendsSelection?: boolean, unit?: TextUnit }
+    | { type: "deleteRight" }
+    | { type: "selectAll" }
+    | { type: "copy" }
+    | { type: "cut" }
+    | { type: "paste" }
+    | { type: "undo" }
+    | { type: "redo" }
+    | { type: "indent" }
+    | { type: "outdent" };
+
 type CommandID = string;
 const IGNORED_KEYS = new Set([
     "Shift",
@@ -34,6 +43,10 @@ export class Keymap {
             [ "ArrowUp", {type: "move", direction: CaretMovementDirection.UP} ],
             [ "ArrowDown", {type: "move", direction: CaretMovementDirection.DOWN} ],
             [ "Delete", {type: "deleteRight"} ],
+            ["Tab", {type: "indent"}],
+            ["Shift+Tab", {type: "outdent"}],
+            ["Ctrl+KeyZ", {type: "undo"}],
+            ["Ctrl+KeyY", {type: "redo"}],
             [ "Shift+ArrowLeft", {
                 type: "move",
                 direction: CaretMovementDirection.LEFT,
@@ -57,24 +70,24 @@ export class Keymap {
             [ "Ctrl+ArrowLeft", {
                 type: "move",
                 direction: CaretMovementDirection.LEFT,
-                unit: CaretMovementUnit.WORD,
+                unit: TextUnit.WORD,
             } ],
             [ "Ctrl+ArrowRight", {
                 type: "move",
                 direction: CaretMovementDirection.RIGHT,
-                unit: CaretMovementUnit.WORD,
+                unit: TextUnit.WORD,
             } ],
             [ "Ctrl+Shift+ArrowLeft", {
                 type: "move",
                 direction: CaretMovementDirection.LEFT,
                 extendsSelection: true,
-                unit: CaretMovementUnit.WORD
+                unit: TextUnit.WORD
             } ],
             [ "Ctrl+Shift+ArrowRight", {
                 type: "move",
                 direction: CaretMovementDirection.RIGHT,
                 extendsSelection: true,
-                unit: CaretMovementUnit.WORD
+                unit: TextUnit.WORD
             } ],
 
         ]
@@ -92,7 +105,6 @@ export class KeybindingService {
 
     resolve(ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, code: string, key: string): EditorIntent | undefined {
         const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey) || (shiftKey && altKey);
-
         if (!isShortcut) {
             if (IGNORED_KEYS.has(key)) {
                 return undefined;
@@ -103,9 +115,10 @@ export class KeybindingService {
             ].filter(Boolean);
 
             const cmd = [ ...modifiers, code ].join("+");
-            const binding = this.keymap.resolve(cmd);
+            console.log("shortcut", cmd);
 
-            return binding ?? {type: "insertChar", text: cmd};
+            const binding = this.keymap.resolve(cmd);
+            return binding ?? {type: "insertChar", text: key};
         }
         const modifiers = [
             metaKey && "Meta",

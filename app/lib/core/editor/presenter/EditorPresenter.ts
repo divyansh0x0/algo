@@ -2,14 +2,15 @@ import { MathUtils } from "../../engine/utils";
 import type { EditorPosition } from "../EditorPosition";
 import { DocumentModel } from "../model/DocumentModel";
 import { EditorModel } from "../model/EditorModel";
+import { EditorSelection } from "../model/EditorSelection";
+import { EOpIndent } from "../operations/EOpIndent";
+import { EOpOutdent } from "../operations/EOpOutdent";
 import {
     CaretMovementDirection,
-    CaretMovementUnit,
     type EditorIntent,
-    KeybindingService
+    KeybindingService,
+    TextUnit
 } from "../services/events/keys/KeybindingService";
-
-
 import type { EditorView } from "../view/EditorView";
 
 class EditorPresenter {
@@ -31,8 +32,10 @@ class EditorPresenter {
         deleteRight: () => this.handleDeleteRight(),
 
         newline: () => this.createNewLine(),
+        move: (intent) => this.handleCaretMovement(intent.direction, intent.extendsSelection ?? false, intent.unit ?? TextUnit.CHAR),
 
-        move: (intent) => this.handleCaretMovement(intent.direction, intent.extendsSelection ?? false, intent.unit ?? CaretMovementUnit.CHAR),
+        indent: () => this.indent(),
+        outdent: () => this.outdent()
     };
 
     constructor(private view: EditorView) {
@@ -71,7 +74,6 @@ class EditorPresenter {
     }
 
     private onKeyDown(event: KeyboardEvent) {
-        console.log("Keydown");
         const editorIntent = this.keybindingService.resolve(
             event.ctrlKey,
             event.altKey,
@@ -80,7 +82,10 @@ class EditorPresenter {
             event.code,
             event.key
         );
+        console.log("Keydown", event.key, editorIntent);
         if (!editorIntent) return;
+        event.stopImmediatePropagation();
+        event.preventDefault();
 
         const handler = this.handlers[editorIntent.type] as (intent: typeof editorIntent) => void;
         handler?.(editorIntent);
@@ -133,6 +138,7 @@ class EditorPresenter {
             return;
 
         this.model.deleteChars(delta);
+        this.renderView();
     }
 
     private renderView(): void {
@@ -151,7 +157,7 @@ class EditorPresenter {
             const caret = this.model.carets[i];
             if (caret === undefined)
                 continue;
-            this.model.selections[i]![1] = caret;
+            this.model.selections[i]!.head = caret;
         }
         this.renderView();
     }
@@ -164,7 +170,7 @@ class EditorPresenter {
                 if (caret === undefined)
                     continue;
 
-                this.model.selections[i] = [ caret, caret ];
+                this.model.selections[i] = new EditorSelection(caret, caret);
             }
             this.renderView();
         }
@@ -216,7 +222,6 @@ class EditorPresenter {
     }
 
     private deleteSelection(): void {
-
         if (this.model.selections.length === 0) {
             return;
         }
@@ -227,8 +232,8 @@ class EditorPresenter {
                 continue;
             if (caret === undefined)
                 continue;
-            const start = Math.min(...selection);
-            const end = Math.max(...selection);
+            const start = selection.min();
+            const end = selection.max();
             const count = end - start;
             this.model.doc.deleteRange(start, count);
             // Moves the corresponding caret to the start
@@ -236,23 +241,6 @@ class EditorPresenter {
         }
         this.resetSelection();
         this.renderView();
-    }
-
-    private handleHorizontalCaretMovement(dir: -1 | 1): void {
-        if (this.model.selections.length === 0) {
-            this.moveCaretHorizontallyBy(dir);
-        }
-        this.jumpSelection(dir);
-        this.resetSelection();
-    }
-
-    private handleVerticalCaretMovement(dir: -1 | 1): void {
-        if (this.model.selections.length === 0) {
-            this.moveCaretVerticallyBy(dir);
-            return;
-        }
-        this.jumpSelection(dir);
-        this.resetSelection();
     }
 
     // Moves caret to the end if type is 1 otherwise moves it towards the back of selection
@@ -266,25 +254,15 @@ class EditorPresenter {
                 continue;
             if (type === 1)
                 // Moves the corresponding caret to the end of selection
-                this.model.carets[i] = Math.max(...selection);
+                this.model.carets[i] = selection.max();
             else
                 // Moves the corresponding caret to the start of selection
-                this.model.carets[i] = Math.min(...selection);
+                this.model.carets[i] = selection.min();
         }
         this.renderView();
     }
 
-    private beginSelection(): void {
-        if (this.model.selections.length !== 0) {
-            this.model.selections.length = 0;
-        }
-        for (const caret of this.model.carets) {
-            this.model.selections.push([ caret, caret ]);
-        }
-        this.renderView();
-    }
-
-    private handleCaretMovement(direction: CaretMovementDirection, extendsSelection: boolean, unit: CaretMovementUnit): void {
+    private handleCaretMovement(direction: CaretMovementDirection, extendsSelection: boolean, unit: TextUnit): void {
 
         if (extendsSelection) {
             this.ensureSelectionAnchor();
@@ -300,13 +278,13 @@ class EditorPresenter {
                 this.moveCaretVerticallyBy(1);
                 break;
             case CaretMovementDirection.LEFT:
-                if (unit === CaretMovementUnit.CHAR)
+                if (unit === TextUnit.CHAR)
                     this.moveCaretHorizontallyBy(-1);
                 else
                     this.moveCaretByWord(-1);
                 break;
             case CaretMovementDirection.RIGHT:
-                if (unit === CaretMovementUnit.CHAR)
+                if (unit === TextUnit.CHAR)
                     this.moveCaretHorizontallyBy(1);
                 else
                     this.moveCaretByWord(1);
@@ -333,14 +311,146 @@ class EditorPresenter {
             } else {
                 while (k < text.length && wordRegex.test(text[k]!)) k++;
             }
-            console.log(k)
-            if(k === column)
+            if (k === column)
                 k += delta;
-            const count = k-column;
+            const count = k - column;
             this.moveCaretHorizontallyBy(count);
         }
         this.renderView();
     }
+
+    private indentLines(lineStart: number, lineEnd: number, tabSize: number): void {
+        const rows =[]
+        for (let i = lineStart; i <= lineEnd; i++) {
+            rows.push(i);
+        }
+        this.model.opDispatcher.execute(new EOpIndent(rows,tabSize));
+    }
+
+    private indent(): void {
+        const tabSize = this.model.settings.tabSize;
+        const tab = " ".repeat(tabSize);
+        if (this.model.hasSelections()) {
+            for (let i = 0; i < this.model.selections.length; i++) {
+                const selection = this.model.selections[i];
+                if (!selection)
+                    continue;
+                const lineStart = this.model.doc.getLineTable().findLineNumber(selection.min());
+                const lineEnd = this.model.doc.getLineTable().findLineNumber(selection.max());
+                const lineCount = lineEnd - lineStart + 1;
+                this.indentLines(lineStart, lineEnd, tabSize);
+                // Anchor sits on lineStart → shifts by exactly one tabSize.
+                // Active shifts by tabSize * lineCount (every line it spans).
+                if (!selection.isReversed()) {
+                    selection.anchor += tabSize;
+                    selection.head += tabSize * lineCount;
+                } else {
+                    selection.head += tabSize;
+                    selection.anchor += tabSize * lineCount;
+                }
+                this.model.carets[i]! = selection.head;
+
+            }
+            this.renderView();
+            return;
+        }
+        this.insertChar(tab);
+    }
+
+    private outdentLines(startRow: number, endRow: number, tabSize: number): EOpOutdent {
+        const rows: number[] = [];
+        for (let line = startRow; line <= endRow; line++)
+            rows.push(line);
+        const op = new EOpOutdent(rows, tabSize);
+        this.model.opDispatcher.execute(op);
+        return op;
+    }
+
+    private outdent(): void {
+        const tabSize = this.model.settings.tabSize;
+        if (this.model.hasSelections()) {
+            for (let i = 0; i < this.model.selections.length; i++) {
+                const selection = this.model.selections[i];
+                if (!selection)
+                    continue;
+                const startRow = this.model.doc.getLineTable().findLineNumber(selection.min());
+                const endRow = this.model.doc.getLineTable().findLineNumber(selection.max());
+                if (!EOpOutdent.canOutdent(this.model, startRow, endRow))
+                    continue;
+                const op = this.outdentLines(startRow, endRow, tabSize);
+                const removed = op.getOutdentedLines();
+                // Each endpoint shifts left by exactly how many chars were removed
+                // from the line it sits on.
+                console.log(selection,removed)
+                const selectionAnchorRow = this.model.doc.getLineTable().findLineNumber(selection.anchor);
+                const selectionEndRow = this.model.doc.getLineTable().findLineNumber(selection.head);
+                if(removed.includes(selectionAnchorRow) || removed.includes(selectionEndRow)){
+
+                    if (!selection.isReversed()) {
+                        selection.anchor -= tabSize;
+                        selection.head -= tabSize * removed.length;
+                    } else {
+                        selection.head -= tabSize;
+                        selection.anchor -= tabSize * removed.length;
+                    }
+                }
+
+                this.model.carets[i] = selection.head;
+            }
+            this.renderView();
+            return;
+        }
+        // No selection: outdent the line the caret is on.
+        const caret = this.model.carets[0];
+        if (caret === undefined) return;
+        const caretLine = this.model.doc.getLineTable().findLineNumber(caret);
+        if (!EOpOutdent.canOutdent(this.model, caretLine, caretLine)) return;
+        const op = this.outdentLines(caretLine, caretLine, tabSize);
+        for (let i = 0; i < this.model.carets.length; i++) {
+            const c = this.model.carets[i];
+            if (c !== undefined)
+                this.model.carets[i] = Math.max(0, c - tabSize);
+        }
+        this.renderView();
+    }
+
 }
 
+// private indent(): void {
+//     const tabSize = this.model.settings.tabSize;
+//     const tab = " ".repeat(tabSize);
+//     console.log(this.model.selections);
+//     if (this.model.hasSelections()) {
+//     for (let i = 0; i < this.model.selections.length; i++) {
+//         const selection = this.model.selections[i];
+//         if (!selection)
+//             continue;
+//         const start = Math.min(...selection);
+//         const end = Math.max(...selection);
+//         const lineStart = this.model.doc.getLineTable().findLineNumber(start);
+//         const lineEnd = this.model.doc.getLineTable().findLineNumber(end);
+//         for (let line = lineStart; line <= lineEnd; line++) {
+//             const offset = this.model.doc.getCharacterOffset(line, 0);
+//             this.model.insertAt(offset, tab);
+//         }
+//         if(selection[0] < selection[1]){
+//             selection[0] += tabSize;
+//             selection[1] += tabSize * (lineEnd - lineStart);
+//         }
+//         else{
+//             selection[1] += tabSize;
+//             selection[0] += tabSize * (lineEnd - lineStart + 1);
+//         }
+//         for (let j = 0; j < this.model.carets.length; j++) {
+//             if (this.model.carets[j] !== undefined) {
+//                 this.model.carets[j]! += tabSize;
+//             }
+//         }
+//     }
+//
+//     this.renderView();
+//     return;
+// }
+// this.insertChar(tab);
+// }
 export default EditorPresenter;

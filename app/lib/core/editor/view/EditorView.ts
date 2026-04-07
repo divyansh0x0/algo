@@ -47,7 +47,7 @@ export class EditorView {
     }
 
     onKeyDown(handler: KeyboardEventHandler): void {
-        this.textLayer.addEventListener("keydown", handler);
+        this.textLayer.onkeydown = handler;
     }
 
     onKeyUp(handler: KeyboardEventHandler): void {
@@ -109,8 +109,8 @@ export class EditorView {
 
         this.selectionEl.innerHTML = "";
         for (const selection of model.selections) {
-            const selectionStart = Math.min(...selection);
-            const selectionEnd = Math.max(...selection);
+            const selectionStart = selection.min();
+            const selectionEnd   = selection.max();
 
             const start = model.doc.getLineAndColumn(selectionStart);
             const end = model.doc.getLineAndColumn(selectionEnd);

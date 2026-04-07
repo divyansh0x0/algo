@@ -39,7 +39,7 @@ export class EditorLineTable {
         return this.lineStarts[line]!;
     }
     // Binary search
-    private findLineNumber(offset: number): number {
+    findLineNumber(offset: number): number {
         let low = 0, high = this.lineStarts.length - 1;
         while (low <= high) {
             const mid = (low + high) >> 1;
@@ -54,6 +54,7 @@ export class EditorLineTable {
     getLineCount(): number {
         return this.lineStarts.length;
     }
+
     setText(text: string) {
         this.text = text;
         this.buildLineStarts();
