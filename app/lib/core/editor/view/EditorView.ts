@@ -97,7 +97,7 @@ export class EditorView {
         if (this.gutter.children.length !== model.doc.getLineCount()) {
             let html = "";
             for (let i = 1; i <= model.doc.getLineCount(); i++) {
-                html += `<span>${i}</span>`;
+                html += `<span style="height:${charHeight}px">${i}</span>`;
             }
             this.gutter.innerHTML = html;
         }

@@ -131,6 +131,7 @@ class EditorPresenter {
         this.deleteSelection();
         this.resetSelection();
         this.model.insertText(text);
+        this.renderView()
     }
 
     private deleteChars(delta: number): void {
