@@ -1,21 +1,22 @@
-
 export enum TextUnit {
     CHAR,
     WORD,
 }
+
 export enum CaretMovementDirection {
     UP,
     DOWN,
     LEFT,
     RIGHT
 }
+
 export type EditorIntent =
-    | { type: "command", command: string }
+    | { type: "unknown", command: string }
     | { type: "insertChar", text: string }
-    | { type: "deleteLeft" }
+    | { type: "deleteLeft", unit?: TextUnit }
+    | { type: "deleteRight", unit?: TextUnit }
     | { type: "newline" }
     | { type: "move", direction: CaretMovementDirection, extendsSelection?: boolean, unit?: TextUnit }
-    | { type: "deleteRight" }
     | { type: "selectAll" }
     | { type: "copy" }
     | { type: "cut" }
@@ -37,16 +38,18 @@ export class Keymap {
     private bindings = new Map<CommandID, EditorIntent>(
         [
             [ "Enter", {type: "newline"} ],
-            [ "Backspace", {type: "deleteLeft"} ],
+            [ "Backspace", {type: "deleteLeft", unit: TextUnit.CHAR} ],
+            [ "Ctrl+Backspace", {type: "deleteLeft", unit: TextUnit.WORD} ],
+            [ "Delete", {type: "deleteRight"} ],
+            [ "Ctrl+Delete", {type: "deleteRight", unit: TextUnit.WORD} ],
             [ "ArrowLeft", {type: "move", direction: CaretMovementDirection.LEFT} ],
             [ "ArrowRight", {type: "move", direction: CaretMovementDirection.RIGHT} ],
             [ "ArrowUp", {type: "move", direction: CaretMovementDirection.UP} ],
             [ "ArrowDown", {type: "move", direction: CaretMovementDirection.DOWN} ],
-            [ "Delete", {type: "deleteRight"} ],
-            ["Tab", {type: "indent"}],
-            ["Shift+Tab", {type: "outdent"}],
-            ["Ctrl+KeyZ", {type: "undo"}],
-            ["Ctrl+KeyY", {type: "redo"}],
+            [ "Tab", {type: "indent"} ],
+            [ "Shift+Tab", {type: "outdent"} ],
+            [ "Ctrl+KeyZ", {type: "undo"} ],
+            [ "Ctrl+KeyY", {type: "redo"} ],
             [ "Shift+ArrowLeft", {
                 type: "move",
                 direction: CaretMovementDirection.LEFT,
@@ -101,7 +104,7 @@ export class Keymap {
 
 export class KeybindingService {
     private keymap = new Keymap();
-
+    private textSegmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
 
     resolve(ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, code: string, key: string): EditorIntent | undefined {
         const isShortcut = ctrlKey || metaKey || (ctrlKey && altKey) || (ctrlKey && shiftKey) || (shiftKey && altKey);
@@ -118,7 +121,11 @@ export class KeybindingService {
             console.log("shortcut", cmd);
 
             const binding = this.keymap.resolve(cmd);
-            return binding ?? {type: "insertChar", text: key};
+            if (binding !== undefined)
+                return binding;
+
+            if([...this.textSegmenter.segment(key)].length === 1)
+                return {type: "insertChar", text: key}
         }
         const modifiers = [
             metaKey && "Meta",
@@ -129,6 +136,6 @@ export class KeybindingService {
 
         const cmd = [ ...modifiers, code ].join("+");
         const binding = this.keymap.resolve(cmd);
-        return binding ?? {type: "command", command: cmd};
+        return binding ?? {type: "unknown", command: cmd};
     }
 }

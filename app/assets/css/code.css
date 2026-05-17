@@ -126,6 +126,12 @@
     touch-action: none;
     background-color: var(--yasl-row-active-bg);
 }
+.yl-editor-input-detector{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+}
 .yl-document-wrapper .keyword {
     color: var(--yasl-keyword-color);
 }

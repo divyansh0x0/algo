@@ -10,13 +10,13 @@ type KeyboardEventHandler = (event: KeyboardEvent) => void;
 export class EditorView {
     private presenter: EditorPresenter;
     // private lexer = new Lexer();
-    private readonly textLayer: HTMLElement;
-    private readonly caretEl: HTMLElement;
-    private readonly gutter: HTMLElement;
+    private readonly textLayer: HTMLDivElement;
+    private readonly caretEl: HTMLDivElement;
+    private readonly gutter: HTMLDivElement;
     private fontservice: FontService;
-    private readonly activeRowElement: HTMLElement;
-    private readonly selectionEl: HTMLElement;
-
+    private readonly activeRowElement: HTMLDivElement;
+    private readonly selectionEl: HTMLDivElement;
+    private readonly inputDetectorEl: HTMLInputElement;
     constructor(private container: HTMLElement) {
         const documentWrapper = document.createElement("div");
         documentWrapper.style.position = "relative";
@@ -26,10 +26,12 @@ export class EditorView {
         this.gutter = document.createElement("div");
         this.activeRowElement = document.createElement("div");
         this.selectionEl = document.createElement("div");
+        this.inputDetectorEl = document.createElement("input");
 
         this.textLayer.tabIndex = 1;
 
-        documentWrapper.append(this.caretEl, this.selectionEl,this.textLayer);
+        this.inputDetectorEl.classList.add("yl-editor-input-detector");
+        documentWrapper.append(this.caretEl, this.selectionEl,this.textLayer, this.inputDetectorEl);
         this.container.append(this.gutter, documentWrapper, this.activeRowElement);
 
         this.gutter.classList.add("yl-editor-number-gutter");
@@ -39,7 +41,6 @@ export class EditorView {
         this.textLayer.classList.add("yl-text-layer");
         this.selectionEl.classList.add("yl-selection-container");
         documentWrapper.classList.add("yl-document-wrapper");
-
         this.fontservice = new FontService(container);
         this.fontservice.init();
 
@@ -47,7 +48,7 @@ export class EditorView {
     }
 
     onKeyDown(handler: KeyboardEventHandler): void {
-        this.textLayer.onkeydown = handler;
+        this.inputDetectorEl.onkeydown = handler;
     }
 
     onKeyUp(handler: KeyboardEventHandler): void {
@@ -55,10 +56,10 @@ export class EditorView {
     }
 
     onMouseDown(handler: MouseEventHandler): void {
-        this.textLayer.addEventListener("mousedown", (e) => {
+        this.textLayer.onmousedown = (e) => {
             handler(e);
-            this.textLayer.focus()
-        });
+            this.inputDetectorEl.focus()
+        };
     }
 
     onMouseUp(handler: MouseEventHandler): void {
@@ -104,6 +105,11 @@ export class EditorView {
         this.caretEl.style.left = `${charWidth * caretPos.column}px`;
         this.caretEl.style.top = `${charHeight * caretPos.line}px`;
         this.caretEl.style.height = `${charHeight}px`;
+
+        this.inputDetectorEl.style.height = `${charHeight}px`;
+        this.inputDetectorEl.style.top = `${charHeight * caretPos.line}px`;
+        this.inputDetectorEl.style.left = `${charWidth * caretPos.column}px`;
+
         this.activeRowElement.style.top = `${charHeight * caretPos.line}px`;
         this.activeRowElement.style.height = `${charHeight}px`;
 

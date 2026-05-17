@@ -27,13 +27,10 @@ class EditorPresenter {
         [K in EditorIntent["type"]]?: (intent: Extract<EditorIntent, { type: K }>) => void;
     } = {
         insertChar: (intent) => this.insertChar(intent.text),
-
-        deleteLeft: () => this.handleDeleteLeft(),
-        deleteRight: () => this.handleDeleteRight(),
-
+        deleteLeft: (intent) => this.handleDeleteLeft(intent.unit ?? TextUnit.CHAR),
+        deleteRight: (intent) => this.handleDeleteRight(intent.unit ?? TextUnit.CHAR),
         newline: () => this.createNewLine(),
         move: (intent) => this.handleCaretMovement(intent.direction, intent.extendsSelection ?? false, intent.unit ?? TextUnit.CHAR),
-
         indent: () => this.indent(),
         outdent: () => this.outdent()
     };
@@ -131,7 +128,7 @@ class EditorPresenter {
         this.deleteSelection();
         this.resetSelection();
         this.model.insertText(text);
-        this.renderView()
+        this.renderView();
     }
 
     private deleteChars(delta: number): void {
@@ -206,20 +203,30 @@ class EditorPresenter {
         return;
     }
 
-    private handleDeleteLeft(): void {
+    private handleDeleteLeft(unit: TextUnit): void {
         if (this.model.selections.length > 0) {
             this.deleteSelection();
             return;
         }
-        this.deleteChars(-1);
+        if (unit === TextUnit.CHAR){
+            this.deleteChars(-1);
+            return;
+        }
+        this.deleteWord(-1);
+
     }
 
-    private handleDeleteRight(): void {
+    private handleDeleteRight(unit: TextUnit): void {
         if (this.model.selections.length > 0) {
             this.deleteSelection();
             return;
         }
-        this.deleteChars(1);
+        if (unit === TextUnit.CHAR){
+            this.deleteChars(1);
+            return;
+        }
+        this.deleteWord(1);
+
     }
 
     private deleteSelection(): void {
@@ -296,36 +303,49 @@ class EditorPresenter {
             this.updateSelection();
 
     }
-
-    private moveCaretByWord(delta: -1 | 1): void {
+    private getAdjacentWordLength(caret: number, direction: -1 | 1): number {
         const wordRegex = /\w/;
+        const {line, column} = this.model.doc.getLineAndColumn(caret);
+        const text = this.model.doc.getLineText(line);
+
+        let k = column;
+        if (direction < 0) {
+            while (k > 0 && wordRegex.test(text[k - 1]!)) k--;
+        } else {
+            while (k < text.length && wordRegex.test(text[k]!)) k++;
+        }
+        if (k === column)
+            k += direction;
+        const count = k - column;
+        return count;
+    }
+    private deleteWord(direction: -1 | 1): void {
         for (let i = 0; i < this.model.carets.length; i++) {
             const caret = this.model.carets[i];
             if (caret === undefined)
                 continue;
-            const {line, column} = this.model.doc.getLineAndColumn(caret);
-            const text = this.model.doc.getLineText(line);
-
-            let k = column;
-            if (delta < 0) {
-                while (k > 0 && wordRegex.test(text[k - 1]!)) k--;
-            } else {
-                while (k < text.length && wordRegex.test(text[k]!)) k++;
-            }
-            if (k === column)
-                k += delta;
-            const count = k - column;
+            const count = this.getAdjacentWordLength(caret, direction);
+            this.deleteChars(count);
+        }
+        this.renderView();
+    }
+    private moveCaretByWord(direction: -1 | 1): void {
+        for (let i = 0; i < this.model.carets.length; i++) {
+            const caret = this.model.carets[i];
+            if (caret === undefined)
+                continue;
+            const count = this.getAdjacentWordLength(caret, direction);
             this.moveCaretHorizontallyBy(count);
         }
         this.renderView();
     }
 
     private indentLines(lineStart: number, lineEnd: number, tabSize: number): void {
-        const rows =[]
+        const rows = [];
         for (let i = lineStart; i <= lineEnd; i++) {
             rows.push(i);
         }
-        this.model.opDispatcher.execute(new EOpIndent(rows,tabSize));
+        this.model.opDispatcher.execute(new EOpIndent(rows, tabSize));
     }
 
     private indent(): void {
@@ -382,10 +402,10 @@ class EditorPresenter {
                 const removed = op.getOutdentedLines();
                 // Each endpoint shifts left by exactly how many chars were removed
                 // from the line it sits on.
-                console.log(selection,removed)
+                console.log(selection, removed);
                 const selectionAnchorRow = this.model.doc.getLineTable().findLineNumber(selection.anchor);
                 const selectionEndRow = this.model.doc.getLineTable().findLineNumber(selection.head);
-                if(removed.includes(selectionAnchorRow) || removed.includes(selectionEndRow)){
+                if (removed.includes(selectionAnchorRow) || removed.includes(selectionEndRow)) {
 
                     if (!selection.isReversed()) {
                         selection.anchor -= tabSize;
