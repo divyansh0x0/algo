@@ -1,0 +1,29 @@
+// 03_functions.yasl
+// Demonstrates function declaration and calling
+
+// Basic function declaration
+fn add(a, b) {
+    return a + b;
+}
+
+// Function with multiple return paths
+fn max(a, b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+// Calling functions
+let sum = add(10, 20);
+let largest = max(50, 100);
+
+// Recursive function
+fn factorial(n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+let fact5 = factorial(5); // 120

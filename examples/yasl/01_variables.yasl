@@ -1,0 +1,25 @@
+// 01_variables.yasl
+// Demonstrates variable declaration and inline assignments
+
+// Declaration using let
+let x = 10;
+let y = 20;
+
+// Re-assignment using inline assignment operator
+x := x + 5;
+y := y * 2;
+
+// Block scoping
+{
+    let z = 100;
+    x := z; // z is accessible here
+}
+// z is not accessible here
+
+// Postfix operators
+x++;
+y--;
+
+// Unary operators
+let isTrue = !false;
+let negative = -x;

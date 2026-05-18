@@ -1,0 +1,21 @@
+// 06_types.yasl
+// Demonstrates static typing and type annotations
+
+// Static Type Annotations
+let x: number = 10;
+let message: string = "Hello World";
+let isReady: boolean = true;
+
+// Union Types
+let id: string | number = 100;
+id := "ID-100"; // Valid, since it's a union type
+
+// Type checking using instanceof
+let isNumber = id instanceof number; // Evaluates to false since it holds a string now
+
+// Function parameter types and return types
+fn add(a: number, b: number): number {
+    return a + b;
+}
+
+let sum = add(5, 10);

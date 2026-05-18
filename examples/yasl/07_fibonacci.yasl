@@ -1,0 +1,35 @@
+// 07_fibonacci.yasl
+// A complete example demonstrating functions, recursion, and arithmetic
+
+// Calculate the nth Fibonacci number recursively
+fn fibonacci(n: number): number {
+    if (n <= 0) {
+        return 0;
+    } else if (n == 1) {
+        return 1;
+    }
+    
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Iterative implementation of Fibonacci
+fn fibonacciIterative(n: number): number {
+    if (n <= 0) {
+        return 0;
+    }
+    
+    let a = 0;
+    let b = 1;
+    let temp = 0;
+    
+    for (let i = 2; i <= n; i++) {
+        temp := a + b;
+        a := b;
+        b := temp;
+    }
+    
+    return b;
+}
+
+let fib10 = fibonacci(10); // 55
+let fib10Iter = fibonacciIterative(10); // 55

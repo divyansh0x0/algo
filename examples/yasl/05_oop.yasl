@@ -1,0 +1,30 @@
+// 05_oop.yasl
+// Demonstrates classes, constructors, methods, and instantiation
+
+// Class Declaration
+class Animal {
+    // Fields
+    pub string name;
+    
+    // Constructor (usually a standard method or handled implicitly, assuming generic setup here)
+    pub fn init(animalName) {
+        self.name := animalName;
+    }
+
+    pub fn speak() {
+        return "...";
+    }
+}
+
+// Inheritance (Implements / Extends)
+class Dog implements Animal {
+    pub fn speak() {
+        return "Woof!";
+    }
+}
+
+// Instantiation
+let myDog = new Dog();
+myDog.init("Rex");
+
+let sound = myDog.speak();

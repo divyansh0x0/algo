@@ -1,0 +1,49 @@
+// 02_control_flow.yasl
+// Demonstrates branching and loops
+
+let score = 85;
+let grade = null;
+
+// If / Else If / Else
+if (score >= 90) {
+    grade := "A";
+} else if (score >= 80) {
+    grade := "B";
+} else {
+    grade := "C";
+}
+
+// Switch Statement
+let status = 1;
+switch (status) {
+    case 1:
+        // Active
+        break;
+    case 2:
+        // Inactive
+        break;
+    default:
+        // Unknown
+        break;
+}
+
+// While Loop
+let counter = 0;
+while (counter < 5) {
+    counter++;
+}
+
+// For Loop with break/continue
+let sum = 0;
+for (let i = 0; i < 10; i++) {
+    if (i == 5) {
+        continue;
+    }
+    if (i > 8) {
+        break;
+    }
+    sum := sum + i;
+}
+
+// Ternary Operator
+let isPassing = score > 50 ? true : false;
