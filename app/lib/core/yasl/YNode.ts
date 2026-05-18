@@ -87,9 +87,9 @@ export interface StmtWhileNode extends YNode {
 
 export interface StmtForNode extends YNode {
     readonly type: YNodeType.STMT_FOR;
-    init_statement: YExpression;
+    init_statement: StmtExpressionNode | StmtAssignNode | StmtDeclarationNode;
     condition: YExpression;
-    increment_statement: YExpression;
+    increment_statement: StmtExpressionNode | StmtAssignNode;
     body: YExpression;
 }
 

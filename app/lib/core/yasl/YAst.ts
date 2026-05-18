@@ -11,7 +11,9 @@ import type {
     ExpUnaryNode,
     OpIndexingNode,
     OpPostfixNode, ExpBlockNode, StmtBreakNode, StmtCaseNode,
-    StmtContinueNode, StmtDeclarationNode, ExpIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode, StmtAssignNode
+    StmtContinueNode, StmtDeclarationNode, ExpIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode, StmtAssignNode,
+    StmtForNode,
+    StmtWhileNode
 } from "./YNode";
 
 export type YExpression =
@@ -86,6 +88,8 @@ export type YStatement =
     | StmtBreakNode
     | StmtCaseNode
     | StmtContinueNode
+    | StmtForNode
+    | StmtWhileNode
     | ExpIfNode
     | StmtIfNode
     | StmtElseNode;

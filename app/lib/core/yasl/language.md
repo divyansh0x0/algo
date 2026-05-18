@@ -18,7 +18,11 @@ FunctionDeclarationStmt         <- "fn" Identifier "(" ParameterList? ")" (":" T
 ParameterList                   <- Paramater ("," Parameter)*
 Parameter                       <- Identifier (":" Type)?
 DeclarationStmt                 <- "let" Identifier (":" Type)? "=" Assignable
-AssignmentStmt                  <- Identifier (":" Type)? "=" Assignable
+AssignmentStmt                  <- Identifier (":" Type)? ("="
+        / "+="
+        / "-="
+        / "*="
+        / "/=") Assignable
 Type                            <- Identifier
 Assignable                      <- Expression
 

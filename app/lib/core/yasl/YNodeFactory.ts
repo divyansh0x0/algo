@@ -197,9 +197,9 @@ export class YNodeFactory {
     }
 
     getForStatement(
-        init_statement: YExpression,
+        init_statement: StmtExpressionNode | StmtAssignNode | StmtDeclarationNode,
         condition: YExpression,
-        increment_statement: YExpression,
+        increment_statement: StmtExpressionNode | StmtAssignNode,
         body: YExpression,
         startIndex: number,
         endIndex: number,

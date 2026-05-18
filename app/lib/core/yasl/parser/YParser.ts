@@ -1,21 +1,22 @@
-import { YLexer } from "~/lib/core/yasl";
-import { PrettyPrinterVisitor } from "~/lib/core/yasl/visitors/PrettyPrinterVisitor";
+import { PrettyPrinterVisitor } from "../visitors/PrettyPrinterVisitor";
 import type { LineMap } from "../../LineMap";
 import { YNativeValueWrapper } from "../natives/YNativeValueWrapper";
-import { type YExpression, YProgram,type YStatement,type YValueType } from "../YAst";
+import { type YExpression, YProgram, type YStatement, type YValueType } from "../YAst";
 import { YNodeFactory } from "../YNodeFactory";
 import { YTypeChecker } from "../YTypeChecker";
 import { type YToken, type YTokenBinaryOp, YTokenType, type YTokenUnaryOp } from "../YToken";
 import {
+    getAugmentedAssignmentOperatorToken,
     getBindingPower,
     isAssignmentOperator,
     isExpressionTerminator,
     isOperator,
     isPostfixOperator,
-    parseTypeToken
+    parseTypeToken,
+    type YTokenAugmentedAssignOp
 } from "./YHelpers";
 import type { YParserError } from "./YParserError";
-import type { ExpBlockNode } from "../YNode";
+import type { ExpBlockNode, StmtDeclarationNode } from "../YNode";
 
 export class YParser {
     private next_index = 0;
@@ -33,7 +34,7 @@ export class YParser {
     getProgram(): YProgram {
         while (!this.isEOF()) {
             const statement = this.parseStatement();
-            if(statement !== null){
+            if (statement !== null) {
                 this.program.addStatement(statement);
             }
         }
@@ -54,29 +55,10 @@ export class YParser {
             case YTokenType.LET:
                 return this.parseDeclaration();
             case YTokenType.IDENTIFIER: {
-                const lvalue = this.consumeExpression();
-                if (!lvalue) {
-                    this.errorToken("Invalid statement", token);
-                    break;
-                }
-
-                const inlineAssign = this.peek();
-                if (inlineAssign.type === YTokenType.INLINE_ASSIGN) {
-                    this.errorToken("Inline assignment used as normal assignment, use '=' for assignments in a statement");
-                    break;
-                }
-                if (isAssignmentOperator(inlineAssign.type)) {
-                    this.consume();
-                    const rvalue = this.consumeExpression();
-                    if (!rvalue) {
-                        this.errorToken("Invalid RValue");
-                        break;
-                    }
-                    return this.nodeFactory.getAssignmentStatement(lvalue, rvalue);
-                }
-                return this.nodeFactory.getStatementExpression(lvalue);
+                return this.parseAssignmentStatement();
             }
-                
+            case YTokenType.FOR:
+                return this.parseForStatement();
             default: {
                 const exp = this.parseExpression();
                 if (exp)
@@ -87,7 +69,96 @@ export class YParser {
         return null;
 
     }
+    private parseAssignmentStatement() {
+        const lvalue = this.consumeExpression();
+        if (!lvalue) {
+            this.errorToken("Invalid lvalue", lvalue);
+            return null;
+        }
 
+        console.log(lvalue)
+        if (!isAssignmentOperator(this.peek().type) && !this.match(YTokenType.STATEMENT_END)) {
+            this.errorToken(`Invalid token after lvalue ${this.peek().lexeme}`, this.peek())
+        }
+
+        // If no assignment operature then treat the statement as expression statement
+        if (!isAssignmentOperator(this.peek().type)) {
+            return this.nodeFactory.getStatementExpression(lvalue);
+        }
+        const op = this.consume()
+        const rvalue = this.consumeExpression();
+        if (!rvalue) {
+            this.errorToken("Invalid RValue");
+            return null;
+        }
+        if (op.type === YTokenType.ASSIGN) {
+            return this.nodeFactory.getAssignmentStatement(lvalue, rvalue);
+        }
+        return this.nodeFactory.getAssignmentStatement(
+            lvalue,
+            this.nodeFactory.getBinaryExpression(
+                getAugmentedAssignmentOperatorToken(op.type as YTokenAugmentedAssignOp),
+                lvalue,
+                rvalue)
+        );
+
+
+
+    }
+
+    private parseForStatement() {
+        const token = this.consume() // consume for token
+        this.expect(YTokenType.LPAREN, "Expected a ( after for keyword")
+        let init_stmt;
+        const viewer = new PrettyPrinterVisitor()
+        if (this.match(YTokenType.LET)) {
+            init_stmt = this.parseDeclaration()
+        }
+        else {
+            init_stmt = this.parseAssignmentStatement();
+        }
+        this.expect(YTokenType.STATEMENT_END)
+        const condition_stmt = this.parseExpression()
+        this.expect(YTokenType.STATEMENT_END)
+
+        // Iteration statement of for loop
+        let iter_stmt = null;
+
+        const lvalue = this.parseExpression();
+        let rvalue = null;
+        if (lvalue) {
+            if (isAssignmentOperator(this.peek().type)) {
+                const op = this.consume();
+                rvalue = this.parseExpression()
+                if (lvalue && rvalue) {
+                    if (op.type === YTokenType.ASSIGN)
+                        iter_stmt = this.nodeFactory.getAssignmentStatement(lvalue, rvalue)
+                    else {
+                        iter_stmt = this.nodeFactory.getAssignmentStatement(
+                            lvalue,
+                            this.nodeFactory.getBinaryExpression(
+                                getAugmentedAssignmentOperatorToken(op.type as YTokenAugmentedAssignOp),
+                                lvalue,
+                                rvalue
+                            )
+                        )
+
+                    }
+                }
+
+            }
+            else {
+                iter_stmt = this.nodeFactory.getStatementExpression(lvalue);
+            }
+        }
+
+        this.expect(YTokenType.RPAREN)
+        const body = this.parseExpression();
+        if (!init_stmt || !condition_stmt || !iter_stmt || !body)
+            return null
+        return this.nodeFactory.getForStatement(init_stmt, condition_stmt, iter_stmt, body, token.start, this.peek().start)
+
+    }
     private synchronize() {
         while (!this.isEOF()) {
             const next_token = this.peek();
@@ -101,8 +172,8 @@ export class YParser {
     private errorToken(msg: string, token: YToken | null = null) {
         const error_token = token == null ? this.tokens[this.next_index - 1] : token;
         if (error_token != null) {
-            const [ line1, col1 ] = this.line_map.indexToLineCol(error_token.start);
-            const [ line2, col2 ] = this.line_map.indexToLineCol(error_token.end);
+            const [line1, col1] = this.line_map.indexToLineCol(error_token.start);
+            const [line2, col2] = this.line_map.indexToLineCol(error_token.end);
             this.errors.push({
                 message: msg,
                 token: error_token,
@@ -188,23 +259,23 @@ export class YParser {
     private consumeBlock(): ExpBlockNode | null {
         const lbrace = this.consume();
         const statements: YStatement[] = [];
-        while(!this.isEOF() && this.peek().type !== YTokenType.RBRACE){
+        while (!this.isEOF() && this.peek().type !== YTokenType.RBRACE) {
             const statement = this.parseStatement();
-            if(statement !== null){
+            if (statement !== null) {
                 statements.push(statement);
             }
         }
         const rbrace = this.expect(YTokenType.RBRACE);
-        if(!rbrace){
+        if (!rbrace) {
             this.errorToken(`Expected a right brace }`, rbrace);
             return null;
         }
         return this.nodeFactory.getBlockExpression(statements, lbrace.start, rbrace.end);
-    
+
     }
 
 
-    private parseDeclaration(): YStatement | null {
+    private parseDeclaration(): StmtDeclarationNode | null {
         this.expect(YTokenType.LET, "Assignment requires let");
         // storing identifier
         const identifier = this.expect(YTokenType.IDENTIFIER, "Expected an identifier");
@@ -259,7 +330,7 @@ export class YParser {
                     return this.nodeFactory.getUnaryExpression(token.type as YTokenUnaryOp, right_node, token.start, right_node.endIndex);
                 break;
             }
-                
+
             case YTokenType.NUMBER:
                 return this.nodeFactory.getLiteralNode(new YNativeValueWrapper(token.literal as number), token.start, token.end);
             case YTokenType.IDENTIFIER:
@@ -272,28 +343,28 @@ export class YParser {
             case YTokenType.IF: {
                 this.expect(YTokenType.LPAREN, "Expected (")
                 const condition = this.consumeExpression()
-                
+
                 this.expect(YTokenType.RPAREN, "Expected )")
                 let ifBody = null;
-                if(this.match(YTokenType.LBRACE)){
+                if (this.match(YTokenType.LBRACE)) {
                     ifBody = this.consumeBlock()
                 }
-                else{
+                else {
                     ifBody = this.consumeExpression()
                 }
                 // if its not followed by else, its a pure if statement which is invalid in expressions.
                 this.expect(YTokenType.ELSE, "If must be followed by an else or else if statement inside an expression")
                 let elseBody;
                 // if else is followed by a brace then its a pure else statement
-                 if(this.match(YTokenType.LBRACE)){
+                if (this.match(YTokenType.LBRACE)) {
                     elseBody = this.consumeBlock();
                 }
-                else{
-                // otherwise treat the inside as an expression which can even be another if statement allowing else if statements
+                else {
+                    // otherwise treat the inside as an expression which can even be another if statement allowing else if statements
                     elseBody = this.consumeExpression(0)
                 }
-                if(!condition || !ifBody || !elseBody){
-                    return null;   
+                if (!condition || !ifBody || !elseBody) {
+                    return null;
                 }
                 return this.nodeFactory.getIfExpression(condition, ifBody, elseBody, token.start, this.next_index);
                 // otherwise if its followed by a if statement
@@ -341,8 +412,8 @@ export class YParser {
      * @param left_node
      * @param bp
      */
-    private led(op_token: YToken, left_node: YExpression, bp: [ number, number ]): YExpression | null {
-        const [ , right_bp ] = bp;
+    private led(op_token: YToken, left_node: YExpression, bp: [number, number]): YExpression | null {
+        const [, right_bp] = bp;
         // Postfix operators
         if (isPostfixOperator(op_token.type)) {
             if (!isExpressionTerminator(this.peek().type)) {
@@ -441,7 +512,7 @@ export class YParser {
 
             const bp = getBindingPower(op_token.type);
             if (!bp) break;
-            const [ left_binding_power ] = bp;
+            const [left_binding_power] = bp;
 
             if (left_binding_power < min_binding_power) break;
 

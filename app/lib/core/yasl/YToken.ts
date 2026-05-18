@@ -183,6 +183,7 @@ export type YTokenUnaryOp = YTokenType.NEGATE | YTokenType.MINUS | YTokenType.BI
 export type YTokenPostfixOp = YTokenType.INCREMENT | YTokenType.DECREMENT;
 export type YTokenBinaryOp =
     YTokenType.PLUS
+    | YTokenType.POWER
     | YTokenType.MINUS
     | YTokenType.MULTIPLY
     | YTokenType.DIVIDE
