@@ -1,6 +1,8 @@
+import { YLexer } from "~/lib/core/yasl";
+import { PrettyPrinterVisitor } from "~/lib/core/yasl/visitors/PrettyPrinterVisitor";
 import type { LineMap } from "../../LineMap";
 import { YNativeValueWrapper } from "../natives/YNativeValueWrapper";
-import { type YExpression, YProgram,type YValueType } from "../YAst";
+import { type YExpression, YProgram,type YStatement,type YValueType } from "../YAst";
 import { YNodeFactory } from "../YNodeFactory";
 import { YTypeChecker } from "../YTypeChecker";
 import { type YToken, type YTokenBinaryOp, YTokenType, type YTokenUnaryOp } from "../YToken";
@@ -13,6 +15,7 @@ import {
     parseTypeToken
 } from "./YHelpers";
 import type { YParserError } from "./YParserError";
+import type { ExpBlockNode } from "../YNode";
 
 export class YParser {
     private next_index = 0;
@@ -29,7 +32,10 @@ export class YParser {
 
     getProgram(): YProgram {
         while (!this.isEOF()) {
-            this.parseStatement();
+            const statement = this.parseStatement();
+            if(statement !== null){
+                this.program.addStatement(statement);
+            }
         }
         return this.program;
     }
@@ -38,16 +44,15 @@ export class YParser {
         return this.errors;
     }
 
-    private parseStatement() {
+    private parseStatement(): YStatement | null {
         const token = this.peek();
 
         switch (token.type) {
             case YTokenType.STATEMENT_END:
                 this.consume();
-                break;
+                return null;
             case YTokenType.LET:
-                this.parseDeclaration();
-                break;
+                return this.parseDeclaration();
             case YTokenType.IDENTIFIER: {
                 const lvalue = this.consumeExpression();
                 if (!lvalue) {
@@ -67,21 +72,19 @@ export class YParser {
                         this.errorToken("Invalid RValue");
                         break;
                     }
-                    this.program.addStatement(this.node_factory.getAssignmentStatement(lvalue, rvalue));
-                    break;
+                    return this.node_factory.getAssignmentStatement(lvalue, rvalue);
                 }
-                this.program.addStatement(this.node_factory.getStatementExpression(lvalue));
-                break;
+                return this.node_factory.getStatementExpression(lvalue);
             }
             default: {
                 const exp = this.parseExpression();
                 if (exp)
-                    this.program.addStatement(this.node_factory.getStatementExpression(exp));
-                break;
+                    return this.node_factory.getStatementExpression(exp);
             }
 
-
         }
+        return null;
+
     }
 
     private synchronize() {
@@ -123,12 +126,15 @@ export class YParser {
     }
 
     /**
-     * consumes the token if it matches token type and returns true otherwise false
+     * @returns {boolean} true if next token matches the `token_type` otherwise false
      */
     private match(token_type: YTokenType): boolean {
         return this.peek().type === token_type;
     }
 
+    /**
+     * @returns {YToken} the next token without consuming it
+     */
     private peek(): YToken {
         if (this.next_index >= this.tokens.length)
             return this.tokens[this.tokens.length - 1]!;
@@ -136,9 +142,9 @@ export class YParser {
     }
 
     /**
-     *if next token matches the `token_type` consumes and returns the next token, otherwise returns null and emits an error
+     * @returns {YToken | null} if next token matches the `token_type` consumes and returns the next token, otherwise returns null and emits an error
      */
-    private expect(token_type: YTokenType, msg?: string) {
+    private expect(token_type: YTokenType, msg?: string): YToken | null {
         if (this.peek().type === token_type) {
             return this.consume();
         } else {
@@ -153,7 +159,7 @@ export class YParser {
     }
 
 
-    private parseExpression() {
+    private parseExpression(): YExpression | null {
         const token = this.peek();
         let node = null;
         switch (token.type) {
@@ -166,9 +172,9 @@ export class YParser {
             case YTokenType.IDENTIFIER:
                 node = this.consumeExpression();
                 break;
-            // case YASLTokenType.LBRACE:
-            //     node = this.consumeBlock();
-            //     break
+            case YTokenType.LBRACE:
+                node = this.consumeBlock();
+                break
             default:
 
                 this.errorToken(`Invalid token in parseExpression`, token);
@@ -178,13 +184,30 @@ export class YParser {
         return node;
 
     }
+    private consumeBlock(): ExpBlockNode | null {
+        const lbrace = this.consume();
+        const statements: YStatement[] = [];
+        while(!this.isEOF() && this.peek().type !== YTokenType.RBRACE){
+            const statement = this.parseStatement();
+            if(statement !== null){
+                statements.push(statement);
+            }
+        }
+        const rbrace = this.expect(YTokenType.RBRACE);
+        if(!rbrace){
+            this.errorToken(`Expected a right brace }`, rbrace);
+            return null;
+        }
+        return this.node_factory.getBlockExpression(statements, lbrace.start, rbrace.end);
+    
+    }
 
 
-    private parseDeclaration() {
+    private parseDeclaration(): YStatement | null {
         this.expect(YTokenType.LET, "Assignment requires let");
         // storing identifier
         const identifier = this.expect(YTokenType.IDENTIFIER, "Expected an identifier");
-        if (!identifier) return;
+        if (!identifier) return null;
         // checking for type
         let types: Set<YValueType> | null = null;
         if (this.match(YTokenType.COLON)) {
@@ -196,13 +219,13 @@ export class YParser {
 
         if (this.match(YTokenType.STATEMENT_END)) {
             this.program.addStatement(this.node_factory.getDeclarationStatement(identifier.lexeme, null, types, identifier.start, identifier.end));
-            return;
+            return null;
         }
 
         this.expect(YTokenType.ASSIGN, "Invalid token");
         const value_node = this.consumeExpression();
         const node = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.endIndex : identifier.end);
-        this.program.addStatement(node);
+        return node;
     }
 
     private consumeValueType() {

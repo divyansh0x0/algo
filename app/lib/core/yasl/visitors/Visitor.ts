@@ -23,7 +23,9 @@ import {
     type StmtReturnNode,
     type StmtSwitchNode,
     type StmtThenNode,
-    type StmtWhileNode
+    type StmtWhileNode,
+    type StmtDefaultNode,
+    type ExpParameterNode
 } from "../YNode";
 
 export interface Visitor<T> {
@@ -77,4 +79,6 @@ export interface Visitor<T> {
     visitStmtThen(node: StmtThenNode): T;
 
     visitStmtWhile(node: StmtWhileNode): T;
+    visitStmtDefault(node: StmtDefaultNode): T;
+    visitExpParameter(node: ExpParameterNode): T;
 }

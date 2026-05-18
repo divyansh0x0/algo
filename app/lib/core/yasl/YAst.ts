@@ -50,7 +50,7 @@ export enum YNodeType {
     STMT_ELSE_IF,
     STMT_SWITCH,
     STMT_CASE,
-    STMT_BLOCK,
+    EXP_BLOCK,
     STMT_EXPRESSION,
     EXP_BINARY,
     EXP_UNARY,

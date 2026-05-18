@@ -90,7 +90,7 @@ or
 
 in case of similar precedence, the expression is parsed left to right
 
-## Implementation Status
+## Implementation Status of Evaluator
 
 ### Core Constructs
 - [x] Variables & Declarations (`let`)
@@ -134,3 +134,47 @@ in case of similar precedence, the expression is parsed left to right
 ### Types
 - [ ] Static Type Annotations (`: Type`)
 - [ ] Type Checking Pipeline
+
+## Implementation status of Parser
+
+### Core Constructs
+- [x] Variables & Declarations (`let`)
+- [x] Assignments (`x = 1`, `(x := 1)`)
+- [x] Block Scoping (`{ ... }`)
+- [x] Expression Statements
+
+### Control Flow
+- [ ] If / Else If / Else
+- [ ] Switch / Case
+- [ ] While Loops
+- [ ] For Loops
+- [ ] Break / Continue
+- [ ] Return
+
+### Expressions & Operators
+- [x] Literals (Numbers, Strings, Booleans)
+- [x] Identifiers
+- [x] Binary Operators (Arithmetic, Relational, Logical, Bitwise)
+- [x] Unary Operators (Prefix `!`, `-`)
+- [x] Postfix Operators (`++`, `--`)
+- [ ] Ternary Operator (`?:`)
+
+### Data Structures
+- [x] Arrays (`[]`)
+- [x] Array Indexing (`arr[i]`)
+- [x] Property Access (`obj.prop`)
+
+### Functions & Methods
+- [ ] Function Declarations (`fn`)
+- [x] Function Calls (`foo()`)
+
+### Object-Oriented Programming
+- [ ] Classes (`class`, `implements`)
+- [ ] Constructors
+- [ ] Methods & Fields
+- [ ] Object Instantiation (`new`)
+- [ ] Access Modifiers (`self`, `pub`, `static`, `readonly`)
+
+### Types
+- [x] Static Type Annotations (`: Type`)
+- [x] Union Types (`Type | Type`)

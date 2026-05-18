@@ -1,5 +1,5 @@
 import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
-import { type YExpression, YNodeType, type YStatement, type YValueType } from "./YAst";
+import { type YExpression, type YLValue, YNodeType, type YStatement, type YValueType } from "./YAst";
 import type { YToken, YTokenBinaryOp, YTokenUnaryOp } from "./YToken";
 
 // ==========================================
@@ -52,7 +52,7 @@ export interface ExpParameterNode extends YNode {
 // ==========================================
 
 export interface ExpBlockNode extends YNode {
-    readonly type: YNodeType.STMT_BLOCK;
+    readonly type: YNodeType.EXP_BLOCK;
     statements: YStatement[];
 }
 
@@ -149,7 +149,7 @@ export interface ExpTernaryNode extends YNode {
 export interface OpPostfixNode extends YNode {
     readonly type: YNodeType.OP_POSTFIX;
     operator: YToken;
-    identifier: YNode;
+    identifier: YLValue;
 }
 
 export interface ExpLiteralNode extends YNode {

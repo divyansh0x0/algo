@@ -41,7 +41,9 @@ import type {
     StmtSwitchNode,
     StmtThenNode,
     StmtWhileNode,
-    YASTNode
+    YASTNode,
+    ExpParameterNode,
+    StmtDefaultNode
 } from "../YNode";
 import { YError } from "./YError";
 import { YNull, type YRuntimeValue } from "./YRuntimeValue";
@@ -103,6 +105,12 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
         this.rootScope = new YEnvironment();
         this.currentScope = this.rootScope;
     }
+    visitStmtDefault(node: StmtDefaultNode): YRuntimeValue {
+        throw new Error("Method not implemented.");
+    }
+    visitExpParameter(node: ExpParameterNode): YRuntimeValue {
+        throw new Error("Method not implemented.");
+    }
 
     // ==========================================
     // CORE TRAVERSAL & DISPATCH
@@ -137,7 +145,7 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
                 return this.visitOpPostfix(node);
             case YNodeType.STMT_ASSIGN:
                 return this.visitStmtAssign(node);
-            case YNodeType.STMT_BLOCK:
+            case YNodeType.EXP_BLOCK:
                 return this.expBlockNode(node);
             case YNodeType.STMT_BREAK:
                 return this.visitStmtBreak(node);

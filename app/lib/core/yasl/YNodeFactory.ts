@@ -32,7 +32,7 @@ import type {
     StmtDefaultNode
 } from "./YNode";
 import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
-import type { YExpression, YValueType } from "./YAst";
+import type { YExpression, YLValue, YStatement, YValueType } from "./YAst";
 import type { YToken, YTokenBinaryOp, YTokenUnaryOp } from "./YToken";
 
 export class YNodeFactory {
@@ -107,6 +107,17 @@ export class YNodeFactory {
     // CONTROL FLOW (BLOCKS, CONDITIONS, LOOPS)
     // ==========================================
 
+    getBlockExpression(statements: YStatement[], startIndex: number,
+        endIndex: number
+    ): ExpBlockNode {
+        return {
+            type: YNodeType.EXP_BLOCK,
+            statements,
+            debugId: this.getDebugId(),
+            startIndex,
+            endIndex,
+        }
+    }
     getIfStatement(
         condition: YExpression,
         block: ExpBlockNode,
@@ -318,7 +329,7 @@ export class YNodeFactory {
 
     getPostfixOperation(
         operatorToken: YToken,
-        operandNode: YNode,
+        operandNode: YLValue,
     ): OpPostfixNode {
         return {
             type: YNodeType.OP_POSTFIX,
