@@ -16,7 +16,7 @@ import {
     type StmtCaseNode,
     type StmtContinueNode,
     type StmtDeclarationNode,
-    type StmtElseIfNode,
+    type ExpIfNode,
     type StmtElseNode, type StmtExpressionNode,
     type StmtForNode,
     type StmtIfNode,
@@ -69,7 +69,7 @@ export interface Visitor<T> {
 
     visitStmtIf(node: StmtIfNode): T;
 
-    visitStmtIfElse(node: StmtElseIfNode): T;
+    visitExpIf(node: ExpIfNode): T;
     visitStmtElse(node: StmtElseNode): T;
 
     visitStmtReturn(node: StmtReturnNode): T;

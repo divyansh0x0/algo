@@ -21,7 +21,7 @@ import type {
     StmtExpressionNode,
     StmtForNode,
     StmtIfNode,
-    StmtElseIfNode,
+    ExpIfNode,
     StmtElseNode,
     StmtReturnNode,
     StmtSwitchNode,
@@ -92,8 +92,8 @@ export class PrettyPrinterVisitor implements Visitor<string> {
                 return this.visitStmtFor(node);
             case YNodeType.STMT_IF:
                 return this.visitStmtIf(node);
-            case YNodeType.STMT_ELSE_IF:
-                return this.visitStmtIfElse(node);
+            case YNodeType.EXP_IF:
+                return this.visitExpIf(node);
             case YNodeType.STMT_RETURN:
                 return this.visitStmtReturn(node);
             case YNodeType.STMT_SWITCH:
@@ -193,7 +193,7 @@ export class PrettyPrinterVisitor implements Visitor<string> {
     visitStmtCase(node: StmtCaseNode): string {
         let out = this.getIndent() + "case " + this.visit(node.condition) + ":\n";
         this.indentLevel++;
-        out += this.visit(node.block);
+        out += this.visit(node.body);
         this.indentLevel--;
         return out;
     }
@@ -201,7 +201,7 @@ export class PrettyPrinterVisitor implements Visitor<string> {
     visitStmtDefault(node: StmtDefaultNode): string {
         let out = this.getIndent() + "default:\n";
         this.indentLevel++;
-        out += this.visit(node.block);
+        out += this.visit(node.body);
         this.indentLevel--;
         return out;
     }
@@ -231,19 +231,19 @@ export class PrettyPrinterVisitor implements Visitor<string> {
             (node.init_statement ? this.visit(node.init_statement) : "") + "; " +
             (node.condition ? this.visit(node.condition) : "") + "; " +
             (node.increment_statement ? this.visit(node.increment_statement) : "") + ") " +
-            this.visit(node.block) + "\n";
+            this.visit(node.body) + "\n";
     }
 
     visitStmtIf(node: StmtIfNode): string {
-        return this.getIndent() + "if (" + this.visit(node.condition) + ") " + this.visit(node.block) + "\n";
+        return this.getIndent() + "if (" + this.visit(node.condition) + ") " + this.visit(node.body) + "\n";
     }
 
-    visitStmtIfElse(node: StmtElseIfNode): string {
-        return this.getIndent() + "else if (" + this.visit(node.condition) + ") " + this.visit(node.block) + "\n";
+    visitExpIf(node: ExpIfNode): string {
+        return this.getIndent() + "if (" + this.visit(node.condition) + ") " + this.visit(node.truthyResult) + "\n" + "else" + this.visit(node.falsyResult);
     }
 
     visitStmtElse(node: StmtElseNode): string {
-        return this.getIndent() + "else " + this.visit(node.block) + "\n";
+        return this.getIndent() + "else " + this.visit(node.body) + "\n";
     }
 
     visitStmtReturn(node: StmtReturnNode): string {
@@ -265,10 +265,10 @@ export class PrettyPrinterVisitor implements Visitor<string> {
     }
 
     visitStmtThen(node: StmtThenNode): string {
-        return this.getIndent() + "then " + this.visit(node.block) + "\n";
+        return this.getIndent() + "then " + this.visit(node.body) + "\n";
     }
 
     visitStmtWhile(node: StmtWhileNode): string {
-        return this.getIndent() + "while (" + this.visit(node.condition) + ") " + this.visit(node.block) + "\n";
+        return this.getIndent() + "while (" + this.visit(node.condition) + ") " + this.visit(node.body) + "\n";
     }
 }

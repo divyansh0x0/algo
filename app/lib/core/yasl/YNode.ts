@@ -59,29 +59,30 @@ export interface ExpBlockNode extends YNode {
 export interface StmtIfNode extends YNode {
     readonly type: YNodeType.STMT_IF;
     condition: YExpression;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
-export interface StmtElseIfNode extends YNode {
-    readonly type: YNodeType.STMT_ELSE_IF;
+export interface ExpIfNode extends YNode {
+    readonly type: YNodeType.EXP_IF;
     condition: YExpression;
-    block: ExpBlockNode;
+    truthyResult: YExpression;
+    falsyResult: YExpression;
 }
 
 export interface StmtElseNode extends YNode {
     readonly type: YNodeType.STMT_ELSE;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
 export interface StmtThenNode extends YNode {
     readonly type: YNodeType.STMT_THEN;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
 export interface StmtWhileNode extends YNode {
     readonly type: YNodeType.STMT_WHILE;
     condition: YExpression;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
 export interface StmtForNode extends YNode {
@@ -89,7 +90,7 @@ export interface StmtForNode extends YNode {
     init_statement: YExpression;
     condition: YExpression;
     increment_statement: YExpression;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
 export interface StmtSwitchNode extends YNode {
@@ -102,12 +103,12 @@ export interface StmtSwitchNode extends YNode {
 export interface StmtCaseNode extends YNode {
     readonly type: YNodeType.STMT_CASE;
     condition: YExpression;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
 export interface StmtDefaultNode extends YNode {
     readonly type: YNodeType.STMT_DEFAULT;
-    block: ExpBlockNode;
+    body: YExpression;
 }
 
 export interface StmtBreakNode extends YNode {
@@ -232,7 +233,7 @@ export type YASTNode =
     | StmtForNode
     | StmtWhileNode
     | StmtIfNode
-    | StmtElseIfNode
+    | ExpIfNode
     | StmtElseNode
     | StmtThenNode
     | StmtSwitchNode

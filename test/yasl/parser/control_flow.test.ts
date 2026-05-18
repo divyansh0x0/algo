@@ -10,7 +10,7 @@ describe('Parser: Control Flow', () => {
         return { program: parser.getProgram(), errors: parser.getErrors() };
     }
 
-    it.todo('should parse if / else if / else statements', () => {
+    it('should parse if / else if / else statements', () => {
         const { program, errors } = parseCode('if (true) {} else if (false) {} else {}');
         expect(errors.length).toBe(0);
         const stmt = program.getStatements()[0] as any;

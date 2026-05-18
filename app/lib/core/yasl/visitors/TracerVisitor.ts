@@ -32,7 +32,7 @@ import type {
     StmtCaseNode,
     StmtContinueNode,
     StmtDeclarationNode,
-    StmtElseIfNode,
+    ExpIfNode,
     StmtElseNode,
     StmtExpressionNode,
     StmtForNode,
@@ -163,8 +163,8 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
                 return this.visitStmtFor(node);
             case YNodeType.STMT_IF:
                 return this.visitStmtIf(node);
-            case YNodeType.STMT_ELSE_IF:
-                return this.visitStmtIfElse(node);
+            case YNodeType.EXP_IF:
+                return this.visitExpIf(node);
             case YNodeType.STMT_RETURN:
                 return this.visitStmtReturn(node);
             case YNodeType.STMT_SWITCH:
@@ -235,7 +235,7 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
         return YNull;
     }
 
-    visitStmtIfElse(node: StmtElseIfNode): YRuntimeValue {
+    visitExpIf(node: ExpIfNode): YRuntimeValue {
         return YNull;
     }
 

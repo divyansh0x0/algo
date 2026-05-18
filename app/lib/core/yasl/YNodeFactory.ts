@@ -19,7 +19,7 @@ import type {
     StmtCaseNode,
     StmtContinueNode,
     StmtDeclarationNode,
-    StmtElseIfNode,
+    ExpIfNode,
     StmtElseNode,
     StmtForNode,
     StmtIfNode,
@@ -120,30 +120,32 @@ export class YNodeFactory {
     }
     getIfStatement(
         condition: YExpression,
-        block: ExpBlockNode,
+        body: ExpBlockNode,
         startIndex: number,
         endIndex: number,
     ): StmtIfNode {
         return {
             type: YNodeType.STMT_IF,
             condition,
-            block,
+            body,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
         };
     }
 
-    getElseIfStatement(
+    getIfExpression(
         condition: YExpression,
-        block: ExpBlockNode,
+        truthyResult: YExpression,
+        falsyResult: YExpression,
         startIndex: number,
         endIndex: number,
-    ): StmtElseIfNode {
+    ): ExpIfNode {
         return {
-            type: YNodeType.STMT_ELSE_IF,
+            type: YNodeType.EXP_IF,
             condition,
-            block,
+            truthyResult,
+            falsyResult,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
@@ -151,13 +153,13 @@ export class YNodeFactory {
     }
 
     getElseStatement(
-        block: ExpBlockNode,
+        body: YExpression,
         startIndex: number,
         endIndex: number,
     ): StmtElseNode {
         return {
             type: YNodeType.STMT_ELSE,
-            block,
+            body,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
@@ -165,13 +167,13 @@ export class YNodeFactory {
     }
 
     getThenStatement(
-        block: ExpBlockNode,
+        body: YExpression,
         startIndex: number,
         endIndex: number
     ): StmtThenNode {
         return {
             type: YNodeType.STMT_THEN,
-            block,
+            body,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
@@ -180,14 +182,14 @@ export class YNodeFactory {
 
     getWhileStatement(
         condition: YExpression,
-        block: ExpBlockNode,
+        body: YExpression,
         startIndex: number,
         endIndex: number,
     ): StmtWhileNode {
         return {
             type: YNodeType.STMT_WHILE,
             condition,
-            block,
+            body,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
@@ -198,7 +200,7 @@ export class YNodeFactory {
         init_statement: YExpression,
         condition: YExpression,
         increment_statement: YExpression,
-        block: ExpBlockNode,
+        body: YExpression,
         startIndex: number,
         endIndex: number,
     ): StmtForNode {
@@ -207,7 +209,7 @@ export class YNodeFactory {
             init_statement,
             condition,
             increment_statement,
-            block,
+            body,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
@@ -234,14 +236,14 @@ export class YNodeFactory {
 
     getSwitchCaseStatement(
         condition: YExpression,
-        block: ExpBlockNode,
+        body: YExpression,
         startIndex: number,
         endIndex: number,
     ): StmtCaseNode {
         return {
             type: YNodeType.STMT_CASE,
             condition,
-            block,
+            body,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,

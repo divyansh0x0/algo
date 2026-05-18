@@ -22,7 +22,7 @@ export class YParser {
     private parenthesis_count = 0;
 
     private program = new YProgram();
-    private node_factory = new YNodeFactory();
+    private nodeFactory = new YNodeFactory();
 
     private errors = Array<YParserError>();
 
@@ -72,14 +72,15 @@ export class YParser {
                         this.errorToken("Invalid RValue");
                         break;
                     }
-                    return this.node_factory.getAssignmentStatement(lvalue, rvalue);
+                    return this.nodeFactory.getAssignmentStatement(lvalue, rvalue);
                 }
-                return this.node_factory.getStatementExpression(lvalue);
+                return this.nodeFactory.getStatementExpression(lvalue);
             }
+                
             default: {
                 const exp = this.parseExpression();
                 if (exp)
-                    return this.node_factory.getStatementExpression(exp);
+                    return this.nodeFactory.getStatementExpression(exp);
             }
 
         }
@@ -126,7 +127,7 @@ export class YParser {
     }
 
     /**
-     * @returns {boolean} true if next token matches the `token_type` otherwise false
+     * @returns {boolean} true if next token matches the `token_type` otherwise false. Does not consume the token
      */
     private match(token_type: YTokenType): boolean {
         return this.peek().type === token_type;
@@ -177,7 +178,7 @@ export class YParser {
                 break
             default:
 
-                this.errorToken(`Invalid token in parseExpression`, token);
+                this.errorToken(`Invalid token in parseExpression ${token.lexeme}`, token);
                 break;
         }
 
@@ -198,7 +199,7 @@ export class YParser {
             this.errorToken(`Expected a right brace }`, rbrace);
             return null;
         }
-        return this.node_factory.getBlockExpression(statements, lbrace.start, rbrace.end);
+        return this.nodeFactory.getBlockExpression(statements, lbrace.start, rbrace.end);
     
     }
 
@@ -218,13 +219,13 @@ export class YParser {
         }
 
         if (this.match(YTokenType.STATEMENT_END)) {
-            this.program.addStatement(this.node_factory.getDeclarationStatement(identifier.lexeme, null, types, identifier.start, identifier.end));
+            this.program.addStatement(this.nodeFactory.getDeclarationStatement(identifier.lexeme, null, types, identifier.start, identifier.end));
             return null;
         }
 
         this.expect(YTokenType.ASSIGN, "Invalid token");
         const value_node = this.consumeExpression();
-        const node = this.node_factory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.endIndex : identifier.end);
+        const node = this.nodeFactory.getDeclarationStatement(identifier.lexeme, value_node, types, identifier.start, value_node ? value_node.endIndex : identifier.end);
         return node;
     }
 
@@ -247,26 +248,55 @@ export class YParser {
 
     /**
      * Runs first on the left most operand. It handles parsing prefix operators and values.
-     * @param token must have been consumed before passing into this function
-     * @private
      */
-    private nud(token: YToken): YExpression | null {
+    private nud(): YExpression | null {
+        let token = this.consume();
         switch (token.type) {
             case YTokenType.MINUS:
             case YTokenType.NOT: {
                 const right_node = this.consumeExpression(0);
                 if (right_node && YTypeChecker.isExpression(right_node))
-                    return this.node_factory.getUnaryExpression(token.type as YTokenUnaryOp, right_node, token.start, right_node.endIndex);
+                    return this.nodeFactory.getUnaryExpression(token.type as YTokenUnaryOp, right_node, token.start, right_node.endIndex);
                 break;
             }
+                
             case YTokenType.NUMBER:
-                return this.node_factory.getLiteralNode(new YNativeValueWrapper(token.literal as number), token.start, token.end);
+                return this.nodeFactory.getLiteralNode(new YNativeValueWrapper(token.literal as number), token.start, token.end);
             case YTokenType.IDENTIFIER:
-                return this.node_factory.getIdentifierNode(token);
+                return this.nodeFactory.getIdentifierNode(token);
             case YTokenType.LPAREN: {
                 const expr = this.consumeExpression();
                 this.expect(YTokenType.RPAREN);
                 return expr;
+            }
+            case YTokenType.IF: {
+                this.expect(YTokenType.LPAREN, "Expected (")
+                const condition = this.consumeExpression()
+                
+                this.expect(YTokenType.RPAREN, "Expected )")
+                let ifBody = null;
+                if(this.match(YTokenType.LBRACE)){
+                    ifBody = this.consumeBlock()
+                }
+                else{
+                    ifBody = this.consumeExpression()
+                }
+                // if its not followed by else, its a pure if statement which is invalid in expressions.
+                this.expect(YTokenType.ELSE, "If must be followed by an else or else if statement inside an expression")
+                let elseBody;
+                // if else is followed by a brace then its a pure else statement
+                 if(this.match(YTokenType.LBRACE)){
+                    elseBody = this.consumeBlock();
+                }
+                else{
+                // otherwise treat the inside as an expression which can even be another if statement allowing else if statements
+                    elseBody = this.consumeExpression(0)
+                }
+                if(!condition || !ifBody || !elseBody){
+                    return null;   
+                }
+                return this.nodeFactory.getIfExpression(condition, ifBody, elseBody, token.start, this.next_index);
+                // otherwise if its followed by a if statement
             }
             case YTokenType.LBRACKET: {
                 const values: YExpression[] = [];
@@ -291,14 +321,14 @@ export class YParser {
                     }
                 }
 
-                return this.node_factory.getArrayLiteral(values);
+                return this.nodeFactory.getArrayLiteral(values);
             }
             case YTokenType.TRUE:
-                return this.node_factory.getLiteralNode(new YNativeValueWrapper(true), token.start, token.end);
+                return this.nodeFactory.getLiteralNode(new YNativeValueWrapper(true), token.start, token.end);
             case YTokenType.FALSE:
-                return this.node_factory.getLiteralNode(new YNativeValueWrapper(false), token.start, token.end);
+                return this.nodeFactory.getLiteralNode(new YNativeValueWrapper(false), token.start, token.end);
             case YTokenType.STRING:
-                return this.node_factory.getLiteralNode(new YNativeValueWrapper(token.literal as string), token.start, token.end);
+                return this.nodeFactory.getLiteralNode(new YNativeValueWrapper(token.literal as string), token.start, token.end);
             default:
                 this.errorToken(`Unexpected token in nud: ${token.lexeme}`, token);
                 break;
@@ -322,7 +352,7 @@ export class YParser {
                 this.errorToken("Postfix operator can only be applied to a LValue");
                 return null;
             }
-            return this.node_factory.getPostfixOperation(op_token, left_node);
+            return this.nodeFactory.getPostfixOperation(op_token, left_node);
         }
 
         // Indexing operator
@@ -334,7 +364,7 @@ export class YParser {
             }
             this.expect(YTokenType.RBRACKET, "Expected ']' ");
             if (index)
-                return this.node_factory.getIndexOperation(left_node, index);
+                return this.nodeFactory.getIndexOperation(left_node, index);
         }
 
         // Function call
@@ -370,8 +400,9 @@ export class YParser {
                 //left parenthesis was immediately followed by right parenthesis
                 this.consume();
             }
-            return this.node_factory.getCallNode(left_node, args);
+            return this.nodeFactory.getCallNode(left_node, args);
         }
+
 
         //For binary operators only
         const right_node = this.consumeExpression(right_bp);
@@ -380,26 +411,24 @@ export class YParser {
 
         //Assignment
         if (op_token.type === YTokenType.INLINE_ASSIGN) {
-            return this.node_factory.getAssignmentExpression(left_node, right_node);
+            return this.nodeFactory.getAssignmentExpression(left_node, right_node);
         }
         //Property access
         if (op_token.type === YTokenType.DOT) {
             if (YTypeChecker.isExpression(left_node) && YTypeChecker.isExpression(right_node)) {
-                return this.node_factory.getPropertyAccessExpression(left_node, right_node);
+                return this.nodeFactory.getPropertyAccessExpression(left_node, right_node);
             }
             this.errorToken("The right side of property access must be a valid identifier but was " + left_node.type);
             return null;
         }
-        return this.node_factory.getBinaryExpression(op_token.type as YTokenBinaryOp, left_node, right_node);
+        return this.nodeFactory.getBinaryExpression(op_token.type as YTokenBinaryOp, left_node, right_node);
     }
 
     /**
      * @param min_binding_power Operators with binding power less than this will be ignored
      */
     private consumeExpression(min_binding_power: number = 0): YExpression | null {
-        const token = this.consume();
-        // console.log("lexeme", token)
-        let left_node = this.nud(token);
+        let left_node = this.nud();
 
         while (!this.isEOF()) {
             if (!left_node)
