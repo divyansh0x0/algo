@@ -89,3 +89,48 @@ or
 ```
 
 in case of similar precedence, the expression is parsed left to right
+
+## Implementation Status
+
+### Core Constructs
+- [x] Variables & Declarations (`let`)
+- [x] Assignments (`x = 1`, `(x := 1)`)
+- [x] Block Scoping (`{ ... }`)
+- [x] Expression Statements
+
+### Control Flow
+- [ ] If / Else If / Else
+- [ ] Switch / Case
+- [ ] While Loops
+- [ ] For Loops
+- [ ] Break / Continue
+- [ ] Return
+
+### Expressions & Operators
+- [x] Literals (Numbers, Strings, Booleans, Null)
+- [x] Identifiers
+- [x] Binary Operators (Arithmetic, Relational, Logical, Bitwise)
+- [ ] Unary Operators (Prefix `!`, `-`, `~`)
+- [ ] Postfix Operators (`++`, `--`)
+- [ ] Ternary Operator (`?:`)
+
+### Data Structures
+- [x] Arrays (`[]`)
+- [ ] Array Indexing (`arr[i]`)
+- [ ] Property Access (`obj.prop`)
+
+### Functions & Methods
+- [ ] Function Declarations (`fn`)
+- [x] Function Calls (`foo()`)
+- [x] Native Array Methods (e.g., `print`)
+
+### Object-Oriented Programming
+- [ ] Classes (`class`, `implements`)
+- [ ] Constructors
+- [ ] Methods & Fields
+- [ ] Object Instantiation (`new`)
+- [ ] Access Modifiers (`self`, `pub`, `static`, `readonly`)
+
+### Types
+- [ ] Static Type Annotations (`: Type`)
+- [ ] Type Checking Pipeline

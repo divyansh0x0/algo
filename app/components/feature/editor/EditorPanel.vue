@@ -65,7 +65,7 @@ function runCode() {
     });
     try {
         for (const statement of statements) {
-            statement.accept(visitor);
+            visitor.visit(statement as any);
         }
     } catch (error) {
         console.log("ERROR", error);

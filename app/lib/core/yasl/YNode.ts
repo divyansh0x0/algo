@@ -1,421 +1,240 @@
 import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
-import type { Visitor } from "./visitors/Visitor";
 import { type YExpression, YNodeType, type YStatement, type YValueType } from "./YAst";
 import type { YToken, YTokenBinaryOp, YTokenUnaryOp } from "./YToken";
 
-export abstract class YNode {
-    constructor(
-        public type: YNodeType,
-        public debugId: number,
-        public startIndex: number,
-        public endIndex: number,
-    ) {
-    }
+// ==========================================
+// CORE / BASE INTERFACES
+// ==========================================
 
-    abstract accept<T>(visitor: Visitor<T>): T;
+export interface YNode {
+    readonly type: YNodeType;
+    debugId: number;
+    startIndex: number;
+    endIndex: number;
 }
 
-export class OpPostfixNode extends YNode {
-    constructor(
-        public operator: YToken,
-        public identifier: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.OP_POSTFIX, debugId, startIndex, endIndex);
-    }
+// ==========================================
+// VARIABLES & SCOPE (DECLARATIONS, IDENTIFIERS)
+// ==========================================
 
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitOpPostfix(this);
-    }
+export interface StmtDeclarationNode extends YNode {
+    readonly type: YNodeType.STMT_DECLARATION;
+    lvalue: string;
+    rvalue: YExpression | null;
+    types: Set<YValueType> | null;
 }
 
-export class ExpPropertyAccessNode extends YNode {
-    constructor(
-        public objectNode: YExpression,
-        public propertyNode: YExpression | undefined,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(
-            YNodeType.EXP_PROPERTY_ACCESS,
-
-            debugId,
-            startIndex,
-            endIndex,
-        );
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpPropertyAccess(this);
-    }
+export interface StmtAssignNode extends YNode {
+    readonly type: YNodeType.STMT_ASSIGN;
+    lvalue: YExpression;
+    rvalue: YExpression;
 }
 
-export class ExpBinaryNode extends YNode {
-    constructor(
-        public op: YTokenBinaryOp,
-        public expLeft: YExpression,
-        public expRight: YExpression,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.EXP_BINARY, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpBinary(this);
-    }
+export interface ExpAssignNode extends YNode {
+    readonly type: YNodeType.EXP_ASSIGN;
+    lvalue: YExpression;
+    rvalue: YExpression;
 }
 
-export class ExpUnaryNode extends YNode {
-    constructor(
-        public op: YTokenUnaryOp,
-        public expression: YExpression,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.EXP_UNARY, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpUnary(this);
-    }
+export interface ExpIdentifierNode extends YNode {
+    readonly type: YNodeType.EXP_IDENTIFIER;
+    name: string;
 }
 
-export class ExpBlockNode extends YNode {
-    constructor(public statements:YStatement[], debugId: number, startIndex: number, endIndex: number) {
-        super(YNodeType.STMT_BLOCK, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.expBlockNode(this);
-    }
+export interface ExpParameterNode extends YNode {
+    readonly type: YNodeType.EXP_PARAMETER;
+    name: string;
+    types: Set<YValueType> | null;
 }
 
-export class ExpTernaryNode extends YNode {
-    constructor(
-        public condition: YNode,
-        public true_statement: YNode,
-        public false_statement: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.OP_TERNARY, debugId, startIndex, endIndex);
-    }
+// ==========================================
+// CONTROL FLOW (BLOCKS, CONDITIONS, LOOPS)
+// ==========================================
 
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpTernary(this);
-    }
+export interface ExpBlockNode extends YNode {
+    readonly type: YNodeType.STMT_BLOCK;
+    statements: YStatement[];
 }
 
-export class ExpLiteralNode extends YNode {
-    constructor(
-        public value: YNativeValueWrapper,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.EXP_LITERAL, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpLiteral(this);
-    }
+export interface StmtIfNode extends YNode {
+    readonly type: YNodeType.STMT_IF;
+    condition: YExpression;
+    block: ExpBlockNode;
 }
 
-export class ExpIdentifierNode extends YNode {
-    constructor(
-        public name: string,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.EXP_IDENTIFIER, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpIdentifier(this);
-    }
+export interface StmtElseIfNode extends YNode {
+    readonly type: YNodeType.STMT_ELSE_IF;
+    condition: YExpression;
+    block: ExpBlockNode;
 }
 
-export class DefArrayNode extends YNode {
-    constructor(
-        public elements: YExpression[],
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.DEF_ARRAY, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitDefArray(this);
-    }
+export interface StmtElseNode extends YNode {
+    readonly type: YNodeType.STMT_ELSE;
+    block: ExpBlockNode;
 }
 
-export class OpIndexingNode extends YNode {
-    constructor(
-        public operand: YExpression,
-        public index: YExpression,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.OP_INDEXING, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitOpIndexing(this);
-    }
+export interface StmtThenNode extends YNode {
+    readonly type: YNodeType.STMT_THEN;
+    block: ExpBlockNode;
 }
 
-export class ExpCallNode extends YNode {
-    constructor(
-        public qualifiedName: YExpression,
-        public args: YExpression[],
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.EXP_CALL, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpCall(this);
-    }
+export interface StmtWhileNode extends YNode {
+    readonly type: YNodeType.STMT_WHILE;
+    condition: YExpression;
+    block: ExpBlockNode;
 }
 
-export class StmtBreakNode extends YNode {
-    constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YNodeType.STMT_BREAK, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtBreak(this);
-    }
+export interface StmtForNode extends YNode {
+    readonly type: YNodeType.STMT_FOR;
+    init_statement: YExpression;
+    condition: YExpression;
+    increment_statement: YExpression;
+    block: ExpBlockNode;
 }
 
-export class StmtContinueNode extends YNode {
-    constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YNodeType.STMT_CONTINUE, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtContinue(this);
-    }
+export interface StmtSwitchNode extends YNode {
+    readonly type: YNodeType.STMT_SWITCH;
+    condition: YExpression;
+    cases: StmtCaseNode[];
+    default_stmt: StmtDefaultNode;
 }
 
-export class StmtReturnNode extends YNode {
-    constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YNodeType.STMT_RETURN, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtReturn(this);
-    }
+export interface StmtCaseNode extends YNode {
+    readonly type: YNodeType.STMT_CASE;
+    condition: YExpression;
+    block: ExpBlockNode;
 }
 
-export class StmtDeclarationNode extends YNode {
-    constructor(
-        public lvalue: string,
-        public rvalue: YExpression | null,
-        public types: Set<YValueType> | null,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(
-            YNodeType.STMT_DECLARATION,
-
-            debugId,
-            startIndex,
-            endIndex,
-        );
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtDeclaration(this);
-    }
-}
-export class StmtExpressionNode extends YNode {
-    constructor(
-        public exp: YExpression,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(
-            YNodeType.STMT_EXPRESSION,
-
-            debugId,
-            startIndex,
-            endIndex,
-        );
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtExpression(this);
-    }
-}
-export class ExpAssignNode extends YNode {
-    constructor(
-        public lvalue: YExpression,
-        public rvalue: YExpression,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.EXP_ASSIGN, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitExpAssign(this);
-    }
-}
-export class StmtAssignNode extends YNode {
-    constructor(
-        public lvalue: YExpression,
-        public rvalue: YExpression,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_ASSIGN, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtAssign(this);
-    }
-}
-export class DefFunctionNode extends YNode {
-    constructor(
-        public identifier_name: string,
-        public params: YNode[],
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.DEF_FUNCTION, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitDefFunction(this);
-    }
+export interface StmtDefaultNode extends YNode {
+    readonly type: YNodeType.STMT_DEFAULT;
+    block: ExpBlockNode;
 }
 
-export class StmtForNode extends YNode {
-    constructor(
-        public statement_1: YNode,
-        public statement_2: YNode,
-        public statement_3: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_FOR, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtFor(this);
-    }
+export interface StmtBreakNode extends YNode {
+    readonly type: YNodeType.STMT_BREAK;
 }
 
-export class StmtWhileNode extends YNode {
-    constructor(
-        public expression_inside: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_WHILE, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtWhile(this);
-    }
+export interface StmtContinueNode extends YNode {
+    readonly type: YNodeType.STMT_CONTINUE;
 }
 
-export class StmtIfNode extends YNode {
-    constructor(
-        public expression_inside: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_IF, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtIf(this);
-    }
+export interface StmtReturnNode extends YNode {
+    readonly type: YNodeType.STMT_RETURN;
 }
 
-export class StmtElseIfNode extends YNode {
-    constructor(
-        public expression_inside: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_ELSE_IF, debugId, startIndex, endIndex);
-    }
+// ==========================================
+// OPERATIONS (MATH, LOGIC, UNARY, LITERALS)
+// ==========================================
 
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtIfElse(this);
-    }
+export interface ExpBinaryNode extends YNode {
+    readonly type: YNodeType.EXP_BINARY;
+    op: YTokenBinaryOp;
+    expLeft: YExpression;
+    expRight: YExpression;
 }
 
-export class StmtElseNode extends YNode {
-    constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YNodeType.STMT_ELSE, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtElse(this);
-    }
+export interface ExpUnaryNode extends YNode {
+    readonly type: YNodeType.EXP_UNARY;
+    op: YTokenUnaryOp;
+    expression: YExpression;
 }
 
-export class StmtThenNode extends YNode {
-    constructor(debugId: number, startIndex: number, endIndex: number) {
-        super(YNodeType.STMT_THEN, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtThen(this);
-    }
+export interface ExpTernaryNode extends YNode {
+    readonly type: YNodeType.OP_TERNARY;
+    condition: YExpression;
+    true_statement: YExpression;
+    false_statement: YExpression;
 }
 
-export class StmtSwitchNode extends YNode {
-    constructor(
-        public expression_inside: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_SWITCH, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtSwitch(this);
-    }
+export interface OpPostfixNode extends YNode {
+    readonly type: YNodeType.OP_POSTFIX;
+    operator: YToken;
+    identifier: YNode;
 }
 
-export class StmtCaseNode extends YNode {
-    constructor(
-        public expression_inside: YNode,
-        debugId: number,
-        startIndex: number,
-        endIndex: number,
-    ) {
-        super(YNodeType.STMT_CASE, debugId, startIndex, endIndex);
-    }
-
-    accept<T>(visitor: Visitor<T>): T {
-        return visitor.visitStmtCase(this);
-    }
+export interface ExpLiteralNode extends YNode {
+    readonly type: YNodeType.EXP_LITERAL;
+    value: YNativeValueWrapper;
 }
+
+// ==========================================
+// DATA STRUCTURES (ARRAYS, OBJECTS)
+// ==========================================
+
+export interface DefArrayNode extends YNode {
+    readonly type: YNodeType.DEF_ARRAY;
+    elements: YExpression[];
+}
+
+export interface OpIndexingNode extends YNode {
+    readonly type: YNodeType.OP_INDEXING;
+    operand: YExpression;
+    index: YExpression;
+}
+
+export interface ExpPropertyAccessNode extends YNode {
+    readonly type: YNodeType.EXP_PROPERTY_ACCESS;
+    objectNode: YExpression;
+    propertyNode: YExpression | undefined;
+}
+
+// ==========================================
+// FUNCTIONS & CALLS
+// ==========================================
+
+export interface DefFunctionNode extends YNode {
+    readonly type: YNodeType.DEF_FUNCTION;
+    identifier_name: string;
+    params: ExpParameterNode[];
+    block: ExpBlockNode;
+}
+
+export interface ExpCallNode extends YNode {
+    readonly type: YNodeType.EXP_CALL;
+    qualifiedName: YExpression;
+    args: YExpression[];
+}
+
+// ==========================================
+// WRAPPERS
+// ==========================================
+
+export interface StmtExpressionNode extends YNode {
+    readonly type: YNodeType.STMT_EXPRESSION;
+    exp: YExpression;
+}
+
+// ==========================================
+// AST UNION
+// ==========================================
+
+export type YASTNode =
+    | OpPostfixNode
+    | ExpPropertyAccessNode
+    | ExpBinaryNode
+    | ExpUnaryNode
+    | ExpBlockNode
+    | ExpTernaryNode
+    | ExpLiteralNode
+    | ExpIdentifierNode
+    | ExpParameterNode
+    | DefArrayNode
+    | OpIndexingNode
+    | ExpCallNode
+    | StmtBreakNode
+    | StmtContinueNode
+    | StmtReturnNode
+    | StmtDeclarationNode
+    | StmtExpressionNode
+    | ExpAssignNode
+    | StmtAssignNode
+    | DefFunctionNode
+    | StmtForNode
+    | StmtWhileNode
+    | StmtIfNode
+    | StmtElseIfNode
+    | StmtElseNode
+    | StmtThenNode
+    | StmtSwitchNode
+    | StmtCaseNode
+    | StmtDefaultNode;

@@ -11,11 +11,12 @@ import type {
     ExpUnaryNode,
     OpIndexingNode,
     OpPostfixNode, ExpBlockNode, StmtBreakNode, StmtCaseNode,
-    StmtContinueNode, StmtDeclarationNode, StmtElseIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode,
+    StmtContinueNode, StmtDeclarationNode, StmtElseIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode, StmtAssignNode
 } from "./YNode";
 
 export type YExpression =
     | ExpUnaryNode
+    | ExpBlockNode
     | ExpBinaryNode
     | ExpAssignNode
     | ExpLiteralNode
@@ -31,6 +32,8 @@ export type YLValue =
     | OpIndexingNode;
 
 export enum YNodeType {
+    EXP_PARAMETER,
+    STMT_DEFAULT,
     EXP_IDENTIFIER,
     EXP_LITERAL,
     EXP_CALL,
@@ -76,8 +79,8 @@ export interface YReturnValue {
 }
 
 export type YStatement =
+    | StmtAssignNode
     | StmtExpressionNode
-    | ExpBlockNode
     | StmtDeclarationNode
     | StmtBreakNode
     | StmtCaseNode

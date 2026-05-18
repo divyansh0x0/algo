@@ -10,14 +10,14 @@ import {
     type ExpTernaryNode,
     type ExpUnaryNode,
     type OpIndexingNode,
-    type OpPostfixNode, StmtAssignNode,
+    type OpPostfixNode, type StmtAssignNode,
     type ExpBlockNode,
     type StmtBreakNode,
     type StmtCaseNode,
     type StmtContinueNode,
     type StmtDeclarationNode,
     type StmtElseIfNode,
-    type StmtElseNode, StmtExpressionNode,
+    type StmtElseNode, type StmtExpressionNode,
     type StmtForNode,
     type StmtIfNode,
     type StmtReturnNode,
@@ -51,7 +51,7 @@ export interface Visitor<T> {
 
     visitOpPostfix(node: OpPostfixNode): T;
 
-    visitStmtAssign(node: StmtAssignNode):T;
+    visitStmtAssign(node: StmtAssignNode): T;
     expBlockNode(node: ExpBlockNode): T;
 
     visitStmtBreak(node: StmtBreakNode): T;
@@ -61,14 +61,14 @@ export interface Visitor<T> {
     visitStmtContinue(node: StmtContinueNode): T;
 
     visitStmtDeclaration(node: StmtDeclarationNode): T;
-    visitStmtExpression(node:StmtExpressionNode):T;
-    visitStmtElse(node: StmtElseNode): T;
+    visitStmtExpression(node: StmtExpressionNode): T;
 
     visitStmtFor(node: StmtForNode): T;
 
     visitStmtIf(node: StmtIfNode): T;
 
     visitStmtIfElse(node: StmtElseIfNode): T;
+    visitStmtElse(node: StmtElseNode): T;
 
     visitStmtReturn(node: StmtReturnNode): T;
 

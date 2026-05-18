@@ -3,14 +3,14 @@ import {
     YNativeValueWrapper,
     YTypeChecker,
     type YNativeValue,
-    YTokenType
+    YTokenType,
+    YNodeType
 } from "../";
 import type { LineMap } from "../../LineMap";
 import { YEnvironment } from "../environment/environment";
 import { YArrayObj } from "../natives/YArrayObj";
 import { YTraceList } from "../tracer/YTraceList";
 import type { YTracer } from "../tracer/YTracers";
-import type { Visitor } from "./Visitor";
 import type { YMemPointer } from "../environment/YMemPointer";
 import { YArrayNativeMethods } from "../natives/methods/YArrayNativeMethods";
 import { YRuntimeContext } from "../tracer/YRuntimeError";
@@ -41,29 +41,32 @@ import type {
     StmtSwitchNode,
     StmtThenNode,
     StmtWhileNode,
-    YNode
+    YASTNode
 } from "../YNode";
 import { YError } from "./YError";
 import { YNull, type YRuntimeValue } from "./YRuntimeValue";
+import type { Visitor } from "./Visitor";
 
 function CreateYaslValue(val: YNativeValue): YRuntimeValue {
-    return {kind: "value", value: new YNativeValueWrapper(val)};
+    return { kind: "value", value: new YNativeValueWrapper(val) };
 }
 
 function CreateYaslRef(ref: YMemPointer): YRuntimeValue {
-    return {kind: "ref", ref: ref};
+    return { kind: "ref", ref: ref };
 }
-
+function assertNever(node: YASTNode): never {
+    throw new Error("Unreachable statement " + node.type);
+}
 function StringifyNativeValues(nativeVals: YNativeValue[]): string {
     let str = "";
 
-    for (let i = 0; i < nativeVals.length; i++){
+    for (let i = 0; i < nativeVals.length; i++) {
         const nativeVal = nativeVals[i];
-        if(nativeVal === null){
+        if (nativeVal === null) {
             str += "null";
             continue;
         }
-        switch (typeof nativeVal){
+        switch (typeof nativeVal) {
             case "object":
                 str += nativeVal.toString();
                 break;
@@ -79,7 +82,7 @@ function StringifyNativeValues(nativeVals: YNativeValue[]): string {
                 str += "[unknown]";
                 break;
         }
-        if(i < nativeVals.length - 1){
+        if (i < nativeVals.length - 1) {
             str += " "
         }
     }
@@ -87,100 +90,190 @@ function StringifyNativeValues(nativeVals: YNativeValue[]): string {
 }
 
 export class TracerVisitor implements Visitor<YRuntimeValue> {
-    private next_node: YNode | null = null;
+    private next_node: YASTNode | null = null;
     private rootScope: YEnvironment;
     private currentScope: YEnvironment;
     private tracerList: YTraceList = new YTraceList();
     private ctx = new YRuntimeContext();
-    private stdOut = (output:string)=>{
+    private stdOut = (output: string) => {
         console.log(output);
     };
-    constructor(private readonly map:LineMap) {
+
+    constructor(private readonly map: LineMap) {
         this.rootScope = new YEnvironment();
         this.currentScope = this.rootScope;
     }
 
-    setStdOut(listener:(arg:string) =>void): void {
-        this.stdOut = listener;
-    }
+    // ==========================================
+    // CORE TRAVERSAL & DISPATCH
+    // ==========================================
 
-    private getLine(node:YNode){
-        return this.map.getLine(node.startIndex)
-    }
-    private expectRef(
-        node: YNode,
-    ): { kind: "ref"; ref: YMemPointer } {
-        const rv = node.accept(this);
-        if (rv.kind !== "ref") {
-            this.ctx.raise({
-                node,
-                kind: "ReferenceError",
-                message: "Expected reference but got a value"
-            });
-            throw new YError("TypeError");
+    // Exhaustive entry point for AST traversal
+    public visit(node: YASTNode): YRuntimeValue {
+        switch (node.type) {
+            case YNodeType.DEF_ARRAY:
+                return this.visitDefArray(node);
+            case YNodeType.DEF_FUNCTION:
+                return this.visitDefFunction(node);
+            case YNodeType.EXP_ASSIGN:
+                return this.visitExpAssign(node);
+            case YNodeType.EXP_BINARY:
+                return this.visitExpBinary(node);
+            case YNodeType.EXP_CALL:
+                return this.visitExpCall(node);
+            case YNodeType.EXP_LITERAL:
+                return this.visitExpLiteral(node);
+            case YNodeType.EXP_PROPERTY_ACCESS:
+                return this.visitExpPropertyAccess(node);
+            case YNodeType.OP_TERNARY:
+                return this.visitExpTernary(node);
+            case YNodeType.EXP_UNARY:
+                return this.visitExpUnary(node);
+            case YNodeType.EXP_IDENTIFIER:
+                return this.visitExpIdentifier(node);
+            case YNodeType.OP_INDEXING:
+                return this.visitOpIndexing(node);
+            case YNodeType.OP_POSTFIX:
+                return this.visitOpPostfix(node);
+            case YNodeType.STMT_ASSIGN:
+                return this.visitStmtAssign(node);
+            case YNodeType.STMT_BLOCK:
+                return this.expBlockNode(node);
+            case YNodeType.STMT_BREAK:
+                return this.visitStmtBreak(node);
+            case YNodeType.STMT_CASE:
+                return this.visitStmtCase(node);
+            case YNodeType.STMT_CONTINUE:
+                return this.visitStmtContinue(node);
+            case YNodeType.STMT_DECLARATION:
+                return this.visitStmtDeclaration(node);
+            case YNodeType.STMT_EXPRESSION:
+                return this.visitStmtExpression(node);
+            case YNodeType.STMT_ELSE:
+                return this.visitStmtElse(node);
+            case YNodeType.STMT_FOR:
+                return this.visitStmtFor(node);
+            case YNodeType.STMT_IF:
+                return this.visitStmtIf(node);
+            case YNodeType.STMT_ELSE_IF:
+                return this.visitStmtIfElse(node);
+            case YNodeType.STMT_RETURN:
+                return this.visitStmtReturn(node);
+            case YNodeType.STMT_SWITCH:
+                return this.visitStmtSwitch(node);
+            case YNodeType.STMT_THEN:
+                return this.visitStmtThen(node);
+            case YNodeType.STMT_WHILE:
+                return this.visitStmtWhile(node);
+            default:
+                return assertNever(node);
         }
-        return rv;
     }
 
-    private expectValue(
-        node: YNode
-    ): { kind: "value"; value: YNativeValueWrapper } {
-        const rv = node.accept(this);
-        if (rv.kind !== "value") {
-            this.ctx.raise({
-                node,
-                kind: "TypeError",
-                message: "Expected value but got a reference",
-            });
-            throw new YError("TypeError");
+    // ==========================================
+    // VARIABLES & SCOPE (DECLARATION, ASSIGNMENT, IDENTIFIERS)
+    // ==========================================
+
+    visitStmtDeclaration(node: StmtDeclarationNode): YRuntimeValue {
+        const lvalue = node.lvalue;
+        if (!node.rvalue) {
+            this.currentScope.define(lvalue, YNativeValueWrapper.NULL);
+            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YNativeValueWrapper.NULL);
+            return YNull;
         }
-        return rv;
-    }
-
-    private callArrayMethod(
-        objIdentifierNode: ExpIdentifierNode,
-        arrayValue: YArrayObj,
-        methodIdentifierNode: ExpIdentifierNode,
-        args: YExpression[],
-    ): void {
-        const methodName = methodIdentifierNode.name;
-
-        const valueArgs = args.map(arg => this.expectValue(arg).value);
-
-        YArrayNativeMethods.call(
-            methodName,
-            arrayValue,
-            valueArgs,
-            {
-                tracer: this.tracerList,
-                line: this.getLine(methodIdentifierNode),
-                identifier:objIdentifierNode.name
-            }
-        );
-    }
-    private doAssignment(leftNode:YNode, rightNode:YNode) {
-        const lvalue = this.expectRef(leftNode);
-        const rvalue = this.expectValue(rightNode);
-        lvalue.ref.set(rvalue.value);
+        const rvalue = this.expectValue(node.rvalue);
+        this.currentScope.define(lvalue, rvalue.value);
+        this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), rvalue.value);
         return rvalue;
     }
 
-    visitDefArray(node: DefArrayNode): YRuntimeValue {
-        const arr: YArrayObj = new YArrayObj();
-        for (const element of node.elements) {
-            const val = this.expectValue(element).value;
-            arr.push(val);
-        }
-        return {kind: "value", value: new YNativeValueWrapper(arr)};
-    }
-
-    visitDefFunction(node: DefFunctionNode): YRuntimeValue {
+    visitStmtAssign(node: StmtAssignNode): YRuntimeValue {
+        this.doAssignment(node.lvalue, node.rvalue);
         return YNull;
     }
 
     visitExpAssign(node: ExpAssignNode): YRuntimeValue {
-        return this.doAssignment(node.lvalue,node.rvalue);
+        return this.doAssignment(node.lvalue, node.rvalue);
     }
+
+    visitExpIdentifier(node: ExpIdentifierNode): YRuntimeValue {
+        let currScope: YEnvironment | undefined = this.currentScope;
+        let ref: YMemPointer | undefined;
+        while (!ref && currScope) {
+            ref = currScope.get(node.name);
+            currScope = this.currentScope.parent;
+        }
+        return ref ? CreateYaslRef(ref) : YNull;
+    }
+
+    // ==========================================
+    // CONTROL FLOW (BLOCKS, IF, SWITCH, LOOPS)
+    // ==========================================
+
+    expBlockNode(node: ExpBlockNode): YRuntimeValue {
+        for (let i = 0; i < node.statements.length; i++) {
+            const statement = node.statements[i];
+            if (i === node.statements.length - 1) { // Last statement
+                return statement ? this.visit(statement) : YNull;
+            }
+            else {
+                if (statement) this.visit(statement);
+            }
+        }
+        return YNull;
+    }
+
+    visitStmtIf(node: StmtIfNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtIfElse(node: StmtElseIfNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtElse(node: StmtElseNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtThen(node: StmtThenNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtSwitch(node: StmtSwitchNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtCase(node: StmtCaseNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtWhile(node: StmtWhileNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtFor(node: StmtForNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtBreak(node: StmtBreakNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtContinue(node: StmtContinueNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtReturn(node: StmtReturnNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitStmtExpression(node: StmtExpressionNode): YRuntimeValue {
+        return this.visit(node.exp);
+    }
+
+    // ==========================================
+    // OPERATIONS (MATH, LOGIC, UNARY, POSTFIX, LITERALS)
+    // ==========================================
 
     visitExpBinary(node: ExpBinaryNode): YRuntimeValue {
         // For inline assign operations
@@ -192,8 +285,8 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
         }
 
         // For normal binary operations
-        const expLeft = node.expLeft.accept(this);
-        const expRight = node.expRight.accept(this);
+        const expLeft = this.visit(node.expLeft);
+        const expRight = this.visit(node.expRight);
         const operand1 = expLeft.kind == "ref" ? expLeft.ref.get() : expLeft.value;
         const operand2 = expRight.kind == "ref" ? expRight.ref.get() : expRight.value;
         switch (node.op) {
@@ -266,7 +359,6 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
                 if (operand1.isNumber() && operand2.isNumber()) {
                     return CreateYaslValue(operand1.value << operand2.value);
                 }
-
                 break;
             case YTokenType.AND:
                 // Logical AND
@@ -275,9 +367,9 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
                 }
                 break;
             case YTokenType.OR:
-                // Logical AND
+                // Logical OR
                 if (operand1.isBoolean() || operand2.isBoolean()) {
-                    return CreateYaslValue(operand1.value && operand2.value);
+                    return CreateYaslValue(operand1.value || operand2.value);
                 }
                 break;
             default:
@@ -290,11 +382,57 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
         throw new YError("Invalid binary operation");
     }
 
+    visitExpUnary(node: ExpUnaryNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitExpTernary(node: ExpTernaryNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitOpPostfix(node: OpPostfixNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitExpLiteral(node: ExpLiteralNode): YRuntimeValue {
+        return { kind: "value", value: node.value };
+    }
+
+    // ==========================================
+    // DATA STRUCTURES (ARRAYS, OBJECTS)
+    // ==========================================
+
+    visitDefArray(node: DefArrayNode): YRuntimeValue {
+        const arr: YArrayObj = new YArrayObj();
+        for (const element of node.elements) {
+            const val = this.expectValue(element).value;
+            arr.push(val);
+        }
+        return { kind: "value", value: new YNativeValueWrapper(arr) };
+    }
+
+    visitOpIndexing(node: OpIndexingNode): YRuntimeValue {
+        return YNull;
+    }
+
+    visitExpPropertyAccess(node: ExpPropertyAccessNode): YRuntimeValue {
+        return YNull;
+    }
+
+    // ==========================================
+    // FUNCTIONS & CALLS
+    // ==========================================
+
+    visitDefFunction(node: DefFunctionNode): YRuntimeValue {
+        return YNull;
+    }
+
     visitExpCall(node: ExpCallNode): YRuntimeValue {
         if (YTypeChecker.isIdentifier(node.qualifiedName)) {
-            switch (node.qualifiedName.name) {
+            const qualifiedName = node.qualifiedName as ExpIdentifierNode;
+            switch (qualifiedName.name) {
                 case "print": {
-                    const runtimeVals = node.args.map((arg) => arg.accept(this));
+                    const runtimeVals = node.args.map((arg) => this.visit(arg));
                     const nativeVals: YNativeValue[] = [];
                     for (const runtimeVal of runtimeVals) {
                         if (runtimeVal.kind === "value")
@@ -309,8 +447,9 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
             }
         }
         if (YTypeChecker.isPropertyAccess(node.qualifiedName)) {
-            const obj = node.qualifiedName.objectNode;
-            const prop = node.qualifiedName.propertyNode;
+            const qualifiedName = node.qualifiedName as ExpPropertyAccessNode;
+            const obj = qualifiedName.objectNode;
+            const prop = qualifiedName.propertyNode;
             if (!prop)
                 throw new YError("Invalid state achieved. Prop was undefined of obj");
 
@@ -320,134 +459,88 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
                 if (!nativeVal.isArray())
                     throw new YError("Object methods not implemented");
                 else
-                    this.callArrayMethod(obj, nativeVal.value, prop, node.args);
+                    this.callArrayMethod(obj as ExpIdentifierNode, nativeVal.value, prop as ExpIdentifierNode, node.args);
             }
         }
-        return node.qualifiedName.accept(this);
+        return this.visit(node.qualifiedName);
     }
 
-    visitExpLiteral(node: ExpLiteralNode): YRuntimeValue {
-        return {kind: "value", value: node.value};
+    // ==========================================
+    // UTILITY METHODS
+    // ==========================================
+
+    setStdOut(listener: (arg: string) => void): void {
+        this.stdOut = listener;
     }
 
-    visitExpPropertyAccess(node: ExpPropertyAccessNode): YRuntimeValue {
-        return YNull;
+    private getLine(node: YASTNode) {
+        return this.map.getLine(node.startIndex)
     }
 
-    visitExpTernary(node: ExpTernaryNode): YRuntimeValue {
-        return YNull;
-
-    }
-
-    visitExpUnary(node: ExpUnaryNode): YRuntimeValue {
-        return YNull;
-
-    }
-
-    visitExpIdentifier(node: ExpIdentifierNode): YRuntimeValue {
-        let currScope: YEnvironment | undefined = this.currentScope;
-        let ref: YMemPointer | undefined;
-        while (!ref && currScope) {
-            ref = currScope.get(node.name);
-            currScope = this.currentScope.parent;
+    private expectRef(
+        node: YASTNode,
+    ): { kind: "ref"; ref: YMemPointer } {
+        const rv = this.visit(node);
+        if (rv.kind !== "ref") {
+            this.ctx.raise({
+                node,
+                kind: "ReferenceError",
+                message: "Expected reference but got a value"
+            });
+            throw new YError("TypeError");
         }
-        return ref ? CreateYaslRef(ref) : YNull;
-
+        return rv;
     }
 
-    visitOpIndexing(node: OpIndexingNode): YRuntimeValue {
-        return YNull;
+    private expectValue(
+        node: YASTNode
+    ): { kind: "value"; value: YNativeValueWrapper } {
+        const rv = this.visit(node);
+        if (rv.kind !== "value") {
+            this.ctx.raise({
+                node,
+                kind: "TypeError",
+                message: "Expected value but got a reference",
+            });
+            throw new YError("TypeError");
+        }
+        return rv;
     }
 
-    visitOpPostfix(node: OpPostfixNode): YRuntimeValue {
-        return YNull;
-    }
-    visitStmtAssign(node: StmtAssignNode): YRuntimeValue {
-        this.doAssignment(node.lvalue,node.rvalue);
-        return YNull;
-    }
-    expBlockNode(node: ExpBlockNode): YRuntimeValue {
-        for (let i = 0; i < node.statements.length; i++){
-            const statement = node.statements[i];
-            if(i === node.statements.length - 1){ // Last statement
-                return statement?.accept(this) ?? YNull;
+    private callArrayMethod(
+        objIdentifierNode: ExpIdentifierNode,
+        arrayValue: YArrayObj,
+        methodIdentifierNode: ExpIdentifierNode,
+        args: YExpression[],
+    ): void {
+        const methodName = methodIdentifierNode.name;
+
+        const valueArgs = args.map(arg => this.expectValue(arg).value);
+
+        YArrayNativeMethods.call(
+            methodName,
+            arrayValue,
+            valueArgs,
+            {
+                tracer: this.tracerList,
+                line: this.getLine(methodIdentifierNode),
+                identifier: objIdentifierNode.name
             }
-            else{
-                statement?.accept(this);
-            }
-        }
-        return YNull;
+        );
     }
 
-    visitStmtBreak(node: StmtBreakNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtCase(node: StmtCaseNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtContinue(node: StmtContinueNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtDeclaration(node: StmtDeclarationNode): YRuntimeValue {
-        const lvalue = node.lvalue;
-        if (!node.rvalue) {
-            this.currentScope.define(lvalue, YNativeValueWrapper.NULL);
-            this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), YNativeValueWrapper.NULL );
-            return YNull;
-        }
-        const rvalue = this.expectValue(node.rvalue);
-        this.currentScope.define(lvalue, rvalue.value);
-        this.tracerList.emitDeclareVariable(lvalue, this.getLine(node), rvalue.value );
+    private doAssignment(leftNode: YASTNode, rightNode: YASTNode) {
+        const lvalue = this.expectRef(leftNode);
+        const rvalue = this.expectValue(rightNode);
+        lvalue.ref.set(rvalue.value);
         return rvalue;
     }
 
-    visitStmtExpression(node: StmtExpressionNode): YRuntimeValue {
-        return node.exp.accept(this);
-    }
-
-    visitStmtElse(node: StmtElseNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtFor(node: StmtForNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtIf(node: StmtIfNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtIfElse(node: StmtElseIfNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtReturn(node: StmtReturnNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtSwitch(node: StmtSwitchNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtThen(node: StmtThenNode): YRuntimeValue {
-        return YNull;
-    }
-
-    visitStmtWhile(node: StmtWhileNode): YRuntimeValue {
-        return YNull;
-    }
-
-
-    //**
-    //Utility
     getTracers() {
         return this.tracerList
     }
 
-    addTraceListener(param: (trace:YTracer) => void): void {
+    addTraceListener(param: (trace: YTracer) => void): void {
         this.tracerList.setListener(param);
     }
 
@@ -455,25 +548,3 @@ export class TracerVisitor implements Visitor<YRuntimeValue> {
         return this.ctx.getError();
     }
 }
-
-// const code = `
-// let a = [1,2,3]
-// print(a)
-// a.swap(1,2)
-// print(a)
-// `;
-// const lexer = new Lexer(code);
-// const parser = new YParser(lexer.getTokens(), lexer.getLineMap());
-// const visitor = new TracerVisitor(lexer.getLineMap());
-// visitor.addTraceListener((trace)=>{
-//     console.log("GOT TRACER",trace)
-// })
-// const statements = parser.getProgram().getStatements();
-// if (statements) {
-//     // console.log(YFormatter.formatAst(ast));
-//     for (const statement of statements) {
-//         statement.accept(visitor);
-//     }
-// } else {
-//     console.error("Couldnt build ast");
-// }
