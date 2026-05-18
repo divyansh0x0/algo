@@ -5,14 +5,14 @@
 let x = 10;
 let y = 20;
 
-// Re-assignment using inline assignment operator
-x := x + 5;
-y := y * 2;
+// Re-assignment using inline assignment operator (now an expression wrapped in parens)
+(x := x + 5);
+(y := y * 2);
 
 // Block scoping
 {
     let z = 100;
-    x := z; // z is accessible here
+    x = z; // z is accessible here
 }
 // z is not accessible here
 

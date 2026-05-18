@@ -13,12 +13,11 @@ describe('Lexer: Control Flow', () => {
     });
 
     it('should tokenize switch / case', () => {
-        const lexer = new YLexer('switch (x) { case 1: break; default: break; }');
+        const lexer = new YLexer('switch (x) { 1: break; _: break; }');
         const tokens = lexer.getTokens();
         
         expect(tokens[0].type).toBe(YTokenType.SWITCH);
-        expect(tokens.find(t => t.type === YTokenType.CASE)).toBeDefined();
-        expect(tokens.find(t => t.type === YTokenType.DEFAULT)).toBeDefined();
+        expect(tokens.find(t => t.lexeme === '_')).toBeDefined();
     });
 
     it('should tokenize while loops', () => {

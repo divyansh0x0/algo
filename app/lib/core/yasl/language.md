@@ -6,28 +6,28 @@
 Program                         <- StatementList
 StatementList                   <- (Statement EOL?)*
 EOL                             <- ";" | [\n\r]+
-Statement                       <- FunctionDeclarationStmt | ExpressionStmt | ConditionStmt | IterationStmt | ClassDeclarationStmt | DeclarationStmt | ExpressionStmt | BlockStmt
-ExpressionStmt                  <- Expression
+Statement <- DeclarationStmt
+           / FunctionDeclarationStmt
+           / ClassDeclarationStmt
+           / IterationStmt
+           / AssignmentStmt
+           / IfStmt
+           / ExpressionStmt
 
-FunctionDeclarationStmt         <- "fn" Identifier "(" ParameterList? ")" (":" Type)? BlockStmt
+FunctionDeclarationStmt         <- "fn" Identifier "(" ParameterList? ")" (":" Type)? "{" StatementList "}"
 ParameterList                   <- Paramater ("," Parameter)*
 Parameter                       <- Identifier (":" Type)?
 DeclarationStmt                 <- "let" Identifier (":" Type)? "=" Assignable
 AssignmentStmt                  <- Identifier (":" Type)? "=" Assignable
 Type                            <- Identifier
-Assignable                      <- Call | Expression
-Call                            <- FunctionCall | ObjectCreationCall
-FunctionCall                    <- Identifier "(" ArgumentList? ")"
-ObjectCreationCall              <- "new" Identifier "(" ArgumentList? ")"
-ArgumentList                    <- Identifier ("," Identifier)*
+Assignable                      <- Expression
 
 Identifier                      <- [a-zA-Z_][a-zA-Z0-9_]*
 LValue                          <- PropertyAccess | Identifier
 PropertyAccess                  <- Identifier "." Identifier ("." Identifier)*
 
-ExpressionStmt                  <- Expression EOL
-Expression                      <- InlineCondition
-InlineCondition                 <- BooleanOr ("?" Expression ":" Expression)?
+ExpressionStmt                  <- Expression
+Expression                      <- IfExp / SwitchExp / BooleanOr
 BooleanOr                       <- BooleanAnd ("or" BooleanAnd)*
 BooleanAnd                      <- Equality ("and" Equality)*
 Equality                        <- Relational (("==" | "!=") Relational)*
@@ -36,27 +36,49 @@ Additive                        <- Shift (("+" | "-") Shift)*
 Shift                           <- Bitwise (("<<" | ">>" | "<<<") Bitwise)*
 Bitwise                         <- Term (("&" | "|" | "^" | "~") Term)*
 Term                            <- Factor (("*" | "/" | "%") Factor)*
-Factor                          <- Prefix ("**" Prefix)*
-Prefix                          <- ("-" | "~" | "!")? Postfix
-Postfix                         <- Primary ("++" | "--")?
-Primary                         <- Number | LValue | "(" Expression ")" | AssignableExp | Call | InlineCondition
+Factor                          <- Prefix ("**" Factor)?
+Prefix                          <- ("-" | "~" | "!")* Postfix
+Postfix <- Primary (
+      "(" ArgumentList? ")"
+    | "." Identifier
+    | "++"
+    | "--"
+)*
+Primary                         <- Call / AssignableExp  / NumberLiteral / LValue / "(" Expression ")" / StringLiteral
+
+
+Call                            <- FunctionCall | ObjectCreationCall
+FunctionCall                    <- LValue "(" ArgumentList? ")"
+ObjectCreationCall              <- "new" LValue "(" ArgumentList? ")"
+ArgumentList                    <- Expression ("," Expression)*
+
 
 AssignableExp                   <- "(" LValue (":" Type)? ":=" Expression ")"
 DeclarationExp                  <- "(" DeclarationStmt ")"
 
-ConditionStmt                   <- "if" "(" Expression ")" Statement
-                                    ("else" "if" "(" Expression ")" Statement)*
-                                    ("else" Statement)?
+IfExp <- "if" "(" Expression ")" ExprBody
+          "else" (IfExp / ExprBody)
 
-IterationStmt                   <- ("while" "(" Expression ")" Statement ) |
-                                   ("for" "(" Expression ";" Expression ";" Expression ")" Statement)
+IfStmt <- "if" "(" Expression ")" StatementBody
+           ("else" (IfStmt / StatementBody))?
 
-BlockExp                       <- "{" StatementList? "}"
+SwitchExp                       <- "switch" "(" Expression ")" "{" CaseStmt* DefaultStmt? "}"
+CaseStmt                       <- Expression ":" ExprBody EOL
+DefaultStmt                       <- "_" ":" ExprBody EOL
+
+
+ExprBody <- BlockExp / Expression
+StatementBody <- BlockExp / Statement
+
+IterationStmt                  <- ("while" "(" Expression ")" ExprBody ) |
+                                   ("for" "(" DeclarationStmt | AssignmentStmt ";" Expression? ";" Expression? ")" ExprBody)
+
+BlockExp                       <- "{" (Statement EOL?)* ExpressionStmt? "}"
 
 ClassDeclarationStmt            <- "class" Identifier "{" ClassStatement*  "}" ("implements" Identifier)?
 ClassStatement                  <-  FieldDeclarationStmt | ConstructorStmt  | MethodDeclarationStmt
 FieldDeclarationStmt            <- fieldModifier? DeclarationStmt ";"
-ConstructorStmt                 <- visibilityModifier? "(" ParameterList? ")" BlockStmt
+ConstructorStmt                 <- visibilityModifier? "(" ParameterList? ")" "{" StatementList "}"
 MethodDeclarationStmt           <- visibilityModifier? FunctionDeclarationStmt
 visibilityModifier              <- "self" | "pub" | "static"
 fieldModifier                   <- "readonly"

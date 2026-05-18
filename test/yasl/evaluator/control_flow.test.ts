@@ -39,13 +39,13 @@ describe('Evaluator: Control Flow', () => {
             let x = 2;
             let result = 0;
             switch(x) {
-                case 1:
+                1:
                     result = 1;
                     break;
-                case 2:
+                2:
                     result = 2;
                     break;
-                default:
+                _:
                     result = -1;
             }
             result;
@@ -57,7 +57,7 @@ describe('Evaluator: Control Flow', () => {
         const { lastResult } = evaluateCode(`
             let count = 0;
             while(count < 3) {
-                count := count + 1;
+                count = count + 1;
             }
             count;
         `);
@@ -68,7 +68,7 @@ describe('Evaluator: Control Flow', () => {
         const { lastResult } = evaluateCode(`
             let sum = 0;
             for(let i = 0; i < 5; i++) {
-                sum := sum + i;
+                sum = sum + i;
             }
             sum;
         `);

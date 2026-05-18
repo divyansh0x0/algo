@@ -22,7 +22,7 @@ describe('Parser: Core Constructs', () => {
     });
 
     it.todo('should parse assignments', () => {
-        const { program, errors } = parseCode('x = 5; y := 10;');
+        const { program, errors } = parseCode('x = 5; (y := 10);');
         expect(errors.length).toBe(0);
         
         const statements = program.getStatements();

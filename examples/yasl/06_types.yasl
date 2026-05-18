@@ -8,7 +8,7 @@ let isReady: boolean = true;
 
 // Union Types
 let id: string | number = 100;
-id := "ID-100"; // Valid, since it's a union type
+id = "ID-100"; // Valid, since it's a union type
 
 // Type checking using instanceof
 let isNumber = id instanceof number; // Evaluates to false since it holds a string now

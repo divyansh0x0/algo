@@ -19,7 +19,7 @@ describe('Parser: Control Flow', () => {
     });
 
     it.todo('should parse switch / case statements', () => {
-        const { program, errors } = parseCode('switch (x) { case 1: break; default: break; }');
+        const { program, errors } = parseCode('switch (x) { 1: break; _: break; }');
         expect(errors.length).toBe(0);
         const stmt = program.getStatements()[0] as any;
         expect(stmt.type).toBe(YNodeType.STMT_SWITCH);

@@ -13,7 +13,7 @@ describe('Lexer: Core Constructs', () => {
     });
 
     it('should tokenize assignments', () => {
-        const lexer = new YLexer('x = 1; y := 2;');
+        const lexer = new YLexer('x = 1; (y := 2);');
         const tokens = lexer.getTokens();
         
         expect(tokens[0].lexeme).toBe('x');
@@ -21,10 +21,12 @@ describe('Lexer: Core Constructs', () => {
         expect(tokens[2].literal).toBe(1);
         expect(tokens[3].type).toBe(YTokenType.STATEMENT_END);
 
-        expect(tokens[4].lexeme).toBe('y');
-        expect(tokens[5].type).toBe(YTokenType.INLINE_ASSIGN);
-        expect(tokens[6].literal).toBe(2);
-        expect(tokens[7].type).toBe(YTokenType.STATEMENT_END);
+        expect(tokens[4].type).toBe(YTokenType.LPAREN);
+        expect(tokens[5].lexeme).toBe('y');
+        expect(tokens[6].type).toBe(YTokenType.INLINE_ASSIGN);
+        expect(tokens[7].literal).toBe(2);
+        expect(tokens[8].type).toBe(YTokenType.RPAREN);
+        expect(tokens[9].type).toBe(YTokenType.STATEMENT_END);
     });
 
     it('should tokenize block scoping', () => {

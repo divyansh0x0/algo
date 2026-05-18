@@ -39,7 +39,7 @@ describe('Evaluator: Core Constructs', () => {
     it('should evaluate inline assignments', () => {
         const { lastResult } = evaluateCode(`
             let a = 1;
-            a := a + 1;
+            (a := a + 1);
             a;
         `);
         expect(lastResult?.kind).toBe('ref');

@@ -6,23 +6,23 @@ let grade = null;
 
 // If / Else If / Else
 if (score >= 90) {
-    grade := "A";
+    grade = "A";
 } else if (score >= 80) {
-    grade := "B";
+    grade = "B";
 } else {
-    grade := "C";
+    grade = "C";
 }
 
 // Switch Statement
 let status = 1;
 switch (status) {
-    case 1:
+    1:
         // Active
         break;
-    case 2:
+    2:
         // Inactive
         break;
-    default:
+    _:
         // Unknown
         break;
 }
@@ -42,7 +42,7 @@ for (let i = 0; i < 10; i++) {
     if (i > 8) {
         break;
     }
-    sum := sum + i;
+    sum = sum + i;
 }
 
 // Ternary Operator

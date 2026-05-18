@@ -8,7 +8,7 @@ class Animal {
     
     // Constructor (usually a standard method or handled implicitly, assuming generic setup here)
     pub fn init(animalName) {
-        self.name := animalName;
+        self.name = animalName;
     }
 
     pub fn speak() {
