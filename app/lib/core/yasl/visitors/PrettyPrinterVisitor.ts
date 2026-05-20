@@ -235,7 +235,7 @@ export class PrettyPrinterVisitor implements Visitor<string> {
     }
 
     visitStmtIf(node: StmtIfNode): string {
-        return this.getIndent() + "if (" + this.visit(node.condition) + ") " + this.visit(node.body) + "\n";
+        return this.getIndent() + "if (" + this.visit(node.condition) + ") " + this.visit(node.truthyBody) + "\n" + (node.falsyBody ? "else" + this.visit(node.falsyBody) + "\n" : "");
     }
 
     visitExpIf(node: ExpIfNode): string {

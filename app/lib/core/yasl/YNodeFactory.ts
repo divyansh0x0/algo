@@ -1,50 +1,41 @@
+import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
+import type { YExpression, YLValue, YStatement, YValueType } from "./YAst";
 import { YNodeType } from "./YAst";
 import type {
-    StmtAssignNode,
-    StmtExpressionNode,
-    YNode,
     DefArrayNode,
     DefFunctionNode,
     ExpAssignNode,
     ExpBinaryNode,
+    ExpBlockNode,
     ExpCallNode,
     ExpIdentifierNode,
+    ExpIfNode,
     ExpLiteralNode,
+    ExpParameterNode,
     ExpPropertyAccessNode,
     ExpTernaryNode,
     ExpUnaryNode,
     OpIndexingNode,
     OpPostfixNode,
+    StmtAssignNode,
     StmtBreakNode,
     StmtCaseNode,
     StmtContinueNode,
     StmtDeclarationNode,
-    ExpIfNode,
+    StmtDefaultNode,
     StmtElseNode,
+    StmtExpressionNode,
     StmtForNode,
     StmtIfNode,
     StmtReturnNode,
     StmtSwitchNode,
     StmtThenNode,
-    StmtWhileNode,
-    ExpParameterNode,
-    ExpBlockNode,
-    StmtDefaultNode
+    StmtWhileNode
 } from "./YNode";
-import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
-import type { YExpression, YLValue, YStatement, YValueType } from "./YAst";
 import type { YToken, YTokenBinaryOp, YTokenUnaryOp } from "./YToken";
 
 export class YNodeFactory {
     private node_index = 0;
-
-    private getDebugId() {
-        return ++this.node_index;
-    }
-
-    // ==========================================
-    // VARIABLES & SCOPE (DECLARATIONS, IDENTIFIERS)
-    // ==========================================
 
     getDeclarationStatement(
         identifier_name: string,
@@ -63,6 +54,10 @@ export class YNodeFactory {
             endIndex,
         };
     }
+
+    // ==========================================
+    // VARIABLES & SCOPE (DECLARATIONS, IDENTIFIERS)
+    // ==========================================
 
     getAssignmentStatement(
         lvalue: YExpression,
@@ -103,12 +98,8 @@ export class YNodeFactory {
         };
     }
 
-    // ==========================================
-    // CONTROL FLOW (BLOCKS, CONDITIONS, LOOPS)
-    // ==========================================
-
     getBlockExpression(statements: YStatement[], startIndex: number,
-        endIndex: number
+                       endIndex: number
     ): ExpBlockNode {
         return {
             type: YNodeType.EXP_BLOCK,
@@ -116,18 +107,25 @@ export class YNodeFactory {
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
-        }
+        };
     }
+
+    // ==========================================
+    // CONTROL FLOW (BLOCKS, CONDITIONS, LOOPS)
+    // ==========================================
+
     getIfStatement(
         condition: YExpression,
-        body: ExpBlockNode,
+        truthyBody: YStatement,
+        falsyBody: YStatement | null,
         startIndex: number,
         endIndex: number,
     ): StmtIfNode {
         return {
             type: YNodeType.STMT_IF,
             condition,
-            body,
+            truthyBody,
+            falsyBody,
             debugId: this.getDebugId(),
             startIndex,
             endIndex,
@@ -268,18 +266,15 @@ export class YNodeFactory {
         };
     }
 
-    getReturnStatement(token: YToken): StmtReturnNode {
+    getReturnStatement(returnValue: YExpression | null, startIndex: number, endIndex: number): StmtReturnNode {
         return {
             type: YNodeType.STMT_RETURN,
+            returnValue,
             debugId: this.getDebugId(),
-            startIndex: token.start,
-            endIndex: token.end,
+            startIndex,
+            endIndex,
         };
     }
-
-    // ==========================================
-    // OPERATIONS (MATH, LOGIC, UNARY, LITERALS)
-    // ==========================================
 
     getBinaryExpression(
         op: YTokenBinaryOp,
@@ -296,6 +291,10 @@ export class YNodeFactory {
             endIndex: expression_right.endIndex,
         };
     }
+
+    // ==========================================
+    // OPERATIONS (MATH, LOGIC, UNARY, LITERALS)
+    // ==========================================
 
     getUnaryExpression(
         op: YTokenUnaryOp,
@@ -357,10 +356,6 @@ export class YNodeFactory {
         };
     }
 
-    // ==========================================
-    // DATA STRUCTURES (ARRAYS, OBJECTS)
-    // ==========================================
-
     getArrayLiteral(elements: YExpression[]): DefArrayNode {
         const startIndex = elements[0]?.startIndex ?? 0;
         const endIndex = elements[elements.length - 1]?.endIndex ?? 0;
@@ -372,6 +367,10 @@ export class YNodeFactory {
             endIndex,
         };
     }
+
+    // ==========================================
+    // DATA STRUCTURES (ARRAYS, OBJECTS)
+    // ==========================================
 
     getIndexOperation(
         operand: YExpression,
@@ -401,10 +400,6 @@ export class YNodeFactory {
         };
     }
 
-    // ==========================================
-    // FUNCTIONS & CALLS
-    // ==========================================
-
     getFunctionDefinition(
         identifier_name: string,
         params: ExpParameterNode[],
@@ -423,6 +418,10 @@ export class YNodeFactory {
         };
     }
 
+    // ==========================================
+    // FUNCTIONS & CALLS
+    // ==========================================
+
     getCallNode(callee: YExpression, args: YExpression[]): ExpCallNode {
         return {
             type: YNodeType.EXP_CALL,
@@ -434,10 +433,6 @@ export class YNodeFactory {
         };
     }
 
-    // ==========================================
-    // WRAPPERS
-    // ==========================================
-
     getStatementExpression(exp: YExpression): StmtExpressionNode {
         return {
             type: YNodeType.STMT_EXPRESSION,
@@ -446,5 +441,13 @@ export class YNodeFactory {
             startIndex: exp.startIndex,
             endIndex: exp.endIndex,
         };
+    }
+
+    // ==========================================
+    // WRAPPERS
+    // ==========================================
+
+    private getDebugId() {
+        return ++this.node_index;
     }
 }

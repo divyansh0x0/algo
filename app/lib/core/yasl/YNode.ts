@@ -1,5 +1,5 @@
 import type { YNativeValueWrapper } from "./natives/YNativeValueWrapper";
-import { type YExpression, type YLValue, YNodeType, type YStatement, type YValueType } from "./YAst";
+import type { YExpression, YLValue, YStatement, YValueType, YNodeType } from "./YAst";
 import type { YToken, YTokenBinaryOp, YTokenUnaryOp } from "./YToken";
 
 // ==========================================
@@ -59,7 +59,8 @@ export interface ExpBlockNode extends YNode {
 export interface StmtIfNode extends YNode {
     readonly type: YNodeType.STMT_IF;
     condition: YExpression;
-    body: YExpression;
+    truthyBody: YStatement;
+    falsyBody: YStatement | null;
 }
 
 export interface ExpIfNode extends YNode {
@@ -121,6 +122,7 @@ export interface StmtContinueNode extends YNode {
 
 export interface StmtReturnNode extends YNode {
     readonly type: YNodeType.STMT_RETURN;
+    returnValue: YExpression|null;
 }
 
 // ==========================================

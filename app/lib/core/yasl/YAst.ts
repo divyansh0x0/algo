@@ -13,7 +13,7 @@ import type {
     OpPostfixNode, ExpBlockNode, StmtBreakNode, StmtCaseNode,
     StmtContinueNode, StmtDeclarationNode, ExpIfNode, StmtElseNode, StmtExpressionNode, StmtIfNode, StmtAssignNode,
     StmtForNode,
-    StmtWhileNode
+    StmtWhileNode, StmtReturnNode
 } from "./YNode";
 
 export type YExpression =
@@ -82,6 +82,7 @@ export interface YReturnValue {
 }
 
 export type YStatement =
+    | StmtReturnNode
     | StmtAssignNode
     | StmtExpressionNode
     | StmtDeclarationNode

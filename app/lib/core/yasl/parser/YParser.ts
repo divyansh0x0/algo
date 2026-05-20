@@ -61,6 +61,20 @@ export class YParser {
             }
             case YTokenType.FOR:
                 return this.parseForStatement();
+            case YTokenType.ELSE:
+            case YTokenType.IF:
+                return this.parseConditionStatement();
+            case YTokenType.BREAK:
+                this.consume();
+                return this.nodeFactory.getBreakStatement(token);
+
+            case YTokenType.CONTINUE:
+                this.consume();
+                return this.nodeFactory.getContinueStatement(token);
+
+            case YTokenType.RETURN:
+                this.consume();
+                return this.nodeFactory.getReturnStatement(this.parseExpression(), token.start, this.peek().start);
             default: {
                 const exp = this.parseExpression();
                 if (exp)
@@ -78,8 +92,7 @@ export class YParser {
             return null;
         }
 
-        console.log(lvalue)
-        if (!isAssignmentOperator(this.peek().type) && !this.match(YTokenType.STATEMENT_END)) {
+        if (!isAssignmentOperator(this.peek().type) && ! isExpressionTerminator(this.peek().type)) {
             this.errorToken(`Invalid token after lvalue ${this.peek().lexeme}`, this.peek())
         }
 
@@ -106,6 +119,27 @@ export class YParser {
 
 
 
+    }
+
+    private parseConditionStatement() {
+        const token = this.consume();
+        if (token.type !== YTokenType.IF){
+            this.errorToken("Expedition condition to start with 'if' keyword",token);
+            return null
+        }
+        this.expect(YTokenType.LPAREN);
+        const conditionExp = this.parseExpression();
+        this.expect(YTokenType.RPAREN);
+        const truthyBody = this.parseStatement();
+        let falsyBody: YStatement | null = null;
+
+        if(this.match(YTokenType.ELSE)){
+            this.consume();
+            falsyBody = this.parseStatement();
+        }
+        if(conditionExp && truthyBody)
+            return this.nodeFactory.getIfStatement(conditionExp, truthyBody,falsyBody, token.start, this.peek().start)
+        return null;
     }
 
     private parseForStatement(): StmtForNode | null {
@@ -153,7 +187,7 @@ export class YParser {
             }
         }
 
-        this.expect(YTokenType.RPAREN)
+        this.expect(YTokenType.RPAREN);
         const body = this.parseExpression();
         if (!init_stmt || !condition_stmt || !iter_stmt || !body)
             return null
@@ -357,6 +391,9 @@ export class YParser {
                 this.expect(YTokenType.RPAREN);
                 return expr;
             }
+            case YTokenType.ELSE:
+                this.errorToken("Invalid else token, else must be after an if condition",token);
+                break;
             case YTokenType.IF: {
                 this.expect(YTokenType.LPAREN, "Expected (")
                 const condition = this.consumeExpression()
