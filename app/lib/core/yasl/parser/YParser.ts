@@ -1,10 +1,10 @@
-import { PrettyPrinterVisitor } from "../visitors/PrettyPrinterVisitor";
 import type { LineMap } from "../../LineMap";
 import { YNativeValueWrapper } from "../natives/YNativeValueWrapper";
 import { type YExpression, YProgram, type YStatement, type YValueType } from "../YAst";
+import type { ExpBlockNode, StmtDeclarationNode, StmtForNode, StmtWhileNode } from "../YNode";
 import { YNodeFactory } from "../YNodeFactory";
-import { YTypeChecker } from "../YTypeChecker";
 import { type YToken, type YTokenBinaryOp, YTokenType, type YTokenUnaryOp } from "../YToken";
+import { YTypeChecker } from "../YTypeChecker";
 import {
     getAugmentedAssignmentOperatorToken,
     getBindingPower,
@@ -16,7 +16,6 @@ import {
     type YTokenAugmentedAssignOp
 } from "./YHelpers";
 import type { YParserError } from "./YParserError";
-import type { ExpBlockNode, StmtDeclarationNode } from "../YNode";
 
 export class YParser {
     private next_index = 0;
@@ -56,6 +55,9 @@ export class YParser {
                 return this.parseDeclaration();
             case YTokenType.IDENTIFIER: {
                 return this.parseAssignmentStatement();
+            }
+            case YTokenType.WHILE: {
+                return this.parseWhileStatement();
             }
             case YTokenType.FOR:
                 return this.parseForStatement();
@@ -106,11 +108,10 @@ export class YParser {
 
     }
 
-    private parseForStatement() {
-        const token = this.consume() // consume for token
+    private parseForStatement(): StmtForNode | null {
+        const token = this.consume(); // consume for token
         this.expect(YTokenType.LPAREN, "Expected a ( after for keyword")
         let init_stmt;
-        const viewer = new PrettyPrinterVisitor()
         if (this.match(YTokenType.LET)) {
             init_stmt = this.parseDeclaration()
         }
@@ -158,6 +159,18 @@ export class YParser {
             return null
         return this.nodeFactory.getForStatement(init_stmt, condition_stmt, iter_stmt, body, token.start, this.peek().start)
 
+    }
+    private parseWhileStatement(): StmtWhileNode | null {
+        const token = this.consume();
+        this.expect(YTokenType.LPAREN);
+        const exp = this.parseExpression();
+        this.expect(YTokenType.RPAREN);
+        const body = this.parseExpression();
+
+        if (exp && body){
+            return this.nodeFactory.getWhileStatement(exp,body, token.start, this.peek().start);
+        }
+        return null;
     }
     private synchronize() {
         while (!this.isEOF()) {
@@ -239,6 +252,10 @@ export class YParser {
             case YTokenType.STATEMENT_END:
                 this.consume();
                 break;
+            case YTokenType.LBRACKET:
+            case YTokenType.TRUE:
+            case YTokenType.FALSE:
+            case YTokenType.STRING:
             case YTokenType.NUMBER:
             case YTokenType.LPAREN:
             case YTokenType.IDENTIFIER:
@@ -524,4 +541,6 @@ export class YParser {
 
         return left_node;
     }
+
+
 }
